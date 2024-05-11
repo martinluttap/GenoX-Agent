@@ -1,8 +1,13 @@
-package main
-
 /*
 Reference: https://stackoverflow.com/questions/36417199/how-to-broadcast-message-using-channel
 */
+
+package main
+
+import (
+	"fmt"
+	"time"
+)
 
 type Broker[T any] struct {
 	stopCh    chan struct{}
@@ -58,4 +63,31 @@ func (b *Broker[T]) Unsubscribe(msgCh chan T) {
 
 func (b *Broker[T]) Publish(msg T) {
 	b.publishCh <- msg
+}
+
+func main() {
+	// Create and start a broker:
+	b := NewBroker[string]()
+	go b.Start()
+
+	// Create and subscribe 3 clients:
+	clientFunc := func(id int) {
+		msgCh := b.Subscribe()
+		for {
+			fmt.Printf("Client %d got message: %v\n", id, <-msgCh)
+		}
+	}
+	for i := 0; i < 3; i++ {
+		go clientFunc(i)
+	}
+
+	// Start publishing messages:
+	go func() {
+		for msgId := 0; ; msgId++ {
+			b.Publish(fmt.Sprintf("msg#%d", msgId))
+			time.Sleep(300 * time.Millisecond)
+		}
+	}()
+
+	time.Sleep(time.Second)
 }

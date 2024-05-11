@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -19,7 +22,7 @@ func makeHints() map[string]string {
 	return hints
 }
 
-func ticker(intervalSec int, stopCh chan int, wg *sync.WaitGroup) {
+func tickWriter(intervalSec int, flagMap map[string]string, stopCh chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	tickCh := time.NewTicker(time.Duration(intervalSec) * time.Second)
@@ -27,11 +30,47 @@ func ticker(intervalSec int, stopCh chan int, wg *sync.WaitGroup) {
 		select {
 		case t := <-tickCh.C:
 			fmt.Printf("Tick at %s\n", t)
+			dynamicWrite(flagMap)
 
 		case <-stopCh:
 			fmt.Println("Ticker stopped!")
 			return
 		}
+	}
+}
+
+func calculateNewPeriod(oldPeriod string) string {
+	old, _ := strconv.ParseFloat(oldPeriod, 64)
+	fmt.Println("Old", old)
+	interval := int64(10000)
+	new := strconv.FormatInt(int64(old)+interval, 10)
+	fmt.Println("New", new)
+
+	return new
+}
+
+func dynamicWrite(flagMap map[string]string) {
+
+	fmt.Printf("Arguments: %v!\n", flagMap)
+	path := `/sys/fs/cgroup/cpu/docker/cpu.cfs_period_us`
+	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	/*
+		1. Open file
+		2. Get old period
+		3. Calculate new period
+		4. Write new period
+	*/
+	if openErr != nil {
+		log.Fatalf("While opening: %s:\n", openErr)
+	}
+	defer infile.Close()
+
+	s := bufio.NewScanner(infile)
+	for s.Scan() {
+		oldPeriod := s.Text()
+		newPeriod := calculateNewPeriod(oldPeriod)
+		fmt.Printf("Old: %s, new: %s\n", oldPeriod, newPeriod)
+		infile.WriteString(newPeriod)
 	}
 }
 
@@ -41,6 +80,17 @@ func stopAt(limit int, stopCh chan int, wg *sync.WaitGroup) {
 	fmt.Printf("Stopper start at %s with limit %d!\n", time.Now(), limit)
 	time.Sleep(time.Duration(limit) * time.Second)
 	stopCh <- 0
+}
+
+func makeFlagMap(cgroup *string, subsystem *string, period *string, quota *string) map[string]string {
+	flagMaps := make(map[string]string)
+
+	flagMaps["cgroup"] = *cgroup
+	flagMaps["subsystem"] = *subsystem
+	flagMaps["period"] = *period
+	flagMaps["quota"] = *quota
+
+	return flagMaps
 }
 
 func main() {
@@ -56,20 +106,19 @@ func main() {
 	*/
 	hints := makeHints()
 
-	flag.String("cgroup", "docker", hints["cgroupName"])
-	flag.String("subsystem", "cpu", hints["subsystem"])
-	flag.String("cpu.cfs_period_us", "100000", hints["cpu.cfs_period_us"])
-	flag.String("cpu.cfs_quota_us", "-1", hints["cpu.cfs_quota_us"])
+	cgroup := flag.String("cgroup", "docker", hints["cgroupName"])
+	subsystem := flag.String("subsystem", "cpu", hints["subsystem"])
+	period := flag.String("cpu.cfs_period_us", "100000", hints["cpu.cfs_period_us"])
+	quota := flag.String("cpu.cfs_quota_us", "-1", hints["cpu.cfs_quota_us"])
 
 	flag.Parse()
 
-	fmt.Printf("Arguments: %v!\n", flag.Args())
-
+	flagMap := makeFlagMap(cgroup, subsystem, period, quota)
 	stopCh := make(chan int)
 	var wg sync.WaitGroup
 
 	wg.Add(2)
-	go ticker(1, stopCh, &wg)
+	go tickWriter(1, flagMap, stopCh, &wg)
 	go stopAt(5, stopCh, &wg)
 	wg.Wait()
 
