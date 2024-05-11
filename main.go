@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -22,15 +23,18 @@ func makeHints() map[string]string {
 	return hints
 }
 
-func tickWriter(intervalSec int, flagMap map[string]string, stopCh chan int, wg *sync.WaitGroup) {
+func tickWriter(containerDirs []string, intervalMillisecond int, flagMap map[string]string, stopCh chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	tickCh := time.NewTicker(time.Duration(intervalSec) * time.Second)
+	tickCh := time.NewTicker(time.Duration(intervalMillisecond) * time.Millisecond)
 	for {
 		select {
 		case t := <-tickCh.C:
 			fmt.Printf("Tick at %s\n", t)
-			dynamicWrite(flagMap)
+			for _, containerDir := range containerDirs {
+				// adjustPeriod(containerDir, flagMap)
+				adjustQuota(containerDir, flagMap, calculateNewPeriod)
+			}
 
 		case <-stopCh:
 			fmt.Println("Ticker stopped!")
@@ -41,18 +45,14 @@ func tickWriter(intervalSec int, flagMap map[string]string, stopCh chan int, wg 
 
 func calculateNewPeriod(oldPeriod string) string {
 	old, _ := strconv.ParseFloat(oldPeriod, 64)
-	fmt.Println("Old", old)
-	interval := int64(10000)
-	new := strconv.FormatInt(int64(old)+interval, 10)
-	fmt.Println("New", new)
+	stepMs := int64(100000)
+	new := strconv.FormatInt(int64(old)+stepMs, 10)
 
 	return new
 }
 
-func dynamicWrite(flagMap map[string]string) {
-
-	fmt.Printf("Arguments: %v!\n", flagMap)
-	path := `/sys/fs/cgroup/cpu/docker/cpu.cfs_period_us`
+func adjustPeriod(containerDir string, flagMap map[string]string, modFunction func(x string) string) {
+	path := fmt.Sprintf(`%s/cpu.cfs_period_us`, containerDir)
 	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	/*
 		1. Open file
@@ -68,8 +68,41 @@ func dynamicWrite(flagMap map[string]string) {
 	s := bufio.NewScanner(infile)
 	for s.Scan() {
 		oldPeriod := s.Text()
-		newPeriod := calculateNewPeriod(oldPeriod)
+		newPeriod := modFunction(oldPeriod)
 		fmt.Printf("Old: %s, new: %s\n", oldPeriod, newPeriod)
+		infile.WriteString(newPeriod)
+	}
+
+}
+
+func resetQuota(containerDir string, flagMap map[string]string) {
+
+	path := fmt.Sprintf(`%s/cpu.cfs_quota_us`, containerDir)
+	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if openErr != nil {
+		log.Fatalf("While opening: %s:\n", openErr)
+	}
+	defer infile.Close()
+
+	s := bufio.NewScanner(infile)
+	for s.Scan() {
+		infile.WriteString("-1")
+	}
+}
+
+func adjustQuota(containerDir string, flagMap map[string]string, modFunction func(x string) string) {
+
+	path := fmt.Sprintf(`%s/cpu.cfs_quota_us`, containerDir)
+	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if openErr != nil {
+		log.Fatalf("While opening: %s:\n", openErr)
+	}
+	defer infile.Close()
+
+	s := bufio.NewScanner(infile)
+	for s.Scan() {
+		oldPeriod := s.Text()
+		newPeriod := modFunction(oldPeriod)
 		infile.WriteString(newPeriod)
 	}
 }
@@ -91,6 +124,20 @@ func makeFlagMap(cgroup *string, subsystem *string, period *string, quota *strin
 	flagMaps["quota"] = *quota
 
 	return flagMaps
+}
+
+func getSubDirs(root string) ([]string, error) {
+	var dirs []string
+	err := filepath.WalkDir(root, func(path string, info os.DirEntry, err error) error {
+		if info.IsDir() &&
+			info.Name() != "buildkit" &&
+			info.Name() != root {
+			dirs = append(dirs, path)
+		}
+		return nil
+	})
+	// dirs[0] == root. We skip it
+	return dirs[1:], err
 }
 
 func main() {
@@ -118,8 +165,17 @@ func main() {
 	var wg sync.WaitGroup
 
 	wg.Add(2)
-	go tickWriter(1, flagMap, stopCh, &wg)
-	go stopAt(5, stopCh, &wg)
-	wg.Wait()
 
+	dockerRootPath := `/sys/fs/cgroup/cpu/docker/`
+	tickIntervalMs := 1000
+	modDuration := 6
+
+	containerDirs, _ := getSubDirs(dockerRootPath)
+	fmt.Println(containerDirs)
+	for _, dir := range containerDirs {
+		resetQuota(dir, flagMap)
+	}
+	go tickWriter(containerDirs, tickIntervalMs, flagMap, stopCh, &wg)
+	go stopAt(modDuration, stopCh, &wg)
+	wg.Wait()
 }
