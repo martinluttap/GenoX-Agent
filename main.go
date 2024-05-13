@@ -12,34 +12,38 @@ import (
 	"time"
 )
 
-// FUNCTIONS
+/****************** FUNCTIONS ******************/
 
 func calculateNewPeriod(oldPeriod string) string {
 	old, _ := strconv.ParseFloat(oldPeriod, 64)
-	stepMs := int64(10000)
+	stepMs := int64(100000)
 	new := strconv.FormatInt(int64(old)+stepMs, 10)
 
 	return new
 }
 
-func continuousIncrease(x string) string {
-	TARGET_CORE := 96
+func continuousIncrease(x float64) string {
+	fmt.Printf("Function called for %f\n", x)
+
+	TARGET_CORE := 16
 	INIT_CORE := 1
 	START_DUR := 1
 	END_DUR := 180 // 3 minutes
 
 	// m = (y2 - y1) / (x2 - x1)
-	m := float64((TARGET_CORE - INIT_CORE) / (END_DUR - START_DUR))
+	m := float64(TARGET_CORE-INIT_CORE) / float64(END_DUR-START_DUR)
 
 	// y = mx + c
 	c := float64(0)
-	floatX, _ := strconv.ParseFloat(x, 64)
-	y := (m * floatX) + c
+	y := int64(((m * x) + c) * 100000) // match cpu.cfs_quota_us, default=100000
 
-	return strconv.FormatFloat(y, 'f', 2, 64)
+	// newPeriod := strconv.FormatFloat(y, 'f', 2, 64)
+	fmt.Printf("m:%f, x:%f, c:%f, y:%d\n", m, x, c, y)
+
+	return strconv.FormatInt(y, 10)
 }
 
-/******************************/
+/*********************************************************/
 
 func makeHints() map[string]string {
 	hints := make(map[string]string)
@@ -56,13 +60,15 @@ func tickWriter(containerDirs []string, intervalMillisecond int, flagMap map[str
 	defer wg.Done()
 
 	tickCh := time.NewTicker(time.Duration(intervalMillisecond) * time.Millisecond)
+	startTime := time.Now()
 	for {
 		select {
 		case t := <-tickCh.C:
-			fmt.Printf("Tick at %s\n", t)
+			elapsedTime := time.Since(startTime).Seconds()
+			fmt.Printf("Tick at %s, elapsed: %s seconds\n", t, strconv.FormatFloat(elapsedTime, 'f', 2, 64))
 			for _, containerDir := range containerDirs {
 				// adjustPeriod(containerDir, flagMap)
-				adjustQuota(containerDir, t, continuousIncrease)
+				adjustQuota(containerDir, elapsedTime, continuousIncrease)
 			}
 
 		case <-stopCh:
@@ -90,7 +96,6 @@ func adjustPeriod(containerDir string, flagMap map[string]string, modFunction fu
 	for s.Scan() {
 		oldPeriod := s.Text()
 		newPeriod := modFunction(oldPeriod)
-		fmt.Printf("Old: %s, new: %s\n", oldPeriod, newPeriod)
 		infile.WriteString(newPeriod)
 	}
 
@@ -111,7 +116,7 @@ func resetQuota(containerDir string, flagMap map[string]string) {
 	}
 }
 
-func adjustQuota(containerDir string, currentTime time.Time, modFunction func(x string) string) {
+func adjustQuota(containerDir string, elapsedTime float64, modFunction func(x float64) string) {
 
 	path := fmt.Sprintf(`%s/cpu.cfs_quota_us`, containerDir)
 	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
@@ -123,7 +128,9 @@ func adjustQuota(containerDir string, currentTime time.Time, modFunction func(x 
 	s := bufio.NewScanner(infile)
 	for s.Scan() {
 		oldPeriod := s.Text()
-		newPeriod := modFunction(oldPeriod)
+		newPeriod := modFunction(elapsedTime)
+		// newPeriod := strconv.FormatFloat(elapsedTime, 'f', 1, 64)
+		fmt.Printf("Old: %s, new: %s\n", oldPeriod, newPeriod)
 		infile.WriteString(newPeriod)
 	}
 }
@@ -189,7 +196,7 @@ func main() {
 
 	dockerRootPath := `/sys/fs/cgroup/cpu/docker/`
 	tickIntervalMs := 1000
-	modDuration := 6
+	modDuration := 180
 
 	containerDirs, _ := getSubDirs(dockerRootPath)
 	fmt.Println(containerDirs)
