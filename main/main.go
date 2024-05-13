@@ -12,6 +12,35 @@ import (
 	"time"
 )
 
+// FUNCTIONS
+
+func calculateNewPeriod(oldPeriod string) string {
+	old, _ := strconv.ParseFloat(oldPeriod, 64)
+	stepMs := int64(10000)
+	new := strconv.FormatInt(int64(old)+stepMs, 10)
+
+	return new
+}
+
+func continuousIncrease(x string) string {
+	TARGET_CORE := 96
+	INIT_CORE := 1
+	START_DUR := 1
+	END_DUR := 180 // 3 minutes
+
+	// m = (y2 - y1) / (x2 - x1)
+	m := float64((TARGET_CORE - INIT_CORE) / (END_DUR - START_DUR))
+
+	// y = mx + c
+	c := float64(0)
+	floatX, _ := strconv.ParseFloat(x, 64)
+	y := (m * floatX) + c
+
+	return strconv.FormatFloat(y, 'f', 2, 64)
+}
+
+/******************************/
+
 func makeHints() map[string]string {
 	hints := make(map[string]string)
 
@@ -33,7 +62,7 @@ func tickWriter(containerDirs []string, intervalMillisecond int, flagMap map[str
 			fmt.Printf("Tick at %s\n", t)
 			for _, containerDir := range containerDirs {
 				// adjustPeriod(containerDir, flagMap)
-				adjustQuota(containerDir, flagMap, calculateNewPeriod)
+				adjustQuota(containerDir, t, continuousIncrease)
 			}
 
 		case <-stopCh:
@@ -41,14 +70,6 @@ func tickWriter(containerDirs []string, intervalMillisecond int, flagMap map[str
 			return
 		}
 	}
-}
-
-func calculateNewPeriod(oldPeriod string) string {
-	old, _ := strconv.ParseFloat(oldPeriod, 64)
-	stepMs := int64(100000)
-	new := strconv.FormatInt(int64(old)+stepMs, 10)
-
-	return new
 }
 
 func adjustPeriod(containerDir string, flagMap map[string]string, modFunction func(x string) string) {
@@ -90,7 +111,7 @@ func resetQuota(containerDir string, flagMap map[string]string) {
 	}
 }
 
-func adjustQuota(containerDir string, flagMap map[string]string, modFunction func(x string) string) {
+func adjustQuota(containerDir string, currentTime time.Time, modFunction func(x string) string) {
 
 	path := fmt.Sprintf(`%s/cpu.cfs_quota_us`, containerDir)
 	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
@@ -178,4 +199,7 @@ func main() {
 	go tickWriter(containerDirs, tickIntervalMs, flagMap, stopCh, &wg)
 	go stopAt(modDuration, stopCh, &wg)
 	wg.Wait()
+	// for _, dir := range containerDirs {
+	// 	resetQuota(dir, flagMap)
+	// }
 }
