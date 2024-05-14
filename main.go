@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -43,6 +45,23 @@ func continuousIncrease(x float64) string {
 	return strconv.FormatInt(y, 10)
 }
 
+func sineWave(x float64) string {
+	// Sine wav: (A * sin(2 * Pi * f + phase)) + yOffset
+	MIN_CORE := 1
+	INIT_CORE := 8
+	// START_DUR := 1
+	// END_DUR := 180 // 3 minutes
+	QUOTA_ONE_CORE := 100000
+
+	yOffset := float64(INIT_CORE)
+	amplitude := math.Max(float64(INIT_CORE-MIN_CORE), float64(1)) // Don't hit < 1
+	frequency := float64(0.05)
+	phase := float64(0)
+
+	y := (amplitude * math.Sin((2*math.Pi*frequency*x)+phase)) + yOffset
+	return strconv.FormatInt(int64(y*float64(QUOTA_ONE_CORE)), 10)
+}
+
 /*********************************************************/
 
 func makeHints() map[string]string {
@@ -67,8 +86,12 @@ func tickWriter(containerDirs []string, intervalMillisecond int, flagMap map[str
 			elapsedTime := time.Since(startTime).Seconds()
 			fmt.Printf("Tick at %s, elapsed: %s seconds\n", t, strconv.FormatFloat(elapsedTime, 'f', 2, 64))
 			for _, containerDir := range containerDirs {
-				// adjustPeriod(containerDir, flagMap)
-				adjustQuota(containerDir, elapsedTime, continuousIncrease)
+
+				// f(x): continuousIncrease
+				// adjustQuota(containerDir, elapsedTime, continuousIncrease)
+
+				// f(x): sineWave
+				adjustQuota(containerDir, elapsedTime, sineWave)
 			}
 
 		case <-stopCh:
@@ -168,7 +191,7 @@ func getSubDirs(root string) ([]string, error) {
 	return dirs[1:], err
 }
 
-func main() {
+func main2() {
 	// Log filename and timestamp for debugging
 	log.SetFlags(log.Lshortfile | log.Ltime)
 
@@ -209,4 +232,57 @@ func main() {
 	// for _, dir := range containerDirs {
 	// 	resetQuota(dir, flagMap)
 	// }
+}
+
+type BucketRange[T, U any] struct {
+	Begin T
+	End   U
+}
+
+type StepBucket struct {
+	bucket BucketRange[float64, float64]
+	value  float64
+}
+
+func randRange(min, max int) int {
+	return rand.IntN(max-min) + min
+}
+
+func generate_buckets() []StepBucket {
+	END_DUR := 180
+	V_MIN := 1
+	V_MAX := 16
+	H_MIN := 4
+	H_MAX := 18
+
+	totalSecs := 0
+	buckets := make([]StepBucket, 0, END_DUR/H_MIN)
+
+	for totalSecs <= END_DUR {
+		nextVStep := randRange(V_MIN, V_MAX)
+		nextHStep := randRange(H_MIN, H_MAX)
+		if totalSecs+nextHStep >= END_DUR {
+			break
+		} else {
+			totalSecs += nextHStep
+			if len(buckets) == 0 {
+				bucketRange := BucketRange[float64, float64]{Begin: 0, End: float64(nextHStep)}
+				stepBucket := StepBucket{bucket: bucketRange, value: float64(nextVStep)}
+				buckets = append(buckets, stepBucket)
+			} else {
+				lastEnd := buckets[len(buckets)-1].bucket.End
+				bucketRange := BucketRange[float64, float64]{Begin: lastEnd, End: lastEnd + float64(nextHStep)}
+				stepBucket := StepBucket{bucket: bucketRange, value: float64(nextVStep)}
+				buckets = append(buckets, stepBucket)
+			}
+		}
+	}
+	return buckets
+}
+
+func main() {
+	// for i := range 180 {
+	// 	fmt.Println(sineWave(float64(i), float64(yOffset), float64(amplitude), frequency, float64(phase)))
+	// }
+	generate_buckets()
 }
