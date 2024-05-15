@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+var buckets []StepBucket = generate_buckets()
+
 /****************** FUNCTIONS ******************/
 
 func calculateNewPeriod(oldPeriod string) string {
@@ -86,12 +88,7 @@ func tickWriter(containerDirs []string, intervalMillisecond int, flagMap map[str
 			elapsedTime := time.Since(startTime).Seconds()
 			fmt.Printf("Tick at %s, elapsed: %s seconds\n", t, strconv.FormatFloat(elapsedTime, 'f', 2, 64))
 			for _, containerDir := range containerDirs {
-
-				// f(x): continuousIncrease
-				// adjustQuota(containerDir, elapsedTime, continuousIncrease)
-
-				// f(x): sineWave
-				adjustQuota(containerDir, elapsedTime, sineWave)
+				adjustQuota(containerDir, elapsedTime)
 			}
 
 		case <-stopCh:
@@ -139,7 +136,7 @@ func resetQuota(containerDir string, flagMap map[string]string) {
 	}
 }
 
-func adjustQuota(containerDir string, elapsedTime float64, modFunction func(x float64) string) {
+func adjustQuota(containerDir string, elapsedTime float64) {
 
 	path := fmt.Sprintf(`%s/cpu.cfs_quota_us`, containerDir)
 	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
@@ -151,8 +148,14 @@ func adjustQuota(containerDir string, elapsedTime float64, modFunction func(x fl
 	s := bufio.NewScanner(infile)
 	for s.Scan() {
 		oldPeriod := s.Text()
-		newPeriod := modFunction(elapsedTime)
-		// newPeriod := strconv.FormatFloat(elapsedTime, 'f', 1, 64)
+		// f(x): continuousIncrease
+		// newPeriod := continuousIncrease(elapsedTime)
+
+		// f(x): sineWave
+		// newPeriod := sineWave(elapsedTime)
+
+		// f(x): randomStep
+		newPeriod := randomStep(elapsedTime, buckets)
 		fmt.Printf("Old: %s, new: %s\n", oldPeriod, newPeriod)
 		infile.WriteString(newPeriod)
 	}
@@ -189,49 +192,6 @@ func getSubDirs(root string) ([]string, error) {
 	})
 	// dirs[0] == root. We skip it
 	return dirs[1:], err
-}
-
-func main2() {
-	// Log filename and timestamp for debugging
-	log.SetFlags(log.Lshortfile | log.Ltime)
-
-	/*
-		cgroupName 			:= Target cgroup (e.g. 'docker')
-		path 				:= Absolute path. Default: "/sys/fs/cgroup/<cgroupName>"
-		subsystem			:= Cgroup subsystems. Default: 'cpu'
-		cpu.cfs_period_us	:= CFS period in us, conforms to Linux's convention. Default: 100000.
-		cpu.cfs_quota_us	:= CFS quota in us, conforms to Linux's convention. Default: -1.
-	*/
-	hints := makeHints()
-
-	cgroup := flag.String("cgroup", "docker", hints["cgroupName"])
-	subsystem := flag.String("subsystem", "cpu", hints["subsystem"])
-	period := flag.String("cpu.cfs_period_us", "100000", hints["cpu.cfs_period_us"])
-	quota := flag.String("cpu.cfs_quota_us", "-1", hints["cpu.cfs_quota_us"])
-
-	flag.Parse()
-
-	flagMap := makeFlagMap(cgroup, subsystem, period, quota)
-	stopCh := make(chan int)
-	var wg sync.WaitGroup
-
-	wg.Add(2)
-
-	dockerRootPath := `/sys/fs/cgroup/cpu/docker/`
-	tickIntervalMs := 1000
-	modDuration := 180
-
-	containerDirs, _ := getSubDirs(dockerRootPath)
-	fmt.Println(containerDirs)
-	for _, dir := range containerDirs {
-		resetQuota(dir, flagMap)
-	}
-	go tickWriter(containerDirs, tickIntervalMs, flagMap, stopCh, &wg)
-	go stopAt(modDuration, stopCh, &wg)
-	wg.Wait()
-	// for _, dir := range containerDirs {
-	// 	resetQuota(dir, flagMap)
-	// }
 }
 
 type BucketRange[T, U any] struct {
@@ -280,9 +240,62 @@ func generate_buckets() []StepBucket {
 	return buckets
 }
 
+func randomStep(x float64, buckets []StepBucket) string {
+	for _, e := range buckets {
+		if (e.bucket.Begin <= x) && (x <= e.bucket.End) {
+			return strconv.FormatInt(int64(e.value)*100000, 10)
+		}
+	}
+	return strconv.FormatInt(int64(buckets[len(buckets)-1].value)*100000, 10)
+}
+
+// func main() {
+// for i := range 180 {
+// 	fmt.Println(sineWave(float64(i), float64(yOffset), float64(amplitude), frequency, float64(phase)))
+// }
+// generate_buckets()
+// }
+
 func main() {
-	// for i := range 180 {
-	// 	fmt.Println(sineWave(float64(i), float64(yOffset), float64(amplitude), frequency, float64(phase)))
+	// Log filename and timestamp for debugging
+	log.SetFlags(log.Lshortfile | log.Ltime)
+
+	/*
+		cgroupName 			:= Target cgroup (e.g. 'docker')
+		path 				:= Absolute path. Default: "/sys/fs/cgroup/<cgroupName>"
+		subsystem			:= Cgroup subsystems. Default: 'cpu'
+		cpu.cfs_period_us	:= CFS period in us, conforms to Linux's convention. Default: 100000.
+		cpu.cfs_quota_us	:= CFS quota in us, conforms to Linux's convention. Default: -1.
+	*/
+	hints := makeHints()
+
+	cgroup := flag.String("cgroup", "docker", hints["cgroupName"])
+	subsystem := flag.String("subsystem", "cpu", hints["subsystem"])
+	period := flag.String("cpu.cfs_period_us", "100000", hints["cpu.cfs_period_us"])
+	quota := flag.String("cpu.cfs_quota_us", "-1", hints["cpu.cfs_quota_us"])
+
+	flag.Parse()
+
+	flagMap := makeFlagMap(cgroup, subsystem, period, quota)
+	stopCh := make(chan int)
+	var wg sync.WaitGroup
+
+	wg.Add(2)
+
+	dockerRootPath := `/sys/fs/cgroup/cpu/docker/`
+	tickIntervalMs := 1000
+	modDuration := 180
+
+	containerDirs, _ := getSubDirs(dockerRootPath)
+	fmt.Println(containerDirs)
+	fmt.Printf("Seed: %v\n", buckets)
+	for _, dir := range containerDirs {
+		resetQuota(dir, flagMap)
+	}
+	go tickWriter(containerDirs, tickIntervalMs, flagMap, stopCh, &wg)
+	go stopAt(modDuration, stopCh, &wg)
+	wg.Wait()
+	// for _, dir := range containerDirs {
+	// 	resetQuota(dir, flagMap)
 	// }
-	generate_buckets()
 }
