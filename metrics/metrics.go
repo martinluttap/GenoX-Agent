@@ -65,7 +65,7 @@ func BuildCpuUsageFromFile() CpuUsage {
 
 }
 
-func MetricsCollection(metricsIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
+func MetricsCollection(containerDirs []string, metricsIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	metricsTicker := time.NewTicker(time.Duration(metricsIntervalMs) * time.Millisecond)
@@ -98,6 +98,29 @@ func MetricsCollection(metricsIntervalMs int, stopCh chan int, wg *sync.WaitGrou
 	}
 }
 
-func Print() {
-	fmt.Println("Hi")
+func ProcFsMetricsCollection(containerDirs []string, metricsIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	metricsTicker := time.NewTicker(time.Duration(metricsIntervalMs) * time.Millisecond)
+	prevUsage := BuildCpuUsageFromFile()
+	for {
+		select {
+		case <-metricsTicker.C:
+
+			currentUsage := BuildCpuUsageFromFile()
+
+			workingTime := currentUsage.WorkingTime - prevUsage.WorkingTime
+			allTime := workingTime + (currentUsage.IdleTime - prevUsage.IdleTime)
+			perc := workingTime / allTime * 100
+
+			fmt.Printf("FilePerc: %s\n",
+				strconv.FormatFloat(perc, 'f', 2, 64),
+			)
+
+			prevUsage = currentUsage
+		case <-stopCh:
+			fmt.Println("Metrics collection stopped!")
+			return
+		}
+	}
 }

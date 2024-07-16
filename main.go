@@ -1,20 +1,16 @@
 package containermod
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 	"sync"
-	"time"
 
+	"github.com/martinluttap/containermod/controller"
 	"github.com/martinluttap/containermod/functions"
 	"github.com/martinluttap/containermod/metrics"
-
-	"github.com/prometheus/procfs"
 )
 
 func makeHints() map[string]string {
@@ -26,98 +22,6 @@ func makeHints() map[string]string {
 	hints["cpu.cfs_quota_us"] = `CFS quota in us, conforms to Linux's convention.`
 
 	return hints
-}
-
-func tickWriter(containerDirs []string, intervalMillisecond int, flagMap map[string]string, stopCh chan int, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	tickCh := time.NewTicker(time.Duration(intervalMillisecond) * time.Millisecond)
-	startTime := time.Now()
-	for {
-		select {
-		case t := <-tickCh.C:
-			elapsedTime := time.Since(startTime).Seconds()
-			fmt.Printf("Tick at %s, elapsed: %s seconds\n", t, strconv.FormatFloat(elapsedTime, 'f', 2, 64))
-			for _, containerDir := range containerDirs {
-				adjustQuota(containerDir, elapsedTime)
-			}
-
-		case <-stopCh:
-			fmt.Println("Ticker stopped!")
-			return
-		}
-	}
-}
-
-func adjustPeriod(containerDir string, flagMap map[string]string, modFunction func(x string) string) {
-	path := fmt.Sprintf(`%s/cpu.cfs_period_us`, containerDir)
-	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	/*
-		1. Open file
-		2. Get old period
-		3. Calculate new period
-		4. Write new period
-	*/
-	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
-	}
-	defer infile.Close()
-
-	s := bufio.NewScanner(infile)
-	for s.Scan() {
-		oldPeriod := s.Text()
-		newPeriod := modFunction(oldPeriod)
-		infile.WriteString(newPeriod)
-	}
-
-}
-
-func resetQuota(containerDir string, flagMap map[string]string) {
-
-	path := fmt.Sprintf(`%s/cpu.cfs_quota_us`, containerDir)
-	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
-	}
-	defer infile.Close()
-
-	s := bufio.NewScanner(infile)
-	for s.Scan() {
-		infile.WriteString("-1")
-	}
-}
-
-func adjustQuota(containerDir string, elapsedTime float64) {
-
-	path := fmt.Sprintf(`%s/cpu.cfs_quota_us`, containerDir)
-	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
-	}
-	defer infile.Close()
-
-	s := bufio.NewScanner(infile)
-	for s.Scan() {
-		oldPeriod := s.Text()
-		// f(x): continuousIncrease
-		// newPeriod := functions.ContinuousIncrease(elapsedTime)
-
-		// f(x): sineWave
-		newPeriod := functions.SineWave(elapsedTime)
-
-		// f(x): randomStep
-		// newPeriod := functions.RandomStep(elapsedTime, buckets)
-		fmt.Printf("Old: %s, new: %s\n", oldPeriod, newPeriod)
-		infile.WriteString(newPeriod)
-	}
-}
-
-func stopAt(limit int, stopCh chan int, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	fmt.Printf("Stopper start at %s with limit %d!\n", time.Now(), limit)
-	time.Sleep(time.Duration(limit) * time.Second)
-	stopCh <- 0
 }
 
 func makeFlagMap(cgroup *string, subsystem *string, period *string, quota *string) map[string]string {
@@ -145,66 +49,6 @@ func getSubDirs(root string) ([]string, error) {
 	return dirs[1:], err
 }
 
-func metricsCollection(containerDirs []string, metricsIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	metricsTicker := time.NewTicker(time.Duration(metricsIntervalMs) * time.Millisecond)
-	prevFS, _ := procfs.NewFS("/proc")
-	prevStats, _ := prevFS.Stat()
-	prevUsage := metrics.BuildCpuUsage(prevStats)
-	for {
-		select {
-		case t := <-metricsTicker.C:
-			fmt.Printf("Metrics collection at %s\n", t)
-
-			currentFS, _ := procfs.NewFS("/proc")
-			currentStats, _ := currentFS.Stat()
-			currentUsage := metrics.BuildCpuUsage(currentStats)
-
-			workingTime := currentUsage.WorkingTime - prevUsage.WorkingTime
-			allTime := workingTime + (currentUsage.IdleTime - prevUsage.IdleTime)
-			perc := workingTime / allTime * 100
-
-			fmt.Printf("Perc: %s\n",
-				strconv.FormatFloat(perc, 'f', 2, 64),
-			)
-
-			prevUsage = currentUsage
-
-		case <-stopCh:
-			fmt.Println("Metrics collection stopped!")
-			return
-		}
-	}
-}
-
-func procFsMetricsCollection(containerDirs []string, metricsIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	metricsTicker := time.NewTicker(time.Duration(metricsIntervalMs) * time.Millisecond)
-	prevUsage := metrics.BuildCpuUsageFromFile()
-	for {
-		select {
-		case <-metricsTicker.C:
-
-			currentUsage := metrics.BuildCpuUsageFromFile()
-
-			workingTime := currentUsage.WorkingTime - prevUsage.WorkingTime
-			allTime := workingTime + (currentUsage.IdleTime - prevUsage.IdleTime)
-			perc := workingTime / allTime * 100
-
-			fmt.Printf("FilePerc: %s\n",
-				strconv.FormatFloat(perc, 'f', 2, 64),
-			)
-
-			prevUsage = currentUsage
-		case <-stopCh:
-			fmt.Println("Metrics collection stopped!")
-			return
-		}
-	}
-}
-
 func main() {
 	// Log filename and timestamp for debugging
 	log.SetFlags(log.Lshortfile | log.Ltime)
@@ -222,10 +66,9 @@ func main() {
 	subsystem := flag.String("subsystem", "cpu", hints["subsystem"])
 	period := flag.String("cpu.cfs_period_us", "100000", hints["cpu.cfs_period_us"])
 	quota := flag.String("cpu.cfs_quota_us", "-1", hints["cpu.cfs_quota_us"])
-
 	flag.Parse()
+	_ = makeFlagMap(cgroup, subsystem, period, quota)
 
-	flagMap := makeFlagMap(cgroup, subsystem, period, quota)
 	stopCh := make(chan int)
 	var wg sync.WaitGroup
 
@@ -240,12 +83,12 @@ func main() {
 	fmt.Println(containerDirs)
 	fmt.Printf("Seed: %v\n", functions.Buckets)
 	for _, dir := range containerDirs {
-		resetQuota(dir, flagMap)
+		controller.ResetQuota(dir)
 	}
-	go tickWriter(containerDirs, tickIntervalMs, flagMap, stopCh, &wg)
-	go metrics.MetricsCollection(metricsIntervalMs, stopCh, &wg)
-	go procFsMetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
-	go stopAt(modDuration, stopCh, &wg)
+	go controller.TickWriter(containerDirs, tickIntervalMs, stopCh, &wg)
+	go metrics.MetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
+	go metrics.ProcFsMetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
+	go controller.StopAt(modDuration, stopCh, &wg)
 	wg.Wait()
 	// for _, dir := range containerDirs {
 	// 	resetQuota(dir, flagMap)
