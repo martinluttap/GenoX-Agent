@@ -1,3 +1,7 @@
 main
 
+experiments/.*
+experiments/.nextflow.*
+experiments/*nextflow*
+
 *.csv
