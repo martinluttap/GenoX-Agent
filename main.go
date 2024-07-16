@@ -5,69 +5,17 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math"
-	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/martinluttap/containermod/functions"
 	"github.com/martinluttap/containermod/metrics"
+
 	"github.com/prometheus/procfs"
 )
-
-var buckets []StepBucket = generate_buckets()
-
-/****************** FUNCTIONS ******************/
-
-func calculateNewPeriod(oldPeriod string) string {
-	old, _ := strconv.ParseFloat(oldPeriod, 64)
-	stepMs := int64(100000)
-	new := strconv.FormatInt(int64(old)+stepMs, 10)
-
-	return new
-}
-
-func continuousIncrease(x float64) string {
-	fmt.Printf("Function called for %f\n", x)
-
-	TARGET_CORE := 16
-	INIT_CORE := 1
-	START_DUR := 1
-	END_DUR := 180 // 3 minutes
-
-	// m = (y2 - y1) / (x2 - x1)
-	m := float64(TARGET_CORE-INIT_CORE) / float64(END_DUR-START_DUR)
-
-	// y = mx + c
-	c := float64(0)
-	y := int64(((m * x) + c) * 100000) // match cpu.cfs_quota_us, default=100000
-
-	// newPeriod := strconv.FormatFloat(y, 'f', 2, 64)
-	fmt.Printf("m:%f, x:%f, c:%f, y:%d\n", m, x, c, y)
-
-	return strconv.FormatInt(y, 10)
-}
-
-func sineWave(x float64) string {
-	// Sine wav: (A * sin(2 * Pi * f + phase)) + yOffset
-	MIN_CORE := 1
-	INIT_CORE := 8
-	// START_DUR := 1
-	// END_DUR := 180 // 3 minutes
-	QUOTA_ONE_CORE := 100000
-
-	yOffset := float64(INIT_CORE)
-	amplitude := math.Max(float64(INIT_CORE-MIN_CORE), float64(1)) // Don't hit < 1
-	frequency := float64(0.05)
-	phase := float64(0)
-
-	y := (amplitude * math.Sin((2*math.Pi*frequency*x)+phase)) + yOffset
-	return strconv.FormatInt(int64(y*float64(QUOTA_ONE_CORE)), 10)
-}
-
-/*********************************************************/
 
 func makeHints() map[string]string {
 	hints := make(map[string]string)
@@ -152,13 +100,13 @@ func adjustQuota(containerDir string, elapsedTime float64) {
 	for s.Scan() {
 		oldPeriod := s.Text()
 		// f(x): continuousIncrease
-		// newPeriod := continuousIncrease(elapsedTime)
+		// newPeriod := functions.ContinuousIncrease(elapsedTime)
 
 		// f(x): sineWave
-		newPeriod := sineWave(elapsedTime)
+		newPeriod := functions.SineWave(elapsedTime)
 
 		// f(x): randomStep
-		// newPeriod := randomStep(elapsedTime, buckets)
+		// newPeriod := functions.RandomStep(elapsedTime, buckets)
 		fmt.Printf("Old: %s, new: %s\n", oldPeriod, newPeriod)
 		infile.WriteString(newPeriod)
 	}
@@ -195,61 +143,6 @@ func getSubDirs(root string) ([]string, error) {
 	})
 	// dirs[0] == root. We skip it
 	return dirs[1:], err
-}
-
-type BucketRange[T, U any] struct {
-	Begin T
-	End   U
-}
-
-type StepBucket struct {
-	bucket BucketRange[float64, float64]
-	value  float64
-}
-
-func randRange(min, max int) int {
-	return rand.IntN(max-min) + min
-}
-
-func generate_buckets() []StepBucket {
-	END_DUR := 180
-	V_MIN := 1
-	V_MAX := 16
-	H_MIN := 4
-	H_MAX := 18
-
-	totalSecs := 0
-	buckets := make([]StepBucket, 0, END_DUR/H_MIN)
-
-	for totalSecs <= END_DUR {
-		nextVStep := randRange(V_MIN, V_MAX)
-		nextHStep := randRange(H_MIN, H_MAX)
-		if totalSecs+nextHStep >= END_DUR {
-			break
-		} else {
-			totalSecs += nextHStep
-			if len(buckets) == 0 {
-				bucketRange := BucketRange[float64, float64]{Begin: 0, End: float64(nextHStep)}
-				stepBucket := StepBucket{bucket: bucketRange, value: float64(nextVStep)}
-				buckets = append(buckets, stepBucket)
-			} else {
-				lastEnd := buckets[len(buckets)-1].bucket.End
-				bucketRange := BucketRange[float64, float64]{Begin: lastEnd, End: lastEnd + float64(nextHStep)}
-				stepBucket := StepBucket{bucket: bucketRange, value: float64(nextVStep)}
-				buckets = append(buckets, stepBucket)
-			}
-		}
-	}
-	return buckets
-}
-
-func randomStep(x float64, buckets []StepBucket) string {
-	for _, e := range buckets {
-		if (e.bucket.Begin <= x) && (x <= e.bucket.End) {
-			return strconv.FormatInt(int64(e.value)*100000, 10)
-		}
-	}
-	return strconv.FormatInt(int64(buckets[len(buckets)-1].value)*100000, 10)
 }
 
 func metricsCollection(containerDirs []string, metricsIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
@@ -345,7 +238,7 @@ func main() {
 
 	containerDirs, _ := getSubDirs(dockerRootPath)
 	fmt.Println(containerDirs)
-	fmt.Printf("Seed: %v\n", buckets)
+	fmt.Printf("Seed: %v\n", functions.Buckets)
 	for _, dir := range containerDirs {
 		resetQuota(dir, flagMap)
 	}

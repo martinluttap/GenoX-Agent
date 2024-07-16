@@ -1,6 +1,10 @@
 main
 
 experiments/.*
+experiments/*.txt
+experiments/*.config
+experiments/*.nf
+experiments/work/
 experiments/.nextflow.*
 experiments/*nextflow*
 

@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-WORKFLOW="/home/cc/elastic-container/container-mod/experiments/nf_scripts/bwa.nf"
-INPUT_CONFIG="/home/cc/elastic-container/container-mod/experiments/configs/bwa.config"
+WORKFLOW="/home/cc/elastic-container/containermod/experiments/nf_scripts/bwa.nf"
+INPUT_CONFIG="/home/cc/elastic-container/containermod/experiments/configs/bwa.config"
 LABEL="test"
 OUT_LOG="${LABEL}.log"
 
