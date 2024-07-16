@@ -1,0 +1,75 @@
+Jul-16 16:07:53.897 [main] DEBUG nextflow.cli.Launcher - $> nextflow run test.nf -c /home/cc/elastic-container/container-mod/experiments/configs/bwa.config -with-timeline test-timeline.html -with-trace test-trace.txt -with-report test-report.html
+Jul-16 16:07:54.016 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 23.10.0
+Jul-16 16:07:54.037 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/cc/.nextflow/plugins; core-plugins: nf-amazon@2.1.4,nf-azure@1.3.2,nf-cloudcache@0.3.0,nf-codecommit@0.1.5,nf-console@1.0.6,nf-ga4gh@1.1.0,nf-google@1.8.3,nf-tower@1.6.3,nf-wave@1.0.0
+Jul-16 16:07:54.047 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Jul-16 16:07:54.048 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Jul-16 16:07:54.051 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.4.1 in 'deployment' mode
+Jul-16 16:07:54.061 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Jul-16 16:07:54.081 [main] DEBUG nextflow.config.ConfigBuilder - User config file: /home/cc/elastic-container/container-mod/experiments/configs/bwa.config
+Jul-16 16:07:54.081 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /home/cc/elastic-container/container-mod/experiments/configs/bwa.config
+Jul-16 16:07:54.104 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Jul-16 16:07:54.619 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=2 by global default
+Jul-16 16:07:54.648 [main] INFO  nextflow.cli.CmdRun - Launching `test.nf` [cheesy_blackwell] DSL2 - revision: b5879218df
+Jul-16 16:07:54.648 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
+Jul-16 16:07:54.648 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[]
+Jul-16 16:07:54.657 [main] DEBUG n.secret.LocalSecretsProvider - Secrets store: /home/cc/.nextflow/secrets/store.json
+Jul-16 16:07:54.661 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@77bb48d5] - activable => nextflow.secret.LocalSecretsProvider@77bb48d5
+Jul-16 16:07:54.714 [main] DEBUG nextflow.Session - Session UUID: eaa947c6-d2a7-4f00-be71-62286e2ce565
+Jul-16 16:07:54.714 [main] DEBUG nextflow.Session - Run name: cheesy_blackwell
+Jul-16 16:07:54.715 [main] DEBUG nextflow.Session - Executor pool size: 96
+Jul-16 16:07:54.722 [main] DEBUG nextflow.file.FilePorter - File porter settings maxRetries=3; maxTransfers=50; pollTimeout=null
+Jul-16 16:07:54.755 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 23.10.0 build 5889
+  Created: 15-10-2023 15:07 UTC 
+  System: Linux 5.4.0-182-generic
+  Runtime: Groovy 3.0.19 on OpenJDK 64-Bit Server VM 21.0.1+12-LTS
+  Encoding: UTF-8 (UTF-8)
+  Process: 4064052@harvestvm-instance0 [127.0.1.1]
+  CPUs: 96 - Mem: 187.4 GB (173.9 GB) - Swap: 0 (0) - Virtual threads ON
+Jul-16 16:07:54.780 [main] DEBUG nextflow.Session - Work-dir: /home/cc/elastic-container/container-mod/experiments/work [ext2/ext3]
+Jul-16 16:07:54.780 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /home/cc/elastic-container/container-mod/experiments/bin
+Jul-16 16:07:54.790 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+Jul-16 16:07:54.803 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Jul-16 16:07:54.834 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Jul-16 16:07:54.844 [main] DEBUG nextflow.util.CustomPoolFactory - Creating virtual thread pool
+Jul-16 16:07:54.917 [main] DEBUG nextflow.Session - Session start
+Jul-16 16:07:54.922 [main] DEBUG nextflow.trace.TraceFileObserver - Workflow started -- trace file: /home/cc/elastic-container/container-mod/experiments/test-trace.txt
+Jul-16 16:07:55.301 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Jul-16 16:07:55.344 [main] WARN  nextflow.script.ScriptBinding - Access to undefined parameter `num_threads` -- Initialise it to a default value eg. `params.num_threads = some_value`
+Jul-16 16:07:55.468 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:BWA_NO_LIMIT` matches process BWA_NO_LIMIT
+Jul-16 16:07:55.474 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Jul-16 16:07:55.474 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Jul-16 16:07:55.478 [main] DEBUG nextflow.executor.Executor - [warm up] executor > local
+Jul-16 16:07:55.485 [main] DEBUG n.processor.LocalPollingMonitor - Creating local task monitor for executor 'local' > cpus=96; memory=187.4 GB; capacity=96; pollInterval=100ms; dumpInterval=5m
+Jul-16 16:07:55.487 [main] DEBUG n.processor.TaskPollingMonitor - >>> barrier register (monitor: local)
+Jul-16 16:07:55.538 [main] DEBUG nextflow.Session - Workflow process names [dsl2]: BWA_32c, BWA_NO_LIMIT, BWA_8c, BWA_4c, BWA_NO_LIMIT3, BWA_1half_c, BWA_16c, BWA_NO_LIMIT2
+Jul-16 16:07:55.539 [main] DEBUG nextflow.Session - Igniting dataflow network (10)
+Jul-16 16:07:55.543 [PathVisitor-1] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.fa; options: [:]
+Jul-16 16:07:55.544 [PathVisitor-2] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.amb; options: [:]
+Jul-16 16:07:55.544 [PathVisitor-3] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.ann; options: [:]
+Jul-16 16:07:55.544 [PathVisitor-4] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.bwt; options: [:]
+Jul-16 16:07:55.545 [PathVisitor-5] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.fai; options: [:]
+Jul-16 16:07:55.545 [PathVisitor-6] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.pac; options: [:]
+Jul-16 16:07:55.545 [PathVisitor-7] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.sa; options: [:]
+Jul-16 16:07:55.545 [PathVisitor-8] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.dict; options: [:]
+Jul-16 16:07:55.545 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > BWA_NO_LIMIT
+Jul-16 16:07:55.546 [PathVisitor-9] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/read-files/SRR24039108/; pattern: *_{1,2}.fastq; options: [:]
+Jul-16 16:07:55.546 [main] DEBUG nextflow.script.ScriptRunner - Parsed script files:
+  Script_72157991d4820ca1: /home/cc/elastic-container/container-mod/experiments/test.nf
+Jul-16 16:07:55.546 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
+Jul-16 16:07:55.546 [main] DEBUG nextflow.Session - Session await
+Jul-16 16:07:55.598 [Actor Thread 19] DEBUG n.splitter.AbstractTextSplitter - Splitter `Fastq` collector path: nextflow.splitter.TextFileCollector$CachePath(/home/cc/elastic-container/container-mod/experiments/work/b6/36b38c2aad1e07e1b9bb276d9295eb/SRR24039108_1.fastq, null)
+Jul-16 16:07:55.598 [Actor Thread 20] DEBUG n.splitter.AbstractTextSplitter - Splitter `Fastq` collector path: nextflow.splitter.TextFileCollector$CachePath(/home/cc/elastic-container/container-mod/experiments/work/49/4cc0654af9b16a76c1850e4801495e/SRR24039108_2.fastq, null)
+Jul-16 16:08:07.586 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Jul-16 16:08:07.587 [Task submitter] INFO  nextflow.Session - [e1/36a57d] Submitted process > BWA_NO_LIMIT (1)
+Jul-16 16:10:45.843 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 1; name: BWA_NO_LIMIT (1); status: COMPLETED; exit: 0; error: -; workDir: /home/cc/elastic-container/container-mod/experiments/work/e1/36a57da996aa0b1926a208dd32f8da]
+Jul-16 16:10:45.870 [main] DEBUG nextflow.Session - Session await > all processes finished
+Jul-16 16:10:45.877 [Task monitor] DEBUG n.processor.TaskPollingMonitor - <<< barrier arrives (monitor: local) - terminating tasks monitor poll loop
+Jul-16 16:10:45.877 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Jul-16 16:10:45.888 [main] DEBUG n.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=1; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=2m 32s; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=1; peakCpus=1; peakMemory=0; ]
+Jul-16 16:10:45.888 [main] DEBUG nextflow.trace.TraceFileObserver - Workflow completed -- saving trace file
+Jul-16 16:10:45.891 [main] DEBUG nextflow.trace.ReportObserver - Workflow completed -- rendering execution report
+Jul-16 16:10:46.582 [main] DEBUG nextflow.trace.TimelineObserver - Workflow completed -- rendering execution timeline
+Jul-16 16:10:46.722 [main] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
+Jul-16 16:10:46.741 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'FileTransfer' shutdown completed (hard=false)
+Jul-16 16:10:46.742 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye

@@ -1,0 +1,66 @@
+Apr-22 21:10:35.117 [main] DEBUG nextflow.cli.Launcher - $> nextflow run input_generation.nf
+Apr-22 21:10:35.202 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 23.10.0
+Apr-22 21:10:35.218 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/cc/.nextflow/plugins; core-plugins: nf-amazon@2.1.4,nf-azure@1.3.2,nf-cloudcache@0.3.0,nf-codecommit@0.1.5,nf-console@1.0.6,nf-ga4gh@1.1.0,nf-google@1.8.3,nf-tower@1.6.3,nf-wave@1.0.0
+Apr-22 21:10:35.226 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Apr-22 21:10:35.226 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Apr-22 21:10:35.229 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.4.1 in 'deployment' mode
+Apr-22 21:10:35.236 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Apr-22 21:10:35.297 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=2 by global default
+Apr-22 21:10:35.312 [main] INFO  nextflow.cli.CmdRun - Launching `input_generation.nf` [cranky_rosalind] DSL2 - revision: 924e8f30eb
+Apr-22 21:10:35.312 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
+Apr-22 21:10:35.313 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[]
+Apr-22 21:10:35.321 [main] DEBUG n.secret.LocalSecretsProvider - Secrets store: /home/cc/.nextflow/secrets/store.json
+Apr-22 21:10:35.327 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@46c00568] - activable => nextflow.secret.LocalSecretsProvider@46c00568
+Apr-22 21:10:35.376 [main] DEBUG nextflow.Session - Session UUID: de4a31ee-b481-490e-8011-61497c767725
+Apr-22 21:10:35.376 [main] DEBUG nextflow.Session - Run name: cranky_rosalind
+Apr-22 21:10:35.377 [main] DEBUG nextflow.Session - Executor pool size: 96
+Apr-22 21:10:35.384 [main] DEBUG nextflow.file.FilePorter - File porter settings maxRetries=3; maxTransfers=50; pollTimeout=null
+Apr-22 21:10:35.413 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 23.10.0 build 5889
+  Created: 15-10-2023 15:07 UTC 
+  System: Linux 5.4.0-169-generic
+  Runtime: Groovy 3.0.19 on OpenJDK 64-Bit Server VM 21.0.2+13-LTS
+  Encoding: UTF-8 (UTF-8)
+  Process: 3734675@harvestsim-instance0 [127.0.1.1]
+  CPUs: 96 - Mem: 187.4 GB (1.5 GB) - Swap: 0 (0) - Virtual threads ON
+Apr-22 21:10:35.432 [main] DEBUG nextflow.Session - Work-dir: /home/cc/nextflow/harvestsim/nf_scripts/work [ext2/ext3]
+Apr-22 21:10:35.433 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /home/cc/nextflow/harvestsim/nf_scripts/bin
+Apr-22 21:10:35.441 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+Apr-22 21:10:35.451 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Apr-22 21:10:35.469 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Apr-22 21:10:35.476 [main] DEBUG nextflow.util.CustomPoolFactory - Creating virtual thread pool
+Apr-22 21:10:35.543 [main] DEBUG nextflow.Session - Session start
+Apr-22 21:10:36.004 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Apr-22 21:10:36.160 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Apr-22 21:10:36.160 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Apr-22 21:10:36.165 [main] DEBUG nextflow.executor.Executor - [warm up] executor > local
+Apr-22 21:10:36.171 [main] DEBUG n.processor.LocalPollingMonitor - Creating local task monitor for executor 'local' > cpus=96; memory=187.4 GB; capacity=96; pollInterval=100ms; dumpInterval=5m
+Apr-22 21:10:36.172 [main] DEBUG n.processor.TaskPollingMonitor - >>> barrier register (monitor: local)
+Apr-22 21:10:36.234 [main] DEBUG nextflow.Session - Workflow process names [dsl2]: DUMMY
+Apr-22 21:10:36.234 [main] DEBUG nextflow.Session - Igniting dataflow network (10)
+Apr-22 21:10:36.238 [PathVisitor-1] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.fa; options: [:]
+Apr-22 21:10:36.238 [PathVisitor-2] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.amb; options: [:]
+Apr-22 21:10:36.239 [PathVisitor-3] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.ann; options: [:]
+Apr-22 21:10:36.239 [PathVisitor-4] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.bwt; options: [:]
+Apr-22 21:10:36.239 [PathVisitor-5] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.fai; options: [:]
+Apr-22 21:10:36.239 [PathVisitor-6] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.pac; options: [:]
+Apr-22 21:10:36.240 [PathVisitor-7] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.sa; options: [:]
+Apr-22 21:10:36.240 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > DUMMY
+Apr-22 21:10:36.240 [PathVisitor-8] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/reference-files/; pattern: *.dict; options: [:]
+Apr-22 21:10:36.240 [PathVisitor-9] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /home/cc/nextflow/read-files/SRR24039108/; pattern: SRR*_{1,2}.fastq; options: [:]
+Apr-22 21:10:36.241 [main] DEBUG nextflow.script.ScriptRunner - Parsed script files:
+  Script_f2f72baf614c0e3d: /home/cc/nextflow/harvestsim/nf_scripts/input_generation.nf
+Apr-22 21:10:36.241 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
+Apr-22 21:10:36.241 [main] DEBUG nextflow.Session - Session await
+Apr-22 21:10:36.305 [Actor Thread 14] DEBUG n.splitter.AbstractTextSplitter - Splitter `Fastq` collector path: nextflow.splitter.TextFileCollector$CachePath(/home/cc/nextflow/harvestsim/nf_scripts/work/c4/b56e4488b668857ea77271180ea3e1/SRR24039108_2.fastq, null)
+Apr-22 21:10:36.305 [Actor Thread 13] DEBUG n.splitter.AbstractTextSplitter - Splitter `Fastq` collector path: nextflow.splitter.TextFileCollector$CachePath(/home/cc/nextflow/harvestsim/nf_scripts/work/33/4230a8cbe9534815053bada789cd54/SRR24039108_1.fastq, null)
+Apr-22 21:10:37.314 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Apr-22 21:10:37.315 [Task submitter] INFO  nextflow.Session - [8f/273ab2] Submitted process > DUMMY (1)
+Apr-22 21:10:37.354 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 1; name: DUMMY (1); status: COMPLETED; exit: 0; error: -; workDir: /home/cc/nextflow/harvestsim/nf_scripts/work/8f/273ab2091cd80db8ce01de591c2bc3]
+Apr-22 21:10:37.378 [main] DEBUG nextflow.Session - Session await > all processes finished
+Apr-22 21:10:37.444 [Task monitor] DEBUG n.processor.TaskPollingMonitor - <<< barrier arrives (monitor: local) - terminating tasks monitor poll loop
+Apr-22 21:10:37.445 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Apr-22 21:10:37.457 [main] DEBUG n.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=1; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=4ms; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=1; peakCpus=1; peakMemory=0; ]
+Apr-22 21:10:37.611 [main] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
+Apr-22 21:10:37.626 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'FileTransfer' shutdown completed (hard=false)
+Apr-22 21:10:37.627 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye
