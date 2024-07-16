@@ -10,10 +10,10 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
+	"github.com/martinluttap/containermod/metrics"
 	"github.com/prometheus/procfs"
 )
 
@@ -252,65 +252,13 @@ func randomStep(x float64, buckets []StepBucket) string {
 	return strconv.FormatInt(int64(buckets[len(buckets)-1].value)*100000, 10)
 }
 
-type cpuUsage struct {
-	workingTime float64
-	idleTime    float64
-}
-
-func buildCpuUsage(stat procfs.Stat) cpuUsage {
-	workingTime := stat.CPUTotal.User + stat.CPUTotal.System + stat.CPUTotal.Nice + stat.CPUTotal.IRQ + stat.CPUTotal.SoftIRQ
-	idleTime := stat.CPUTotal.Idle + stat.CPUTotal.Iowait
-	usage := cpuUsage{
-		workingTime: workingTime,
-		idleTime:    idleTime,
-	}
-
-	return usage
-}
-
-func buildCpuUsageFromFile() cpuUsage {
-	path := fmt.Sprintf(`/proc/stat`)
-	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	/*
-		1. Open file
-		2. Get old period
-		3. Calculate new period
-		4. Write new period
-	*/
-	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
-	}
-	defer infile.Close()
-
-	s := bufio.NewScanner(infile)
-	s.Scan()
-	words := strings.Fields(s.Text())
-	user, _ := strconv.ParseFloat(words[1], 64)
-	nice, _ := strconv.ParseFloat(words[2], 64)
-	system, _ := strconv.ParseFloat(words[3], 64)
-	idle, _ := strconv.ParseFloat(words[4], 64)
-	iowait, _ := strconv.ParseFloat(words[5], 64)
-	irq, _ := strconv.ParseFloat(words[6], 64)
-	softIrq, _ := strconv.ParseFloat(words[7], 64)
-
-	workingTime := user + system + nice + irq + softIrq
-	idleTime := idle + iowait
-	usage := cpuUsage{
-		workingTime: workingTime,
-		idleTime:    idleTime,
-	}
-
-	return usage
-
-}
-
 func metricsCollection(containerDirs []string, metricsIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	metricsTicker := time.NewTicker(time.Duration(metricsIntervalMs) * time.Millisecond)
 	prevFS, _ := procfs.NewFS("/proc")
 	prevStats, _ := prevFS.Stat()
-	prevUsage := buildCpuUsage(prevStats)
+	prevUsage := metrics.BuildCpuUsage(prevStats)
 	for {
 		select {
 		case t := <-metricsTicker.C:
@@ -318,10 +266,10 @@ func metricsCollection(containerDirs []string, metricsIntervalMs int, stopCh cha
 
 			currentFS, _ := procfs.NewFS("/proc")
 			currentStats, _ := currentFS.Stat()
-			currentUsage := buildCpuUsage(currentStats)
+			currentUsage := metrics.BuildCpuUsage(currentStats)
 
-			workingTime := currentUsage.workingTime - prevUsage.workingTime
-			allTime := workingTime + (currentUsage.idleTime - prevUsage.idleTime)
+			workingTime := currentUsage.WorkingTime - prevUsage.WorkingTime
+			allTime := workingTime + (currentUsage.IdleTime - prevUsage.IdleTime)
 			perc := workingTime / allTime * 100
 
 			fmt.Printf("Perc: %s\n",
@@ -341,15 +289,15 @@ func procFsMetricsCollection(containerDirs []string, metricsIntervalMs int, stop
 	defer wg.Done()
 
 	metricsTicker := time.NewTicker(time.Duration(metricsIntervalMs) * time.Millisecond)
-	prevUsage := buildCpuUsageFromFile()
+	prevUsage := metrics.BuildCpuUsageFromFile()
 	for {
 		select {
 		case <-metricsTicker.C:
 
-			currentUsage := buildCpuUsageFromFile()
+			currentUsage := metrics.BuildCpuUsageFromFile()
 
-			workingTime := currentUsage.workingTime - prevUsage.workingTime
-			allTime := workingTime + (currentUsage.idleTime - prevUsage.idleTime)
+			workingTime := currentUsage.WorkingTime - prevUsage.WorkingTime
+			allTime := workingTime + (currentUsage.IdleTime - prevUsage.IdleTime)
 			perc := workingTime / allTime * 100
 
 			fmt.Printf("FilePerc: %s\n",
@@ -402,7 +350,7 @@ func main() {
 		resetQuota(dir, flagMap)
 	}
 	go tickWriter(containerDirs, tickIntervalMs, flagMap, stopCh, &wg)
-	go metrics.metricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
+	go metrics.MetricsCollection(metricsIntervalMs, stopCh, &wg)
 	go procFsMetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
 	go stopAt(modDuration, stopCh, &wg)
 	wg.Wait()
