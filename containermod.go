@@ -1,4 +1,4 @@
-package main
+package containermod
 
 import (
 	"bufio"
@@ -10,8 +10,11 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/prometheus/procfs"
 )
 
 var buckets []StepBucket = generate_buckets()
@@ -152,10 +155,10 @@ func adjustQuota(containerDir string, elapsedTime float64) {
 		// newPeriod := continuousIncrease(elapsedTime)
 
 		// f(x): sineWave
-		// newPeriod := sineWave(elapsedTime)
+		newPeriod := sineWave(elapsedTime)
 
 		// f(x): randomStep
-		newPeriod := randomStep(elapsedTime, buckets)
+		// newPeriod := randomStep(elapsedTime, buckets)
 		fmt.Printf("Old: %s, new: %s\n", oldPeriod, newPeriod)
 		infile.WriteString(newPeriod)
 	}
@@ -249,12 +252,117 @@ func randomStep(x float64, buckets []StepBucket) string {
 	return strconv.FormatInt(int64(buckets[len(buckets)-1].value)*100000, 10)
 }
 
-// func main() {
-// for i := range 180 {
-// 	fmt.Println(sineWave(float64(i), float64(yOffset), float64(amplitude), frequency, float64(phase)))
-// }
-// generate_buckets()
-// }
+type cpuUsage struct {
+	workingTime float64
+	idleTime    float64
+}
+
+func buildCpuUsage(stat procfs.Stat) cpuUsage {
+	workingTime := stat.CPUTotal.User + stat.CPUTotal.System + stat.CPUTotal.Nice + stat.CPUTotal.IRQ + stat.CPUTotal.SoftIRQ
+	idleTime := stat.CPUTotal.Idle + stat.CPUTotal.Iowait
+	usage := cpuUsage{
+		workingTime: workingTime,
+		idleTime:    idleTime,
+	}
+
+	return usage
+}
+
+func buildCpuUsageFromFile() cpuUsage {
+	path := fmt.Sprintf(`/proc/stat`)
+	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	/*
+		1. Open file
+		2. Get old period
+		3. Calculate new period
+		4. Write new period
+	*/
+	if openErr != nil {
+		log.Fatalf("While opening: %s:\n", openErr)
+	}
+	defer infile.Close()
+
+	s := bufio.NewScanner(infile)
+	s.Scan()
+	words := strings.Fields(s.Text())
+	user, _ := strconv.ParseFloat(words[1], 64)
+	nice, _ := strconv.ParseFloat(words[2], 64)
+	system, _ := strconv.ParseFloat(words[3], 64)
+	idle, _ := strconv.ParseFloat(words[4], 64)
+	iowait, _ := strconv.ParseFloat(words[5], 64)
+	irq, _ := strconv.ParseFloat(words[6], 64)
+	softIrq, _ := strconv.ParseFloat(words[7], 64)
+
+	workingTime := user + system + nice + irq + softIrq
+	idleTime := idle + iowait
+	usage := cpuUsage{
+		workingTime: workingTime,
+		idleTime:    idleTime,
+	}
+
+	return usage
+
+}
+
+func metricsCollection(containerDirs []string, metricsIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	metricsTicker := time.NewTicker(time.Duration(metricsIntervalMs) * time.Millisecond)
+	prevFS, _ := procfs.NewFS("/proc")
+	prevStats, _ := prevFS.Stat()
+	prevUsage := buildCpuUsage(prevStats)
+	for {
+		select {
+		case t := <-metricsTicker.C:
+			fmt.Printf("Metrics collection at %s\n", t)
+
+			currentFS, _ := procfs.NewFS("/proc")
+			currentStats, _ := currentFS.Stat()
+			currentUsage := buildCpuUsage(currentStats)
+
+			workingTime := currentUsage.workingTime - prevUsage.workingTime
+			allTime := workingTime + (currentUsage.idleTime - prevUsage.idleTime)
+			perc := workingTime / allTime * 100
+
+			fmt.Printf("Perc: %s\n",
+				strconv.FormatFloat(perc, 'f', 2, 64),
+			)
+
+			prevUsage = currentUsage
+
+		case <-stopCh:
+			fmt.Println("Metrics collection stopped!")
+			return
+		}
+	}
+}
+
+func procFsMetricsCollection(containerDirs []string, metricsIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	metricsTicker := time.NewTicker(time.Duration(metricsIntervalMs) * time.Millisecond)
+	prevUsage := buildCpuUsageFromFile()
+	for {
+		select {
+		case <-metricsTicker.C:
+
+			currentUsage := buildCpuUsageFromFile()
+
+			workingTime := currentUsage.workingTime - prevUsage.workingTime
+			allTime := workingTime + (currentUsage.idleTime - prevUsage.idleTime)
+			perc := workingTime / allTime * 100
+
+			fmt.Printf("FilePerc: %s\n",
+				strconv.FormatFloat(perc, 'f', 2, 64),
+			)
+
+			prevUsage = currentUsage
+		case <-stopCh:
+			fmt.Println("Metrics collection stopped!")
+			return
+		}
+	}
+}
 
 func main() {
 	// Log filename and timestamp for debugging
@@ -280,10 +388,11 @@ func main() {
 	stopCh := make(chan int)
 	var wg sync.WaitGroup
 
-	wg.Add(2)
+	wg.Add(4)
 
 	dockerRootPath := `/sys/fs/cgroup/cpu/docker/`
 	tickIntervalMs := 1000
+	metricsIntervalMs := 1000
 	modDuration := 180
 
 	containerDirs, _ := getSubDirs(dockerRootPath)
@@ -293,6 +402,8 @@ func main() {
 		resetQuota(dir, flagMap)
 	}
 	go tickWriter(containerDirs, tickIntervalMs, flagMap, stopCh, &wg)
+	go metrics.metricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
+	go procFsMetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
 	go stopAt(modDuration, stopCh, &wg)
 	wg.Wait()
 	// for _, dir := range containerDirs {

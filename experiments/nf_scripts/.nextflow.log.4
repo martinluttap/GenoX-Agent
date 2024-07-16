@@ -1,0 +1,98 @@
+Apr-22 21:08:30.765 [main] DEBUG nextflow.cli.Launcher - $> nextflow run input_generation.nf
+Apr-22 21:08:30.843 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 23.10.0
+Apr-22 21:08:30.861 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/cc/.nextflow/plugins; core-plugins: nf-amazon@2.1.4,nf-azure@1.3.2,nf-cloudcache@0.3.0,nf-codecommit@0.1.5,nf-console@1.0.6,nf-ga4gh@1.1.0,nf-google@1.8.3,nf-tower@1.6.3,nf-wave@1.0.0
+Apr-22 21:08:30.870 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Apr-22 21:08:30.871 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Apr-22 21:08:30.873 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.4.1 in 'deployment' mode
+Apr-22 21:08:30.881 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Apr-22 21:08:30.945 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=2 by global default
+Apr-22 21:08:30.961 [main] INFO  nextflow.cli.CmdRun - Launching `input_generation.nf` [spontaneous_marconi] DSL2 - revision: ab5e420124
+Apr-22 21:08:30.961 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
+Apr-22 21:08:30.961 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[]
+Apr-22 21:08:30.969 [main] DEBUG n.secret.LocalSecretsProvider - Secrets store: /home/cc/.nextflow/secrets/store.json
+Apr-22 21:08:30.975 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@1eea9d2d] - activable => nextflow.secret.LocalSecretsProvider@1eea9d2d
+Apr-22 21:08:31.024 [main] DEBUG nextflow.Session - Session UUID: 3cb9da0c-e9e0-45e3-8867-87867614d53a
+Apr-22 21:08:31.024 [main] DEBUG nextflow.Session - Run name: spontaneous_marconi
+Apr-22 21:08:31.026 [main] DEBUG nextflow.Session - Executor pool size: 96
+Apr-22 21:08:31.032 [main] DEBUG nextflow.file.FilePorter - File porter settings maxRetries=3; maxTransfers=50; pollTimeout=null
+Apr-22 21:08:31.062 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 23.10.0 build 5889
+  Created: 15-10-2023 15:07 UTC 
+  System: Linux 5.4.0-169-generic
+  Runtime: Groovy 3.0.19 on OpenJDK 64-Bit Server VM 21.0.2+13-LTS
+  Encoding: UTF-8 (UTF-8)
+  Process: 3733456@harvestsim-instance0 [127.0.1.1]
+  CPUs: 96 - Mem: 187.4 GB (1.8 GB) - Swap: 0 (0) - Virtual threads ON
+Apr-22 21:08:31.087 [main] DEBUG nextflow.Session - Work-dir: /home/cc/nextflow/harvestsim/nf_scripts/work [ext2/ext3]
+Apr-22 21:08:31.087 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /home/cc/nextflow/harvestsim/nf_scripts/bin
+Apr-22 21:08:31.096 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+Apr-22 21:08:31.106 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Apr-22 21:08:31.124 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Apr-22 21:08:31.131 [main] DEBUG nextflow.util.CustomPoolFactory - Creating virtual thread pool
+Apr-22 21:08:31.198 [main] DEBUG nextflow.Session - Session start
+Apr-22 21:08:31.441 [main] DEBUG nextflow.script.ScriptRunner - Parsed script files:
+Apr-22 21:08:31.454 [main] ERROR nextflow.cli.Launcher - Script compilation error
+- file : /home/cc/nextflow/harvestsim/nf_scripts/input_generation.nf
+- cause: Unexpected input: '{' @ line 15, column 15.
+   process DUMMY {
+                 ^
+
+1 error
+
+NOTE: If this is the beginning of a process or workflow, there may be a syntax error in the body, such as a missing or extra comma, for which a more specific error message could not be produced.
+nextflow.exception.ScriptCompilationException: Script compilation error
+- file : /home/cc/nextflow/harvestsim/nf_scripts/input_generation.nf
+- cause: Unexpected input: '{' @ line 15, column 15.
+   process DUMMY {
+                 ^
+
+1 error
+
+NOTE: If this is the beginning of a process or workflow, there may be a syntax error in the body, such as a missing or extra comma, for which a more specific error message could not be produced.
+	at nextflow.script.ScriptParser.parse0(ScriptParser.groovy:196)
+	at nextflow.script.ScriptParser.parse(ScriptParser.groovy:206)
+	at nextflow.script.ScriptRunner.parseScript(ScriptRunner.groovy:228)
+	at nextflow.script.ScriptRunner.execute(ScriptRunner.groovy:135)
+	at nextflow.cli.CmdRun.run(CmdRun.groovy:372)
+	at nextflow.cli.Launcher.run(Launcher.groovy:499)
+	at nextflow.cli.Launcher.main(Launcher.groovy:670)
+Caused by: org.codehaus.groovy.control.MultipleCompilationErrorsException: startup failed:
+Script_6589a7252c2d21c6: 15: Unexpected input: '{' @ line 15, column 15.
+   process DUMMY {
+                 ^
+
+1 error
+
+	at org.codehaus.groovy.control.ErrorCollector.failIfErrors(ErrorCollector.java:292)
+	at org.codehaus.groovy.control.ErrorCollector.addFatalError(ErrorCollector.java:148)
+	at org.apache.groovy.parser.antlr4.AstBuilder.collectSyntaxError(AstBuilder.java:4321)
+	at org.apache.groovy.parser.antlr4.AstBuilder.access$000(AstBuilder.java:176)
+	at org.apache.groovy.parser.antlr4.AstBuilder$1.syntaxError(AstBuilder.java:4332)
+	at groovyjarjarantlr4.v4.runtime.ProxyErrorListener.syntaxError(ProxyErrorListener.java:44)
+	at groovyjarjarantlr4.v4.runtime.Parser.notifyErrorListeners(Parser.java:543)
+	at groovyjarjarantlr4.v4.runtime.DefaultErrorStrategy.notifyErrorListeners(DefaultErrorStrategy.java:154)
+	at org.apache.groovy.parser.antlr4.internal.DescriptiveErrorStrategy.reportInputMismatch(DescriptiveErrorStrategy.java:103)
+	at org.apache.groovy.parser.antlr4.internal.DescriptiveErrorStrategy.recover(DescriptiveErrorStrategy.java:55)
+	at org.apache.groovy.parser.antlr4.internal.DescriptiveErrorStrategy.recoverInline(DescriptiveErrorStrategy.java:68)
+	at groovyjarjarantlr4.v4.runtime.Parser.match(Parser.java:213)
+	at org.apache.groovy.parser.antlr4.GroovyParser.compilationUnit(GroovyParser.java:362)
+	at org.apache.groovy.parser.antlr4.AstBuilder.buildCST(AstBuilder.java:250)
+	at org.apache.groovy.parser.antlr4.AstBuilder.buildCST(AstBuilder.java:228)
+	at org.apache.groovy.parser.antlr4.AstBuilder.buildAST(AstBuilder.java:269)
+	at org.apache.groovy.parser.antlr4.Antlr4ParserPlugin.buildAST(Antlr4ParserPlugin.java:58)
+	at org.codehaus.groovy.control.SourceUnit.buildAST(SourceUnit.java:256)
+	at java.base/java.util.Iterator.forEachRemaining(Iterator.java:133)
+	at java.base/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939)
+	at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762)
+	at org.codehaus.groovy.control.CompilationUnit.buildASTs(CompilationUnit.java:667)
+	at org.codehaus.groovy.control.CompilationUnit.compile(CompilationUnit.java:633)
+	at groovy.lang.GroovyClassLoader.doParseClass(GroovyClassLoader.java:389)
+	at groovy.lang.GroovyClassLoader.lambda$parseClass$3(GroovyClassLoader.java:332)
+	at org.codehaus.groovy.runtime.memoize.StampedCommonCache.compute(StampedCommonCache.java:163)
+	at org.codehaus.groovy.runtime.memoize.StampedCommonCache.getAndPut(StampedCommonCache.java:154)
+	at groovy.lang.GroovyClassLoader.parseClass(GroovyClassLoader.java:330)
+	at groovy.lang.GroovyShell.parseClass(GroovyShell.java:526)
+	at groovy.lang.GroovyShell.parse(GroovyShell.java:538)
+	at groovy.lang.GroovyShell.parse(GroovyShell.java:570)
+	at nextflow.script.ScriptParser.parse0(ScriptParser.groovy:175)
+	... 6 common frames omitted
