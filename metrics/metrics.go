@@ -181,10 +181,11 @@ func PollCAdvisor(containerDirs []string, pollingIntervalMs int, stopCh chan int
 		panic(err)
 	}
 	pollingTicker := time.NewTicker(time.Duration(pollingIntervalMs) * time.Millisecond)
+	prevUsageNs := 0
 	for {
 		select {
 		case <-pollingTicker.C:
-			request := v1.ContainerInfoRequest{NumStats: -1}
+			request := v1.ContainerInfoRequest{NumStats: 1}
 			for _, cidPath := range containerDirs {
 				ss := strings.Split(cidPath, "/")
 				cid := ss[len(ss)-1]
@@ -192,7 +193,7 @@ func PollCAdvisor(containerDirs []string, pollingIntervalMs int, stopCh chan int
 				if reqErr != nil {
 					panic(reqErr)
 				}
-				b, _ := json.MarshalIndent(sInfo, "", "    ")
+				b, _ := json.MarshalIndent(sInfo.Stats[0].Cpu, "", "    ")
 				fmt.Printf("%s: %s\n", cid, string(b))
 			}
 		case <-stopCh:

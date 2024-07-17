@@ -8,8 +8,8 @@ sudo docker run \
   --volume=/var/lib/docker/:/var/lib/docker:ro \
   --volume=/dev/disk/:/dev/disk:ro \
   --publish=8080:8080 \
-  --detach=true \
   --name=cadvisor \
   --privileged \
   --device=/dev/kmsg \
-  gcr.io/cadvisor/cadvisor:$VERSION -storage_driver=stdout
+  gcr.io/cadvisor/cadvisor:$VERSION -storage_driver=stdout -allow_dynamic_housekeeping=false -housekeeping_interval=1s
+  # --detach=true \
