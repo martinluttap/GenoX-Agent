@@ -17,13 +17,11 @@ type StepBucket struct {
 	value  float64
 }
 
-func randRange(min, max int) int {
-	return rand.IntN(max-min) + min
+func randRange(min, max int, r *rand.Rand) int {
+	return r.IntN(max-min) + min
 }
 
-var Buckets []StepBucket = generate_buckets()
-
-func generate_buckets() []StepBucket {
+func GenerateBuckets() []StepBucket {
 	END_DUR := 180
 	V_MIN := 1
 	V_MAX := 16
@@ -33,9 +31,10 @@ func generate_buckets() []StepBucket {
 	totalSecs := 0
 	buckets := make([]StepBucket, 0, END_DUR/H_MIN)
 
+	r := rand.New(rand.NewPCG(1, 2))
 	for totalSecs <= END_DUR {
-		nextVStep := randRange(V_MIN, V_MAX)
-		nextHStep := randRange(H_MIN, H_MAX)
+		nextVStep := randRange(V_MIN, V_MAX, r)
+		nextHStep := randRange(H_MIN, H_MAX, r)
 		if totalSecs+nextHStep >= END_DUR {
 			break
 		} else {
@@ -66,6 +65,7 @@ func CalculateNewPeriod(oldPeriod string) string {
 }
 
 func RandomStep(x float64, buckets []StepBucket) string {
+	fmt.Println(buckets)
 	for _, e := range buckets {
 		if (e.bucket.Begin <= x) && (x <= e.bucket.End) {
 			return strconv.FormatInt(int64(e.value)*100000, 10)

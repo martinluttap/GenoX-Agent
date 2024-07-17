@@ -80,6 +80,7 @@ func adjustQuota(containerDir string, elapsedTime float64) {
 	}
 	defer infile.Close()
 
+	buckets := functions.GenerateBuckets()
 	s := bufio.NewScanner(infile)
 	for s.Scan() {
 		oldPeriod := s.Text()
@@ -87,10 +88,10 @@ func adjustQuota(containerDir string, elapsedTime float64) {
 		// newPeriod := functions.ContinuousIncrease(elapsedTime)
 
 		// f(x): sineWave
-		newPeriod := functions.SineWave(elapsedTime)
+		// newPeriod := functions.SineWave(elapsedTime)
 
 		// f(x): randomStep
-		// newPeriod := functions.RandomStep(elapsedTime, buckets)
+		newPeriod := functions.RandomStep(elapsedTime, buckets)
 		fmt.Printf("Old: %s, new: %s\n", oldPeriod, newPeriod)
 		infile.WriteString(newPeriod)
 	}

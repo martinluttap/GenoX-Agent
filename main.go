@@ -1,4 +1,4 @@
-package containermod
+package main
 
 import (
 	"flag"
@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/martinluttap/containermod/controller"
-	"github.com/martinluttap/containermod/functions"
 	"github.com/martinluttap/containermod/metrics"
 )
 
@@ -49,10 +48,18 @@ func getSubDirs(root string) ([]string, error) {
 	return dirs[1:], err
 }
 
+func prepareResultsFolder() {
+	ex, _ := os.Executable()
+	exPath := filepath.Dir(ex)
+	resultsPath := fmt.Sprintf("%s/results/", exPath)
+	os.MkdirAll(resultsPath, os.ModePerm)
+}
+
 func main() {
 	// Log filename and timestamp for debugging
 	log.SetFlags(log.Lshortfile | log.Ltime)
 
+	// Parse commandline flags
 	/*
 		cgroupName 			:= Target cgroup (e.g. 'docker')
 		path 				:= Absolute path. Default: "/sys/fs/cgroup/<cgroupName>"
@@ -69,28 +76,31 @@ func main() {
 	flag.Parse()
 	_ = makeFlagMap(cgroup, subsystem, period, quota)
 
+	// Prepare results folder
+	prepareResultsFolder()
+
+	// Spawn elasticcontainer processes
 	stopCh := make(chan int)
 	var wg sync.WaitGroup
 
-	wg.Add(4)
+	wg.Add(5)
 
 	dockerRootPath := `/sys/fs/cgroup/cpu/docker/`
 	tickIntervalMs := 1000
 	metricsIntervalMs := 1000
+	pollingIntervalMs := 1000
 	modDuration := 180
 
 	containerDirs, _ := getSubDirs(dockerRootPath)
 	fmt.Println(containerDirs)
-	fmt.Printf("Seed: %v\n", functions.Buckets)
 	for _, dir := range containerDirs {
 		controller.ResetQuota(dir)
 	}
 	go controller.TickWriter(containerDirs, tickIntervalMs, stopCh, &wg)
 	go metrics.MetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
 	go metrics.ProcFsMetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
+	go metrics.PollCAdvisor(containerDirs, pollingIntervalMs, stopCh, &wg)
 	go controller.StopAt(modDuration, stopCh, &wg)
+
 	wg.Wait()
-	// for _, dir := range containerDirs {
-	// 	resetQuota(dir, flagMap)
-	// }
 }

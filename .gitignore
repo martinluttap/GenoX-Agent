@@ -1,7 +1,9 @@
 main
+containermod
 
 experiments/.*
 experiments/*.txt
+experiments/*.html
 experiments/*.config
 experiments/*.nf
 experiments/work/
