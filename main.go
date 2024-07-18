@@ -87,7 +87,7 @@ func main() {
 
 	dockerRootPath := `/sys/fs/cgroup/cpu/docker/`
 	tickIntervalMs := 1000
-	metricsIntervalMs := 1000
+	// metricsIntervalMs := 1000
 	pollingIntervalMs := 1000
 	modDuration := 180
 
@@ -97,8 +97,8 @@ func main() {
 		controller.ResetQuota(dir)
 	}
 	go controller.TickWriter(containerDirs, tickIntervalMs, stopCh, &wg)
-	go metrics.MetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
-	go metrics.ProcFsMetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
+	// go metrics.MetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
+	// go metrics.ProcFsMetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
 	go metrics.PollCAdvisor(containerDirs, pollingIntervalMs, stopCh, &wg)
 	go controller.StopAt(modDuration, stopCh, &wg)
 

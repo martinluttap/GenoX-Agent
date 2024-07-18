@@ -1,5 +1,8 @@
 #!/bin/bash
 
+docker kill "/cadvisor"
+docker rm "/cadvisor" 
+
 VERSION=v0.49.1 # use the latest release version from https://github.com/google/cadvisor/releases
 sudo docker run \
   --volume=/:/rootfs:ro \
@@ -11,5 +14,5 @@ sudo docker run \
   --name=cadvisor \
   --privileged \
   --device=/dev/kmsg \
+  --detach=true \
   gcr.io/cadvisor/cadvisor:$VERSION -storage_driver=stdout -allow_dynamic_housekeeping=false -housekeeping_interval=1s
-  # --detach=true \

@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -21,10 +20,59 @@ type CpuUsage struct {
 	IdleTime    float64
 }
 
+type CAdvisorCpu struct {
+	/*
+		Docs:
+		https://docs.kernel.org/scheduler/sched-bwc.html
+		https://docs.kernel.org/scheduler/sched-stats.html
+	*/
+	timeStamp time.Time //
+	// CPU Usage
+	usageTotalNs  int64 //
+	usageUserNs   int64 //
+	usageSystemNs int64 //
+
+	// CFS Management
+	cfsQuotaUs    int64 // run-time replenished within a period (in microseconds)
+	cfsPeriodUs   int64 // the length of a period (in microseconds)
+	cfsNumPeriods int64 // Number of enforcement intervals that have elapsed.
+
+	// CFS Statistics
+	cfsThrottledPeriods int64 // Number of times the group has been throttled/limited.
+	cfsThrottledTimeNs  int64 // The total time duration (in nanoseconds) for which entities of the group have been throttled.
+
+	// Schedstat Statistics
+	schedstatRunTimeNs      int64 // Time spent on the CPU (nanoseconds)
+	schedstatRunqueueTimeNs int64 // Time spent waiting on the runqueue (nanoseconds)
+	schedstatRunPeriods     int64 // # timeslices run on CPU
+}
+
 type CfsStats struct {
 	NrPeriods       int
 	NrThrottled     int
 	ThrottledTimeNs int
+}
+
+func BuildCAdvisorCPUStats(containerInfo *v1.ContainerInfo) CAdvisorCpu {
+	if len(containerInfo.Stats) != 1 {
+		panic("ContainerInfo has too many elements!")
+	}
+	stats := CAdvisorCpu{
+		timeStamp:               containerInfo.Stats[0].Timestamp,
+		usageTotalNs:            int64(containerInfo.Stats[0].Cpu.Usage.Total),
+		usageUserNs:             int64(containerInfo.Stats[0].Cpu.Usage.User),
+		usageSystemNs:           int64(containerInfo.Stats[0].Cpu.Usage.System),
+		cfsQuotaUs:              int64(containerInfo.Spec.Cpu.Quota),
+		cfsPeriodUs:             int64(containerInfo.Spec.Cpu.Period),
+		cfsNumPeriods:           int64(containerInfo.Stats[0].Cpu.CFS.Periods),
+		cfsThrottledPeriods:     int64(containerInfo.Stats[0].Cpu.CFS.ThrottledPeriods),
+		cfsThrottledTimeNs:      int64(containerInfo.Stats[0].Cpu.CFS.ThrottledTime),
+		schedstatRunTimeNs:      int64(containerInfo.Stats[0].Cpu.Schedstat.RunTime),
+		schedstatRunqueueTimeNs: int64(containerInfo.Stats[0].Cpu.Schedstat.RunqueueTime),
+		schedstatRunPeriods:     int64(containerInfo.Stats[0].Cpu.Schedstat.RunPeriods),
+	}
+
+	return stats
 }
 
 func BuildCpuUsage(stat procfs.Stat) CpuUsage {
@@ -181,7 +229,8 @@ func PollCAdvisor(containerDirs []string, pollingIntervalMs int, stopCh chan int
 		panic(err)
 	}
 	pollingTicker := time.NewTicker(time.Duration(pollingIntervalMs) * time.Millisecond)
-	prevUsageNs := 0
+
+	prevCadvisorCpu := CAdvisorCpu{}
 	for {
 		select {
 		case <-pollingTicker.C:
@@ -193,8 +242,20 @@ func PollCAdvisor(containerDirs []string, pollingIntervalMs int, stopCh chan int
 				if reqErr != nil {
 					panic(reqErr)
 				}
-				b, _ := json.MarshalIndent(sInfo.Stats[0].Cpu, "", "    ")
-				fmt.Printf("%s: %s\n", cid, string(b))
+				currCAdvisorCpu := BuildCAdvisorCPUStats(sInfo)
+				if prevCadvisorCpu != (CAdvisorCpu{}) {
+					diffTimeNs := currCAdvisorCpu.timeStamp.Nanosecond() - prevCadvisorCpu.timeStamp.Nanosecond()
+					if diffTimeNs > 0 {
+						diffTotalCpuNs := currCAdvisorCpu.usageTotalNs - prevCadvisorCpu.usageTotalNs
+
+						usage := (diffTotalCpuNs / int64(pollingIntervalMs*1000000)) * 100
+						fmt.Printf("Usage %s: %d\n", cidPath, usage)
+					}
+				}
+
+				// newTimestamp, _ := json.MarshalIndent(sInfo.Stats[0].Timestamp, "", "    ")
+				// newCpuStats, _ := json.MarshalIndent(sInfo.Stats[0].Cpu, "", "    ")
+				prevCadvisorCpu = currCAdvisorCpu
 			}
 		case <-stopCh:
 			return

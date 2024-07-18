@@ -65,7 +65,6 @@ func CalculateNewPeriod(oldPeriod string) string {
 }
 
 func RandomStep(x float64, buckets []StepBucket) string {
-	fmt.Println(buckets)
 	for _, e := range buckets {
 		if (e.bucket.Begin <= x) && (x <= e.bucket.End) {
 			return strconv.FormatInt(int64(e.value)*100000, 10)
