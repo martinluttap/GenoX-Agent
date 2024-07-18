@@ -100,6 +100,7 @@ func main() {
 	// go metrics.MetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
 	// go metrics.ProcFsMetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
 	go metrics.PollCAdvisor(containerDirs, pollingIntervalMs, stopCh, &wg)
+	go metrics.PollAllStats(containerDirs, pollingIntervalMs, stopCh, &wg)
 	go controller.StopAt(modDuration, stopCh, &wg)
 
 	wg.Wait()
