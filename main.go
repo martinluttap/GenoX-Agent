@@ -131,7 +131,7 @@ func main() {
 	dockerRootPath := `/sys/fs/cgroup/cpu/docker/`
 	tickIntervalMs := 1000
 	// metricsIntervalMs := 1000
-	pollingIntervalMs := 1000
+	pollingIntervalMs := 50
 	modDuration := 180
 
 	containerDirs, _ := getSubDirs(dockerRootPath)

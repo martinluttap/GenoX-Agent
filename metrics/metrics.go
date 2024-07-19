@@ -346,7 +346,7 @@ func GetCpuUsageCgtop(containerDirs []string) map[string]float64 {
 
 		Return map {"docker/66...": 25.7}
 	*/
-	var cgtopMap map[string]float64
+	cgtopMap := map[string]float64{}
 	for _, containerDir := range containerDirs {
 		ss := strings.Split(containerDir, "/")
 		cgroup := strings.Join(ss[len(ss)-2:], `/`)
@@ -365,10 +365,9 @@ func GetCpuUsageCgtop(containerDirs []string) map[string]float64 {
 			}
 		}
 		val, _ := strconv.ParseFloat(cpuUsages[len(cpuUsages)-1], 64)
-		fmt.Printf("%s %.2f\n", cgroup, val)
+		cgtopMap[containerDir] = val
 	}
 	return cgtopMap
-
 }
 
 func GetCpuStatData(containerDir string) (int64, int64, int64) {
@@ -466,14 +465,14 @@ func BuildKernelStats(containerDirs []string) map[string]KernelStats {
 	for _, containerDir := range containerDirs {
 		cfsQuota, cfsPeriod := GetCFSData(containerDir)
 		nrPeriod, nrThrottled, throttledTime := GetCpuStatData(containerDir)
-		procsPidStats := GetProcsPidStats(containerDir)
+		// procsPidStats := GetProcsPidStats(containerDir)
 		kernelStatsD[containerDir] = KernelStats{
 			cfsQuotaUs:          cfsQuota,
 			cfsPeriodUs:         cfsPeriod,
 			cfsNumPeriods:       nrPeriod,
 			cfsThrottledPeriods: nrThrottled,
 			cfsThrottledTimeNs:  throttledTime,
-			procsPidStats:       procsPidStats,
+			// procsPidStats:       procsPidStats,
 		}
 	}
 
@@ -484,7 +483,7 @@ func PollAllStats(containerDirs []string, pollingIntervalMs int, stopCh chan int
 
 	defer wg.Done()
 
-	pollingTicker := time.NewTicker(time.Duration(100) * time.Millisecond)
+	pollingTicker := time.NewTicker(time.Duration(pollingIntervalMs) * time.Millisecond)
 
 	outWriterDict := map[string]*csv.Writer{}
 	for _, containerDir := range containerDirs {
@@ -498,7 +497,7 @@ func PollAllStats(containerDirs []string, pollingIntervalMs int, stopCh chan int
 		writer := csv.NewWriter(outFile)
 		defer writer.Flush()
 		// this defines the header value and data values for the new csv file
-		headers := []string{"timestampNs", "cid", "name", "totalCpu", "quotaUs", "periodUs", "numPeriods", "trPeriods", "trTimeNs"}
+		headers := []string{"timestampNs", "cid", "totalCpu", "quotaUs", "periodUs", "numPeriods", "trPeriods", "trTimeNs"}
 		writer.Write(headers)
 		outWriterDict[containerDir] = writer
 	}
@@ -517,36 +516,26 @@ func PollAllStats(containerDirs []string, pollingIntervalMs int, stopCh chan int
 		case tick := <-pollingTicker.C:
 			fmt.Println("Polling tick at ", tick.String())
 
-			// dockerStatsMap := BuildDockerStats(cidToDirMap)
-			statsStart := time.Now()
-			cpuUsageMap := GetCpuUsageCgtop(containerDirs)
-			fmt.Println(cpuUsageMap)
-			// kernelStatsMap := BuildKernelStats(containerDirs)
-			statsEnd := time.Now()
-			fmt.Println("Stats building take ", statsEnd.Sub(statsStart).Seconds())
+			cgtopMap := GetCpuUsageCgtop(containerDirs)
+			kernelStatsMap := BuildKernelStats(containerDirs)
 
-			// ts := strconv.FormatInt(int64(time.Now().Nanosecond()), 10)
-			// for containerDir, writer := range outWriterDict {
-			// 	cid := dockerStatsMap[containerDir].containerId
-			// 	name := dockerStatsMap[containerDir].containerName
-			// 	totalCpu := fmt.Sprintf("%.2f", dockerStatsMap[containerDir].cpuUsage)
-			// 	quotaUs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsQuotaUs)
-			// 	periodUs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsPeriodUs)
-			// 	numPeriods := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsNumPeriods)
-			// 	trPeriods := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsThrottledPeriods)
-			// 	trTimeNs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsThrottledTimeNs)
+			ts := strconv.FormatInt((time.Since(timeStart) * time.Millisecond).Milliseconds(), 10)
+			for containerDir, writer := range outWriterDict {
+				ss := strings.Split(containerDir, "/")
+				cid := ss[len(ss)-1][:12]
+				totalCpu := fmt.Sprintf("%.2f", cgtopMap[containerDir])
+				quotaUs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsQuotaUs)
+				periodUs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsPeriodUs)
+				numPeriods := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsNumPeriods)
+				trPeriods := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsThrottledPeriods)
+				trTimeNs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsThrottledTimeNs)
 
-			// 	row := []string{
-			// 		ts, cid, name, totalCpu, quotaUs, periodUs, numPeriods, trPeriods, trTimeNs,
-			// 	}
-			// 	writer.Write(row)
-			// 	writer.Flush()
-
-			// 	timeEnd := time.Now()
-			// 	elapsed := timeEnd.Sub(timeStart).Seconds()
-			// 	fmt.Printf("Polling elapsed %f secs, interval %d ms", elapsed, pollingIntervalMs)
-			// 	timeStart = timeEnd
-			// }
+				row := []string{
+					ts, cid, totalCpu, quotaUs, periodUs, numPeriods, trPeriods, trTimeNs,
+				}
+				writer.Write(row)
+				writer.Flush()
+			}
 		case <-stopCh:
 			return
 		}
