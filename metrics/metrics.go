@@ -292,10 +292,6 @@ func BuildDockerStats(cidToDirMap map[string]string) map[string]DockerStats {
 		678500ab3f33   cadvisor                       28.72%    270MiB / 187.4GiB     0.14%     5.13MB / 428MB   3.73MB / 0B   96
 	*/
 	// Execute command
-
-	// systemd-cgtop -n 2 -d 0.1ms -c | grep "docker/"
-	// Capture another CPU stats here
-
 	cmd := exec.Command("docker", "stats", "--no-stream")
 	var out strings.Builder
 	cmd.Stdout = &out
@@ -320,6 +316,59 @@ func BuildDockerStats(cidToDirMap map[string]string) map[string]DockerStats {
 	}
 
 	return statsMap
+}
+
+func executeCgtop(cgroup string) string {
+	/*	Execute:
+		systemd-cgtop -b -n 2 -d 25ms docker/6629b5c0395314ab47fd4dec05d71bea3657c0bfb8f6087feecbda6c225702ca
+		---
+		Output:
+		ControlGroup 		 Tasks   %CPU   Memory  Input/s Output/s
+		docker/6629b5...      99   25.7   257.3M        -        -
+	*/
+	cmd := exec.Command("systemd-cgtop", "-b", "-n", "2", "-d", "25ms", cgroup)
+	var out strings.Builder
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return out.String()
+}
+
+func GetCpuUsageCgtop(containerDirs []string) map[string]float64 {
+	/*	Execute:
+		systemd-cgtop -b -n 2 -d 25ms docker/6629b5c0395314ab47fd4dec05d71bea3657c0bfb8f6087feecbda6c225702ca
+		---
+		Output:
+		ControlGroup 		 Tasks   %CPU   Memory  Input/s Output/s
+		docker/6629b5...      99   25.7   257.3M        -        -
+
+		Return map {"docker/66...": 25.7}
+	*/
+	var cgtopMap map[string]float64
+	for _, containerDir := range containerDirs {
+		ss := strings.Split(containerDir, "/")
+		cgroup := strings.Join(ss[len(ss)-2:], `/`)
+		// We take 10 iterations with rate 0.1 ms, but it's possible that not all has cpu usage (or even any).
+		// Thus, we either take the last value, or if there's no value at all, we repeat the process.
+		cpuUsages := []string{}
+		for len(cpuUsages) == 0 {
+			out := executeCgtop(cgroup)
+			allLines := strings.Fields(out)
+			lineLen := 6
+			for i := 0; i < len(allLines); i = i + lineLen {
+				singleLine := allLines[i : i+lineLen]
+				if singleLine[2] != `-` {
+					cpuUsages = append(cpuUsages, singleLine[2])
+				}
+			}
+		}
+		val, _ := strconv.ParseFloat(cpuUsages[len(cpuUsages)-1], 64)
+		fmt.Printf("%s %.2f\n", cgroup, val)
+	}
+	return cgtopMap
+
 }
 
 func GetCpuStatData(containerDir string) (int64, int64, int64) {
@@ -468,34 +517,36 @@ func PollAllStats(containerDirs []string, pollingIntervalMs int, stopCh chan int
 		case tick := <-pollingTicker.C:
 			fmt.Println("Polling tick at ", tick.String())
 
-			dockerStatsMap := BuildDockerStats(cidToDirMap)
+			// dockerStatsMap := BuildDockerStats(cidToDirMap)
 			statsStart := time.Now()
-			kernelStatsMap := BuildKernelStats(containerDirs)
+			cpuUsageMap := GetCpuUsageCgtop(containerDirs)
+			fmt.Println(cpuUsageMap)
+			// kernelStatsMap := BuildKernelStats(containerDirs)
 			statsEnd := time.Now()
 			fmt.Println("Stats building take ", statsEnd.Sub(statsStart).Seconds())
 
-			ts := strconv.FormatInt(int64(time.Now().Nanosecond()), 10)
-			for containerDir, writer := range outWriterDict {
-				cid := dockerStatsMap[containerDir].containerId
-				name := dockerStatsMap[containerDir].containerName
-				totalCpu := fmt.Sprintf("%.2f", dockerStatsMap[containerDir].cpuUsage)
-				quotaUs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsQuotaUs)
-				periodUs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsPeriodUs)
-				numPeriods := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsNumPeriods)
-				trPeriods := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsThrottledPeriods)
-				trTimeNs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsThrottledTimeNs)
+			// ts := strconv.FormatInt(int64(time.Now().Nanosecond()), 10)
+			// for containerDir, writer := range outWriterDict {
+			// 	cid := dockerStatsMap[containerDir].containerId
+			// 	name := dockerStatsMap[containerDir].containerName
+			// 	totalCpu := fmt.Sprintf("%.2f", dockerStatsMap[containerDir].cpuUsage)
+			// 	quotaUs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsQuotaUs)
+			// 	periodUs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsPeriodUs)
+			// 	numPeriods := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsNumPeriods)
+			// 	trPeriods := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsThrottledPeriods)
+			// 	trTimeNs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsThrottledTimeNs)
 
-				row := []string{
-					ts, cid, name, totalCpu, quotaUs, periodUs, numPeriods, trPeriods, trTimeNs,
-				}
-				writer.Write(row)
-				writer.Flush()
+			// 	row := []string{
+			// 		ts, cid, name, totalCpu, quotaUs, periodUs, numPeriods, trPeriods, trTimeNs,
+			// 	}
+			// 	writer.Write(row)
+			// 	writer.Flush()
 
-				timeEnd := time.Now()
-				elapsed := timeEnd.Sub(timeStart).Seconds()
-				fmt.Printf("Polling elapsed %f secs, interval %d ms", elapsed, pollingIntervalMs)
-				timeStart = timeEnd
-			}
+			// 	timeEnd := time.Now()
+			// 	elapsed := timeEnd.Sub(timeStart).Seconds()
+			// 	fmt.Printf("Polling elapsed %f secs, interval %d ms", elapsed, pollingIntervalMs)
+			// 	timeStart = timeEnd
+			// }
 		case <-stopCh:
 			return
 		}
