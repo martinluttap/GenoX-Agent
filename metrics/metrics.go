@@ -292,6 +292,10 @@ func BuildDockerStats(cidToDirMap map[string]string) map[string]DockerStats {
 		678500ab3f33   cadvisor                       28.72%    270MiB / 187.4GiB     0.14%     5.13MB / 428MB   3.73MB / 0B   96
 	*/
 	// Execute command
+
+	// systemd-cgtop -n 2 -d 0.1ms -c | grep "docker/"
+	// Capture another CPU stats here
+
 	cmd := exec.Command("docker", "stats", "--no-stream")
 	var out strings.Builder
 	cmd.Stdout = &out
@@ -431,7 +435,7 @@ func PollAllStats(containerDirs []string, pollingIntervalMs int, stopCh chan int
 
 	defer wg.Done()
 
-	pollingTicker := time.NewTicker(time.Duration(pollingIntervalMs) * time.Millisecond)
+	pollingTicker := time.NewTicker(time.Duration(100) * time.Millisecond)
 
 	outWriterDict := map[string]*csv.Writer{}
 	for _, containerDir := range containerDirs {
@@ -457,11 +461,18 @@ func PollAllStats(containerDirs []string, pollingIntervalMs int, stopCh chan int
 		cid := ss[len(ss)-1][:12]
 		cidToDirMap[cid] = containerDir
 	}
+	timeStart := time.Now()
+	fmt.Println("Polling start at ", timeStart.String())
 	for {
 		select {
-		case <-pollingTicker.C:
+		case tick := <-pollingTicker.C:
+			fmt.Println("Polling tick at ", tick.String())
+
 			dockerStatsMap := BuildDockerStats(cidToDirMap)
+			statsStart := time.Now()
 			kernelStatsMap := BuildKernelStats(containerDirs)
+			statsEnd := time.Now()
+			fmt.Println("Stats building take ", statsEnd.Sub(statsStart).Seconds())
 
 			ts := strconv.FormatInt(int64(time.Now().Nanosecond()), 10)
 			for containerDir, writer := range outWriterDict {
@@ -479,6 +490,11 @@ func PollAllStats(containerDirs []string, pollingIntervalMs int, stopCh chan int
 				}
 				writer.Write(row)
 				writer.Flush()
+
+				timeEnd := time.Now()
+				elapsed := timeEnd.Sub(timeStart).Seconds()
+				fmt.Printf("Polling elapsed %f secs, interval %d ms", elapsed, pollingIntervalMs)
+				timeStart = timeEnd
 			}
 		case <-stopCh:
 			return

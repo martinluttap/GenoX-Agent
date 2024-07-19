@@ -12,6 +12,9 @@ ps aux | grep resmon | tr -s ' ' | cut -d ' ' -f 2 | xargs -I {} kill -9 {}
 # Clear PageCache, dentries, indoes, and swap
 sudo sync; echo 3 | sudo tee /proc/sys/vm/drop_caches ; sudo swapoff -a && sudo swapon -a
 
+# Clear artefacts from previous runs
+rm LoadDuration.txt
+
 # Backup NF script
 cp $WORKFLOW ${LABEL}.nf
 cp $INPUT_CONFIG ${LABEL}.config

@@ -1,7 +1,10 @@
 main
 containermod
 
+results/*
+
 experiments/.*
+experiments/*.log
 experiments/*.txt
 experiments/*.html
 experiments/*.config
