@@ -6,10 +6,10 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 	"time"
 
-	"github.com/martinluttap/containermod/controller"
 	"github.com/martinluttap/containermod/metrics"
 )
 
@@ -35,18 +35,43 @@ func makeFlagMap(cgroup *string, subsystem *string, period *string, quota *strin
 	return flagMaps
 }
 
-func getSubDirs(root string) ([]string, error) {
-	var dirs []string
-	err := filepath.WalkDir(root, func(path string, info os.DirEntry, err error) error {
-		if info.IsDir() &&
-			info.Name() != "buildkit" &&
-			info.Name() != root {
-			dirs = append(dirs, path)
+func watchActiveContainers(root string, intervalMs int64, activeDirsCh chan<- []string, stopCh <-chan int) {
+	/*
+		This watcher routine do the following:
+		1. Receive tick interval and a result channel. Results channel will be used by other routines
+		2. Create a channel for self-use which produces a signal on each interval
+		3. At each tick:
+			- Poll the operating systems for active containers
+			- Create list of directories for the active containers
+			- Push the list to result channel
+	*/
+
+	tickCh := time.NewTicker(time.Duration(intervalMs) * time.Millisecond)
+	for {
+		select {
+		case <-tickCh.C:
+			var dirs []string
+			err := filepath.WalkDir(root, func(path string, info os.DirEntry, err error) error {
+				if info.IsDir() &&
+					info.Name() != "buildkit" &&
+					info.Name() != root {
+					dirs = append(dirs, path)
+				}
+				return nil
+			})
+			if err == nil {
+				// dirs[0] == root. We skip it
+				activeDirsCh <- dirs[1:]
+			} else {
+				panic("Error when polling active containers!")
+			}
+		case <-stopCh:
+			fmt.Println("Active container watcher stopped!")
+			return
 		}
-		return nil
-	})
-	// dirs[0] == root. We skip it
-	return dirs[1:], err
+
+	}
+
 }
 
 func prepareResultsFolder() {
@@ -89,6 +114,14 @@ func blockUntilContainerStarts() {
 	}
 }
 
+func StopAt(limit int, stopCh chan int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	fmt.Printf("Stopper start at %s with limit %d!\n", time.Now(), limit)
+	time.Sleep(time.Duration(limit) * time.Second)
+	stopCh <- 0
+}
+
 func main() {
 	// Log filename and timestamp for debugging
 	log.SetFlags(log.Lshortfile | log.Ltime)
@@ -124,6 +157,7 @@ func main() {
 
 	// Spawn elasticcontainer processes
 	stopCh := make(chan int)
+	activeContainersCh := make(chan []string)
 	var wg sync.WaitGroup
 
 	dockerRootPath := `/sys/fs/cgroup/cpu/docker/`
@@ -131,23 +165,39 @@ func main() {
 	// metricsIntervalMs := 1000
 	pollingIntervalMs := 50
 	modDuration := 180
+	nonWatchIntervals := []int64{
+		int64(tickIntervalMs),
+		int64(pollingIntervalMs),
+		// int64(metricsIntervalMs),
+	}
 
-	wg.Add(1)
-	// go watchActivecontainers(dockerRootPath)
-	containerDirs, _ := getSubDirs(dockerRootPath)
-	fmt.Println(containerDirs)
+	/*
+		We have several go-routines with different 'tick intervals'.
+		Our active container watcher becomes the starting point for all other routines' activities. Thus, its interval should be the smallest among other intervals to avoid being bottleneck.
+	*/
+	containerWatchIntervalMs := slices.Min(nonWatchIntervals)
+
+	wg.Add(2)
+	go StopAt(modDuration, stopCh, &wg)
+	go watchActiveContainers(dockerRootPath, containerWatchIntervalMs, activeContainersCh, stopCh)
+	// go func(activeCh chan []string) {
+	// 	for {
+	// 		select {
+	// 		case activeDirs := <-activeCh:
+	// 			fmt.Println(activeDirs, time.Now().String())
+	// 		case <-stopCh:
+	// 			return
+	// 		}
+	// 	}
+	// }(activeContainersCh)
 	// for _, dir := range containerDirs {
 	// 	controller.ResetQuota(dir)
 	// }
-	wg.Wait()
-
-	wg.Add(5)
-	go controller.TickWriter(containerDirs, tickIntervalMs, stopCh, &wg)
-	// go metrics.MetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
-	// go metrics.ProcFsMetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
-	// go metrics.PollCAdvisor(containerDirs, pollingIntervalMs, stopCh, &wg)
-	go metrics.PollAllStats(containerDirs, pollingIntervalMs, stopCh, &wg)
-	go controller.StopAt(modDuration, stopCh, &wg)
+	// go controller.TickWriter(activeContainersCh, tickIntervalMs, stopCh, &wg)
+	// go metrics.MetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
+	// go metrics.ProcFsMetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
+	// go metrics.PollCAdvisor(activeContainersCh, pollingIntervalMs, stopCh, &wg)
+	go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
 
 	wg.Wait()
 }

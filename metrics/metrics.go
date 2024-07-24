@@ -558,12 +558,11 @@ func BuildKernelStats(containerDirs []string) map[string]KernelStats {
 	return kernelStatsD
 }
 
-func PollAllStats(containerDirs []string, pollingIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
+func PollAllStats(activeContainersCh <-chan []string, pollingIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
-	pollingTicker := time.NewTicker(time.Duration(pollingIntervalMs) * time.Millisecond)
-
+	containerDirs := <-activeContainersCh
 	outWriterDict := map[string]*csv.Writer{}
 	for _, containerDir := range containerDirs {
 		ss := strings.Split(containerDir, "/")
@@ -590,11 +589,11 @@ func PollAllStats(containerDirs []string, pollingIntervalMs int, stopCh chan int
 	}
 	timeStart := time.Now()
 	fmt.Println("Polling start at ", timeStart.String())
+
 	for {
 		select {
-		case tick := <-pollingTicker.C:
-			fmt.Println("Active contianers", containerDirs)
-			fmt.Println("Polling tick at ", tick.String())
+		case containerDirs := <-activeContainersCh:
+			fmt.Println(time.Now().String(), "Active contianers", containerDirs)
 
 			cgtopMap := GetCpuUsageCgtop(containerDirs)
 			kernelStatsMap := BuildKernelStats(containerDirs)

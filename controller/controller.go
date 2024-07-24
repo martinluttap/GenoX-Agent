@@ -113,11 +113,3 @@ func adjustQuota(containerDir string, elapsedTime float64) {
 		infile.WriteString(newPeriod)
 	}
 }
-
-func StopAt(limit int, stopCh chan int, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	fmt.Printf("Stopper start at %s with limit %d!\n", time.Now(), limit)
-	time.Sleep(time.Duration(limit) * time.Second)
-	stopCh <- 0
-}
