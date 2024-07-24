@@ -3,7 +3,7 @@
 
 WORKFLOW="/home/cc/elastic-container/containermod/experiments/nf_scripts/bwa.nf"
 INPUT_CONFIG="/home/cc/elastic-container/containermod/experiments/configs/bwa.config"
-LABEL="test"
+LABEL="saturate_3bwa_32c"
 OUT_LOG="${LABEL}.log"
 
 # Kill existing resmon processes

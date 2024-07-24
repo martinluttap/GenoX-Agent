@@ -116,7 +116,7 @@ process BWA_8c {
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
         """
-        bwa mem -t 16 -T 0 -R ${METADATA} ${ref_fa} ${forward_fastq} ${reverse_fastq} | samtools view -Shb -o SRR24039108.bam -
+        bwa mem -t 8 -T 0 -R ${METADATA} ${ref_fa} ${forward_fastq} ${reverse_fastq} | samtools view -Shb -o SRR24039108.bam -
         """
         
 }
@@ -164,7 +164,7 @@ process BWA_NO_LIMIT {
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
         """
-        bwa mem -t 96 -T 0 -R ${METADATA} ${ref_fa} ${forward_fastq} ${reverse_fastq} | samtools view -Shb -o SRR24039108.bam -
+        bwa mem -t 28 -T 0 -R ${METADATA} ${ref_fa} ${forward_fastq} ${reverse_fastq} | samtools view -Shb -o SRR24039108.bam -
         """
 }
 
@@ -187,7 +187,7 @@ process BWA_NO_LIMIT2 {
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
         """
-        bwa mem -t 96 -T 0 -R ${METADATA} ${ref_fa} ${forward_fastq} ${reverse_fastq} | samtools view -Shb -o SRR24039108.bam -
+        bwa mem -t 28 -T 0 -R ${METADATA} ${ref_fa} ${forward_fastq} ${reverse_fastq} | samtools view -Shb -o SRR24039108.bam -
         """
 }
 
@@ -210,7 +210,7 @@ process BWA_NO_LIMIT3 {
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
         """
-        bwa mem -t 96 -T 0 -R ${METADATA} ${ref_fa} ${forward_fastq} ${reverse_fastq} | samtools view -Shb -o SRR24039108.bam -
+        bwa mem -t 28 -T 0 -R ${METADATA} ${ref_fa} ${forward_fastq} ${reverse_fastq} | samtools view -Shb -o SRR24039108.bam -
         """
 }
 
@@ -232,10 +232,10 @@ workflow {
     BWA_NO_LIMIT(
         fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
     )
-    // BWA_NO_LIMIT2(
-    //     fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )
-    // BWA_NO_LIMIT3(
-    //     fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )
+    BWA_NO_LIMIT2(
+        fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
+    )
+    BWA_NO_LIMIT3(
+        fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
+    )
 }

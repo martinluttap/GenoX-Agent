@@ -1,9 +1,12 @@
 package functions
 
 import (
+	"bufio"
 	"fmt"
+	"log"
 	"math"
 	"math/rand/v2"
+	"os"
 	"strconv"
 )
 
@@ -94,6 +97,29 @@ func ContinuousIncrease(x float64) string {
 	return strconv.FormatInt(y, 10)
 }
 
+func ContinousDecrease(x float64, fromCore int64, toCore int64) string {
+	/* A continous decrease reveres the effects of continous increase.
+	Thus, for each given x resulting from f_increase, we take the inverse of f_increase with x as target.
+	*/
+
+	TARGET_CORE := fromCore
+	INIT_CORE := toCore
+	START_DUR := 1
+	END_DUR := 2
+
+	// m = (y2 - y1) / (x2 - x1)
+	m := float64(TARGET_CORE-INIT_CORE) / float64(END_DUR-START_DUR)
+
+	// y = mx + c
+	c := float64(INIT_CORE)
+	y := int64(((float64(m) * float64(x)) + c) * 100000) // match cpu.cfs_quota_us, default=100000
+
+	// newPeriod := strconv.FormatFloat(y, 'f', 2, 64)
+	fmt.Printf("m:%f, x:%f, c:%f, y:%d\n", m, x, c, y)
+
+	return strconv.FormatInt(y, 10)
+}
+
 func SineWave(x float64) string {
 	// Sine wav: (A * sin(2 * Pi * f + phase)) + yOffset
 	MIN_CORE := 1
@@ -109,6 +135,25 @@ func SineWave(x float64) string {
 
 	y := (amplitude * math.Sin((2*math.Pi*frequency*x)+phase)) + yOffset
 	return strconv.FormatInt(int64(y*float64(QUOTA_ONE_CORE)), 10)
+}
+
+func NumThreads(containerDir string) string {
+	path := fmt.Sprintf("%s/tasks", containerDir)
+	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if openErr != nil {
+		log.Fatalf("Error when opening: %s:\n", openErr)
+	}
+	defer infile.Close()
+
+	s := bufio.NewScanner(infile)
+	// Dangerous for large files, but okay for this problem.
+	counter := int64(0)
+	for s.Scan() {
+		counter = counter + 1
+	}
+
+	QUOTA_ONE_CORE := 100000
+	return strconv.FormatInt(counter*int64(QUOTA_ONE_CORE), 10)
 }
 
 /*********************************************************/

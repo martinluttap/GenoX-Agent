@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"sync"
 	"time"
-
-	"github.com/martinluttap/containermod/functions"
 )
 
 func TickWriter(containerDirs []string, intervalMillisecond int, stopCh chan int, wg *sync.WaitGroup) {
@@ -82,11 +81,31 @@ func adjustQuota(containerDir string, elapsedTime float64) {
 	s := bufio.NewScanner(infile)
 	for s.Scan() {
 		oldPeriod := s.Text()
+
+		// f(x): constant
+		allocatedCores := int64(32)
+		newPeriod := strconv.FormatInt(allocatedCores*100000, 10)
+
 		// f(x): continuousIncrease
 		// newPeriod := functions.ContinuousIncrease(elapsedTime)
 
+		// f(x): continousDecrease
+		// newPeriod = functions.ContinousDecrease(elapsedTime, initCore, targetCore)
+
+		// f(x): by task
+		// newPeriod := functions.NumThreads(containerDir)
+
+		// initCores := int64(32)
+		// targetCore := int64(8)
+		// var newPeriod string
+		// if elapsedTime > 40 {
+		// 	newPeriod = strconv.FormatInt(targetCore*100000, 10)
+		// } else {
+		// 	newPeriod = strconv.FormatInt(initCores*100000, 10)
+		// }
+
 		// f(x): sineWave
-		newPeriod := functions.SineWave(elapsedTime)
+		// newPeriod := functions.SineWave(elapsedTime)
 
 		// f(x): randomStep
 		// newPeriod := functions.RandomStep(elapsedTime, buckets)

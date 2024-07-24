@@ -126,19 +126,22 @@ func main() {
 	stopCh := make(chan int)
 	var wg sync.WaitGroup
 
-	wg.Add(5)
-
 	dockerRootPath := `/sys/fs/cgroup/cpu/docker/`
-	tickIntervalMs := 1000
+	tickIntervalMs := 50
 	// metricsIntervalMs := 1000
 	pollingIntervalMs := 50
 	modDuration := 180
 
+	wg.Add(1)
+	// go watchActivecontainers(dockerRootPath)
 	containerDirs, _ := getSubDirs(dockerRootPath)
 	fmt.Println(containerDirs)
-	for _, dir := range containerDirs {
-		controller.ResetQuota(dir)
-	}
+	// for _, dir := range containerDirs {
+	// 	controller.ResetQuota(dir)
+	// }
+	wg.Wait()
+
+	wg.Add(5)
 	go controller.TickWriter(containerDirs, tickIntervalMs, stopCh, &wg)
 	// go metrics.MetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
 	// go metrics.ProcFsMetricsCollection(containerDirs, metricsIntervalMs, stopCh, &wg)
