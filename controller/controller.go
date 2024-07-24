@@ -10,19 +10,21 @@ import (
 	"time"
 )
 
-func TickWriter(containerDirs []string, intervalMillisecond int, stopCh chan int, wg *sync.WaitGroup) {
+func TickWriter(activeContainersCh <-chan []string, intervalMillisecond int, stopCh chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	tickCh := time.NewTicker(time.Duration(intervalMillisecond) * time.Millisecond)
 	startTime := time.Now()
 	for {
 		select {
-		case <-tickCh.C:
+		// We guarantee in main that containerDirs is produced at the same rate, or faster, than tick
+		case containerDirs := <-activeContainersCh:
+			<-tickCh.C
+			fmt.Println("Tick writing at ", time.Now().String())
 			elapsedTime := time.Since(startTime).Seconds()
 			for _, containerDir := range containerDirs {
 				adjustQuota(containerDir, elapsedTime)
 			}
-
 		case <-stopCh:
 			fmt.Println("Ticker stopped!")
 			return

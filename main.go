@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/martinluttap/containermod/controller"
 	"github.com/martinluttap/containermod/metrics"
 )
 
@@ -35,7 +36,9 @@ func makeFlagMap(cgroup *string, subsystem *string, period *string, quota *strin
 	return flagMaps
 }
 
-func watchActiveContainers(root string, intervalMs int64, activeDirsCh chan<- []string, stopCh <-chan int) {
+func watchActiveContainers(root string, intervalMs int64, activeDirsCh chan<- []string, stopCh <-chan int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	/*
 		This watcher routine do the following:
 		1. Receive tick interval and a result channel. Results channel will be used by other routines
@@ -177,9 +180,9 @@ func main() {
 	*/
 	containerWatchIntervalMs := slices.Min(nonWatchIntervals)
 
-	wg.Add(2)
+	wg.Add(4)
 	go StopAt(modDuration, stopCh, &wg)
-	go watchActiveContainers(dockerRootPath, containerWatchIntervalMs, activeContainersCh, stopCh)
+	go watchActiveContainers(dockerRootPath, containerWatchIntervalMs, activeContainersCh, stopCh, &wg)
 	// go func(activeCh chan []string) {
 	// 	for {
 	// 		select {
@@ -193,7 +196,7 @@ func main() {
 	// for _, dir := range containerDirs {
 	// 	controller.ResetQuota(dir)
 	// }
-	// go controller.TickWriter(activeContainersCh, tickIntervalMs, stopCh, &wg)
+	go controller.TickWriter(activeContainersCh, tickIntervalMs, stopCh, &wg)
 	// go metrics.MetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
 	// go metrics.ProcFsMetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
 	// go metrics.PollCAdvisor(activeContainersCh, pollingIntervalMs, stopCh, &wg)
