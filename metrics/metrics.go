@@ -3,6 +3,7 @@ package metrics
 import (
 	"bufio"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -409,7 +410,11 @@ func GetCpuStatData(containerDir string) (int64, int64, int64) {
 
 func GetCFSData(containerDir string) (int64, int64) {
 	// CFS Quota
-	quotaInfile, openErr := os.OpenFile(fmt.Sprintf("%s/cpu.cfs_quota_us", containerDir), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	quotaInfilePath := fmt.Sprintf("%s/cpu.cfs_quota_us", containerDir)
+	if _, err := os.Stat(quotaInfilePath); errors.Is(err, os.ErrNotExist) {
+		return int64(-1), int64(-1)
+	}
+	quotaInfile, openErr := os.OpenFile(quotaInfilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if openErr != nil {
 		log.Fatalf("While opening: %s:\n", openErr)
 	}
@@ -420,7 +425,11 @@ func GetCFSData(containerDir string) (int64, int64) {
 	cfsQuota, _ := strconv.Atoi(quotaScanner.Text())
 
 	// CFS Period
-	periodInfile, openErr := os.OpenFile(fmt.Sprintf("%s/cpu.cfs_period_us", containerDir), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	periodInfilePath := fmt.Sprintf("%s/cpu.cfs_period_us", containerDir)
+	if _, err := os.Stat(periodInfilePath); errors.Is(err, os.ErrNotExist) {
+		return int64(-1), int64(-1)
+	}
+	periodInfile, openErr := os.OpenFile(periodInfilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if openErr != nil {
 		log.Fatalf("While opening: %s:\n", openErr)
 	}
@@ -558,47 +567,63 @@ func BuildKernelStats(containerDirs []string) map[string]KernelStats {
 	return kernelStatsD
 }
 
+func prepPolling(containerDirs []string, outWriterDict map[string]*csv.Writer) []*os.File {
+
+	csvFds := []*os.File{}
+	// Check existence of container in map.
+	// If no entry yet, create metrics file and save the pointer towards it.
+	for _, containerDir := range containerDirs {
+		if _, exists := outWriterDict[containerDir]; !exists {
+			fmt.Println("Created new writer for ", containerDir)
+			ss := strings.Split(containerDir, "/")
+			cid := ss[len(ss)-1][:13] // Use first 12 chars as containerId to match Docker's stats
+			outFile, err := os.Create(fmt.Sprintf("%s.csv", cid))
+			if err != nil {
+				panic(err)
+			}
+			// defer outFile.Close()
+			csvFds = append(csvFds, outFile)
+			writer := csv.NewWriter(outFile)
+			defer writer.Flush()
+			// this defines the header value and data values for the new csv file
+			headers := []string{"timestampNs", "cid", "totalCpu", "quotaUs", "periodUs", "numPeriods", "trPeriods", "trTimeNs"}
+			writer.Write(headers)
+			outWriterDict[containerDir] = writer
+		}
+	}
+
+	return csvFds
+	// Build cid -> containerDir map to join DockerStats and KernelStats
+	// cidToDirMap := map[string]string{}
+	// ss := strings.Split(containerDir, "/")
+	// cid := ss[len(ss)-1][:12]
+	// cidToDirMap[cid] = containerDir
+}
+
 func PollAllStats(activeContainersCh <-chan []string, pollingIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
-	containerDirs := <-activeContainersCh
+	// containerDirs := <-activeContainersCh
 	outWriterDict := map[string]*csv.Writer{}
-	for _, containerDir := range containerDirs {
-		ss := strings.Split(containerDir, "/")
-		cid := ss[len(ss)-1][:13] // Use first 12 chars as containerId to match Docker's stats
-		outFile, err := os.Create(fmt.Sprintf("%s.csv", cid))
-		if err != nil {
-			panic(err)
-		}
-		defer outFile.Close()
-		writer := csv.NewWriter(outFile)
-		defer writer.Flush()
-		// this defines the header value and data values for the new csv file
-		headers := []string{"timestampNs", "cid", "totalCpu", "quotaUs", "periodUs", "numPeriods", "trPeriods", "trTimeNs"}
-		writer.Write(headers)
-		outWriterDict[containerDir] = writer
-	}
+	// csvFds := prepPolling(containerDirs, outWriterDict)
+	csvFds := []*os.File{}
 
-	// Build cid -> containerDir map to join DockerStats and KernelStats
-	cidToDirMap := map[string]string{}
-	for _, containerDir := range containerDirs {
-		ss := strings.Split(containerDir, "/")
-		cid := ss[len(ss)-1][:12]
-		cidToDirMap[cid] = containerDir
-	}
 	timeStart := time.Now()
-	fmt.Println("Polling start at ", timeStart.String())
-
 	for {
 		select {
 		case containerDirs := <-activeContainersCh:
 			fmt.Println(time.Now().String(), "Active contianers", containerDirs)
+			newFds := prepPolling(containerDirs, outWriterDict)
+			csvFds = append(csvFds, newFds...)
 
+			profileStart := time.Now()
 			cgtopMap := GetCpuUsageCgtop(containerDirs)
 			kernelStatsMap := BuildKernelStats(containerDirs)
+			profileEnd := time.Now()
 
 			ts := strconv.FormatInt((time.Since(timeStart) * time.Millisecond).Milliseconds(), 10)
+			fmt.Println(outWriterDict)
 			for containerDir, writer := range outWriterDict {
 				ss := strings.Split(containerDir, "/")
 				cid := ss[len(ss)-1][:12]
@@ -612,10 +637,17 @@ func PollAllStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 				row := []string{
 					ts, cid, totalCpu, quotaUs, periodUs, numPeriods, trPeriods, trTimeNs,
 				}
+				fmt.Println("Wrote ", row, "to ", containerDir)
 				writer.Write(row)
 				writer.Flush()
+				fmt.Println(writer.Error())
 			}
+			fmt.Printf("Writing for %d containers took %d us, start %s, end %s\n", len(containerDirs), profileEnd.Sub(profileStart).Microseconds(), timeStart.String(), profileEnd.String())
 		case <-stopCh:
+			for idx, fd := range csvFds {
+				fmt.Printf("Closing fd for container %d: %p\n", idx, fd)
+			}
+			fmt.Println()
 			return
 		}
 	}

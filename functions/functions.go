@@ -156,4 +156,24 @@ func NumThreads(containerDir string) string {
 	return strconv.FormatInt(counter*int64(QUOTA_ONE_CORE), 10)
 }
 
+func CappedNumThreads(containerDir string, cap int) string {
+	path := fmt.Sprintf("%s/tasks", containerDir)
+	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if openErr != nil {
+		log.Fatalf("Error when opening: %s:\n", openErr)
+	}
+	defer infile.Close()
+
+	s := bufio.NewScanner(infile)
+	// Dangerous for large files, but okay for this problem.
+	counter := int64(0)
+	for s.Scan() {
+		counter = counter + 1
+	}
+	target := int64(math.Round(math.Min(float64(counter), float64(cap))))
+
+	QUOTA_ONE_CORE := 100000
+	return strconv.FormatInt(target*int64(QUOTA_ONE_CORE), 10)
+}
+
 /*********************************************************/

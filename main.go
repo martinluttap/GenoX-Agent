@@ -65,6 +65,7 @@ func watchActiveContainers(root string, intervalMs int64, activeDirsCh chan<- []
 			if err == nil {
 				// dirs[0] == root. We skip it
 				activeDirsCh <- dirs[1:]
+				fmt.Println("At ", time.Now().String(), " sent ", dirs[1:])
 			} else {
 				panic("Error when polling active containers!")
 			}

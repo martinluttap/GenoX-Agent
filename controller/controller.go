@@ -2,12 +2,16 @@ package controller
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/martinluttap/containermod/functions"
 )
 
 func TickWriter(activeContainersCh <-chan []string, intervalMillisecond int, stopCh chan int, wg *sync.WaitGroup) {
@@ -20,10 +24,25 @@ func TickWriter(activeContainersCh <-chan []string, intervalMillisecond int, sto
 		// We guarantee in main that containerDirs is produced at the same rate, or faster, than tick
 		case containerDirs := <-activeContainersCh:
 			<-tickCh.C
-			fmt.Println("Tick writing at ", time.Now().String())
-			elapsedTime := time.Since(startTime).Seconds()
-			for _, containerDir := range containerDirs {
-				adjustQuota(containerDir, elapsedTime)
+			if len(containerDirs) > 0 {
+				fmt.Println("Tick writing at ", time.Now().String())
+				elapsedTime := time.Since(startTime).Seconds()
+
+				numTargets := 1
+				targetContainers := containerDirs[:numTargets]
+				controlVariableContainers := containerDirs[numTargets:]
+				for _, containerDir := range targetContainers {
+					ss := strings.Split(containerDir, "/")
+					cid := ss[len(ss)-1]
+					fmt.Println("Adjusting quota for ", cid)
+					adjustQuota(containerDir, elapsedTime, "cappedNumThreads")
+				}
+				for _, containerDir := range controlVariableContainers {
+					ss := strings.Split(containerDir, "/")
+					cid := ss[len(ss)-1]
+					fmt.Println("Adjusting quota for ", cid)
+					adjustQuota(containerDir, elapsedTime, "constant")
+				}
 			}
 		case <-stopCh:
 			fmt.Println("Ticker stopped!")
@@ -70,9 +89,13 @@ func ResetQuota(containerDir string) {
 	}
 }
 
-func adjustQuota(containerDir string, elapsedTime float64) {
+func adjustQuota(containerDir string, elapsedTime float64, functionName string) {
 
 	path := fmt.Sprintf(`%s/cpu.cfs_quota_us`, containerDir)
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		// path/to/whatever does not exist
+		return
+	}
 	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if openErr != nil {
 		log.Fatalf("While opening: %s:\n", openErr)
@@ -81,36 +104,44 @@ func adjustQuota(containerDir string, elapsedTime float64) {
 
 	// buckets := functions.GenerateBuckets()
 	s := bufio.NewScanner(infile)
+	var newPeriod string
+	allowedFunctions := map[string]bool{"constant": true, "continuousIncrease": true, "continuousDecrease": true, "numThreads": true, "sineWave": true, "randomStep": true}
 	for s.Scan() {
 		oldPeriod := s.Text()
-
 		// f(x): constant
-		allocatedCores := int64(32)
-		newPeriod := strconv.FormatInt(allocatedCores*100000, 10)
-
-		// f(x): continuousIncrease
-		// newPeriod := functions.ContinuousIncrease(elapsedTime)
-
-		// f(x): continousDecrease
-		// newPeriod = functions.ContinousDecrease(elapsedTime, initCore, targetCore)
-
-		// f(x): by task
-		// newPeriod := functions.NumThreads(containerDir)
-
-		// initCores := int64(32)
-		// targetCore := int64(8)
-		// var newPeriod string
-		// if elapsedTime > 40 {
-		// 	newPeriod = strconv.FormatInt(targetCore*100000, 10)
-		// } else {
-		// 	newPeriod = strconv.FormatInt(initCores*100000, 10)
-		// }
-
-		// f(x): sineWave
-		// newPeriod := functions.SineWave(elapsedTime)
-
-		// f(x): randomStep
-		// newPeriod := functions.RandomStep(elapsedTime, buckets)
+		if functionName == "constant" {
+			allocatedCores := int64(8)
+			newPeriod = strconv.FormatInt(allocatedCores*100000, 10)
+		} else if functionName == "continuousIncrease" {
+			// f(x): continuousIncrease
+			newPeriod = functions.ContinuousIncrease(elapsedTime)
+		} else if functionName == "continuousDecrese" {
+			// f(x): continousDecrease
+			fromCore := int64(16)
+			toCore := int64(1)
+			newPeriod = functions.ContinousDecrease(elapsedTime, fromCore, toCore)
+		} else if functionName == "numThreads" {
+			// f(x): by task
+			newPeriod = functions.NumThreads(containerDir)
+		} else if functionName == "sineWave" {
+			// f(x): sineWave
+			newPeriod = functions.SineWave(elapsedTime)
+		} else if functionName == "randomStep" {
+			// f(x): randomStep
+			// buckets :=
+			// newPeriod = functions.RandomStep(elapsedTime, buckets)
+			newPeriod = oldPeriod
+		} else if functionName == "cappedNumThreads" {
+			newPeriod = functions.CappedNumThreads(containerDir, 64)
+		}
+		if val, ok := allowedFunctions[functionName]; !ok {
+			fmt.Println("Function ", val, " not allowed!")
+		} else {
+			fmt.Println("Adjusted for ", functionName)
+		}
+		if newPeriod == "" {
+			panic("Empty new period!!")
+		}
 		fmt.Printf("Old: %s, new: %s\n", oldPeriod, newPeriod)
 		infile.WriteString(newPeriod)
 	}
