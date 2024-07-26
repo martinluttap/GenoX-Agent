@@ -3,7 +3,7 @@
 
 WORKFLOW="/home/cc/elastic-container/containermod/experiments/nf_scripts/bwa.nf"
 INPUT_CONFIG="/home/cc/elastic-container/containermod/experiments/configs/bwa.config"
-LABEL="saturate_3bwa_32c"
+LABEL="2bwa-8c_req-64cappedNumThreads"
 OUT_LOG="${LABEL}.log"
 
 # Kill existing resmon processes
@@ -29,3 +29,6 @@ nextflow run ${LABEL}.nf \
 
 sleep 5
 kill ${RESMON_PID}
+
+mkdir -p results/"${LABEL}"
+cp experiments/${LABEL}.csv results/${LABEL}
