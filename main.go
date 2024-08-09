@@ -168,7 +168,7 @@ func main() {
 	tickIntervalMs := 50
 	// metricsIntervalMs := 1000
 	pollingIntervalMs := 50
-	modDuration := 180
+	modDuration := 3600
 	nonWatchIntervals := []int64{
 		int64(tickIntervalMs),
 		int64(pollingIntervalMs),
