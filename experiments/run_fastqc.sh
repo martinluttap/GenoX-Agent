@@ -3,7 +3,7 @@
 EXP_DIR="/home/cc/elastic-container/containermod/experiments/"
 WORKFLOW="${EXP_DIR}/nf_scripts/fastqc.nf"
 INPUT_CONFIG="${EXP_DIR}/configs/fastqc.config"
-LABEL="2fastqc-64c_req-1c_alloc"
+LABEL="2fastqc-32c_req-numThreads"
 OUT_LOG="${LABEL}.log"
 
 # Kill existing resmon processes

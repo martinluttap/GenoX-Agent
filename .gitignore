@@ -10,6 +10,7 @@ experiments/*.html
 experiments/*.config
 experiments/*.nf
 experiments/work/
+experiments/junk/
 experiments/.nextflow.*
 experiments/*nextflow*
 

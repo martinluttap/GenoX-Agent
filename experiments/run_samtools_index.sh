@@ -1,9 +1,9 @@
 #!/bin/bash
 
 EXP_DIR="/home/cc/elastic-container/containermod/experiments/"
-WORKFLOW="${EXP_DIR}/nf_scripts/gatk_baserecal.nf"
-INPUT_CONFIG="${EXP_DIR}/configs/gatk_baserecal.config"
-LABEL="gatk_baserecal_test"
+WORKFLOW="${EXP_DIR}/nf_scripts/samtools_index.nf"
+INPUT_CONFIG="${EXP_DIR}/configs/samtools_index.config"
+LABEL="samtools_index_test"
 OUT_LOG="${LABEL}.log"
 
 # Kill existing resmon processes
@@ -25,6 +25,9 @@ cp $INPUT_CONFIG ${LABEL}.config
 resmon -o ${EXP_DIR}/${OUT_LOG%.log}.csv &
 export RESMON_PID=$!
 
+# glances -t 1 --quiet --export csv --export-csv-file ${EXP_DIR}/${OUT_LOG%.log}.csv --disable-plugin all --enable-plugin now,cpu &
+# export GLANCES_PID=$!
+
 nextflow run ${LABEL}.nf \
     -c $INPUT_CONFIG \
     -with-timeline ${OUT_LOG%.log}-timeline.html \
@@ -42,4 +45,4 @@ mv ${EXP_DIR}/${OUT_LOG%.log}.csv ${EXP_DIR}/results/${LABEL}/${OUT_LOG%.log}.cs
 # awk -f ${EXP_DIR}/parse.awk ${EXP_DIR}/${OUT_LOG%.log}.csv \
 #     > ${EXP_DIR}/results/${LABEL}/${OUT_LOG%.log}.csv
 
-echo "All gatk_baserecal done!"
+echo "All samtools_index done!"

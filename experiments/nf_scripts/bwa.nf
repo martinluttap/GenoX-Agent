@@ -3,17 +3,6 @@ import groovy.time.TimeDuration
 
 include { BWA_NO_LIMIT as BWA1 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
 include { BWA_NO_LIMIT as BWA2 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
-include { BWA_NO_LIMIT as BWA3 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
-include { BWA_NO_LIMIT as BWA4 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
-include { BWA_NO_LIMIT as BWA5 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
-include { BWA_NO_LIMIT as BWA6 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
-include { BWA_NO_LIMIT as BWA7 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
-include { BWA_NO_LIMIT as BWA8 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
-include { BWA_NO_LIMIT as BWA9 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
-include { BWA_NO_LIMIT as BWA10 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
-include { BWA_NO_LIMIT as BWA11 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
-include { BWA_NO_LIMIT as BWA12 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
-include { BWA_NO_LIMIT as BWA13 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
 
 REF_PATH = "/home/cc/nextflow/reference-files"
 ref_fa = Channel.fromPath(REF_PATH + '/*.fa')
@@ -319,34 +308,4 @@ workflow {
     BWA2(
         fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
     )    
-    // BWA3(
-    //     fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )
-    // BWA4(
-    //     fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )
-    // BWA5(
-    //     fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )
-    // BWA6(
-    //     fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )   
-    // BWA7(
-    //     fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )
-    // BWA8(
-    //     fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )
-    // BWA9(
-    //     fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )
-    // BWA10(
-    //     fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )
-    // BWA11(
-    //     fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )
-    // BWA12(
-    //     fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )
 }

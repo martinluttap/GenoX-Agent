@@ -1,15 +1,13 @@
 import groovy.time.TimeCategory 
 import groovy.time.TimeDuration
 
-include { TRIMMOMATIC_NO_LIMIT as TRIMMOMATIC1 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/trimmomatic.nf"
+include { STAR_NO_LIMIT_SIMPLE as STAR1 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/star.nf"
+include { STAR_NO_LIMIT_SIMPLE as STAR2 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/star.nf"
 
 Date loadStart = new Date()
 println ("Data loading started ...")
 
-/* REFERENCE FILES */
 REF_PATH = "/home/cc/nextflow/reference-files"
-ref_known_sites = Channel.fromPath(REF_PATH + '/*.vcf.gz')
-ref_known_sites_tbi = Channel.fromPath(REF_PATH + '/*.vcf.gz.tbi')
 ref_fa = Channel.fromPath(REF_PATH + '/*.fa')
 ref_amb = Channel.fromPath(REF_PATH + '/*.amb')
 ref_ann = Channel.fromPath(REF_PATH + '/*.ann')
@@ -18,11 +16,14 @@ ref_fai = Channel.fromPath(REF_PATH + '/*.fai')
 ref_pac = Channel.fromPath(REF_PATH + '/*.pac')
 ref_sa = Channel.fromPath(REF_PATH + '/*.sa')
 ref_dict = Channel.fromPath(REF_PATH + '/*.dict')
+genome_dir = Channel.fromPath(REF_PATH + '/star-2.7.5c_GRCh38.d1.vd1_gencode.v36')
 
+
+/* Config */
 READ_PATH = "/home/cc/nextflow/read-files/SRR6490021"
 meta_id = Channel.of(READ_PATH.tokenize('/')[-1])
 fastq_pair = Channel.fromFilePairs(READ_PATH + '/SRR*_{1,2}.fastq', flat: true)
-                    .splitFastq(by: 400000, limit:400000, pe:true, file: true)
+                    .splitFastq(by: 10000000, limit:10000000, pe:true, file: true)
 
 workflow {
     fastq_pair.view {
@@ -37,7 +38,10 @@ workflow {
         logFile.append(td)
         println ("Loading done! Took " + td)
     }
-    TRIMMOMATIC1(
-        fastq_pair
+    STAR1(
+        fastq_pair, genome_dir
+    )
+    STAR2(
+        fastq_pair, genome_dir
     )
 }
