@@ -1,8 +1,9 @@
 import groovy.time.TimeCategory 
 import groovy.time.TimeDuration
 
-include { GATK4_BASERECAL as GATK4_BASERECAL1 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_baserecal.nf"
-include { GATK4_BASERECAL as GATK4_BASERECAL2 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_baserecal.nf"
+include { GATK4_BASERECAL as BASERECAL_DEF1 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_baserecal.nf"
+include { GATK4_BASERECAL_SPARK_NO_LIMIT as BASERECAL_SPARK1 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_baserecal.nf"
+include { GATK4_BASERECAL_SPARK_NO_LIMIT as BASERECAL_SPARK2 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_baserecal.nf"
 
 
 Date loadStart = new Date()
@@ -21,7 +22,7 @@ ref_sa = Channel.fromPath(REF_PATH + '/*.sa')
 ref_dict = Channel.fromPath(REF_PATH + '/*.dict')
 
 BAM_PATH = "/home/cc/nextflow/read-files/bams/1500MB"
-bam_file = Channel.fromPath(BAM_PATH + '/*.bam')
+bam_file = Channel.fromPath(BAM_PATH + '/chr1.bam')
 
 workflow {
     bam_file.view {
@@ -36,7 +37,11 @@ workflow {
         logFile.append(td)
         println ("Loading done! Took " + td)
     }
-    GATK4_BASERECAL1(
+    BASERECAL_SPARK1(
         bam_file, ref_known_sites, ref_known_sites_tbi, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
     )
+    BASERECAL_SPARK2(
+        bam_file, ref_known_sites, ref_known_sites_tbi, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
+    )
+
 }

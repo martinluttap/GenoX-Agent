@@ -3,7 +3,7 @@
 EXP_DIR="/home/cc/elastic-container/containermod/experiments/"
 WORKFLOW="${EXP_DIR}/nf_scripts/gatk_baserecal.nf"
 INPUT_CONFIG="${EXP_DIR}/configs/gatk_baserecal.config"
-LABEL="gatk_baserecal_test"
+LABEL="2baserecal_spark-96c_req-numThreads"
 OUT_LOG="${LABEL}.log"
 
 # Kill existing resmon processes

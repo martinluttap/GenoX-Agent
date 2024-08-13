@@ -23,12 +23,11 @@ process GATK4_BASERECAL {
         """
 }
 
-process GATK4_BASERECAL_SPARK {
-    container "ghcr.io/martinluttap/gatk:4.2.4.1"
+process GATK4_BASERECAL_SPARK_NO_LIMIT {
+    container "ghcr.io/martinluttap/gatk:4.2.4.1-no-entrypoint"
 
     input:
-        path input
-        path index
+      path input
         path known_sites
         path known_sites_tbi
         path ref_fa
