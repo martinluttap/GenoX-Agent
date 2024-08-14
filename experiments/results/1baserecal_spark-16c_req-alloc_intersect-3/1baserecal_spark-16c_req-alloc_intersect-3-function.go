@@ -122,8 +122,8 @@ func ContinousDecrease(x float64, fromCore int64, toCore int64) string {
 
 func SineWave(x float64) string {
 	// Sine wav: (A * sin(2 * Pi * f + phase)) + yOffset
-	MIN_CORE := 20
-	INIT_CORE := 28
+	MIN_CORE := 2
+	INIT_CORE := 8
 	// START_DUR := 1
 	// END_DUR := 180 // 3 minutes
 	QUOTA_ONE_CORE := 100000
