@@ -3,7 +3,7 @@
 
 WORKFLOW="/home/cc/elastic-container/containermod/experiments/nf_scripts/bwa.nf"
 INPUT_CONFIG="/home/cc/elastic-container/containermod/experiments/configs/bwa.config"
-LABEL="2bwa-8c_req-8c_alloc"
+LABEL="1bwa-8c_req-4c_alloc"
 OUT_LOG="${LABEL}.log"
 
 # Kill existing resmon processes

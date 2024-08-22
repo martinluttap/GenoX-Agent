@@ -346,7 +346,7 @@ func executeCgtop(cgroup string) string {
 		ControlGroup 		 Tasks   %CPU   Memory  Input/s Output/s
 		docker/6629b5...      99   25.7   257.3M        -        -
 	*/
-	cmd := exec.Command("systemd-cgtop", "-b", "-n", "2", "-d", "25ms", cgroup)
+	cmd := exec.Command("systemd-cgtop", "-b", "-n", "2", "-d", "5ms", cgroup)
 	var out strings.Builder
 	cmd.Stdout = &out
 	err := cmd.Run()

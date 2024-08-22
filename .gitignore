@@ -11,6 +11,7 @@ experiments/*.config
 experiments/*.nf
 experiments/work/
 experiments/junk/
+experiments/results/*
 experiments/.nextflow.*
 experiments/*nextflow*
 

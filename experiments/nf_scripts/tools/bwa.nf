@@ -22,9 +22,8 @@ fastq_pair = Channel.fromFilePairs(READ_PATH + '/*_{1,2}.fastq', flat: true)
 fastq_pair2 = Channel.fromFilePairs(READ_PATH + '/*_{1,2}.fastq', flat: true)
             .splitFastq(by: 250000, limit:250000, pe:true, file: true)
 
-process BWA_1half_c {
+process BWA {
     container "ghcr.io/martinluttap/bwa:0.7.15-554c2eb"
-    containerOptions '--cpus=1.5'
 
     input:
         tuple val(meta), path(forward_fastq), path(reverse_fastq)
@@ -43,7 +42,7 @@ process BWA_1half_c {
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
         """
-        bwa mem -t 16 -T 0 -R ${METADATA} ${ref_fa} ${forward_fastq} ${reverse_fastq} | samtools view -Shb -o SRR24039108.bam -
+        bwa mem -t 8 -T 0 -R ${METADATA} ${ref_fa} ${forward_fastq} ${reverse_fastq} | samtools view -Shb -o SRR24039108.bam -
         """
 }
 

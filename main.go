@@ -165,9 +165,9 @@ func main() {
 	var wg sync.WaitGroup
 
 	dockerRootPath := `/sys/fs/cgroup/cpu/docker/`
-	tickIntervalMs := 50
+	tickIntervalMs := 10
 	// metricsIntervalMs := 1000
-	pollingIntervalMs := 50
+	pollingIntervalMs := 10
 	modDuration := 3600
 	nonWatchIntervals := []int64{
 		int64(tickIntervalMs),
