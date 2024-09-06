@@ -668,7 +668,9 @@ func GetProcStatCpu(containerDir string, proc string, hertz int64) ProcStatCpu {
 }
 
 func sumWorkingTime(cpuTotal procfs.CPUStat) float64 {
-	return (cpuTotal.User + cpuTotal.System + cpuTotal.Nice + cpuTotal.Iowait + cpuTotal.IRQ + cpuTotal.SoftIRQ + cpuTotal.Steal)
+	// https://github.com/moby/moby/blob/master/daemon/stats_unix.go#L321
+	// man 5 proc
+	return (cpuTotal.User + cpuTotal.Nice + cpuTotal.System + cpuTotal.Iowait + cpuTotal.IRQ + cpuTotal.SoftIRQ + cpuTotal.Steal)
 }
 
 func MonitorCpuUsage(activeContainersCh <-chan []string, MonitorIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
@@ -686,26 +688,26 @@ func MonitorCpuUsage(activeContainersCh <-chan []string, MonitorIntervalMs int, 
 	for {
 		select {
 		case containerDirs := <-activeContainersCh:
+			stat, _ := fs.Stat()
+			sysCpuTotal := sumWorkingTime(stat.CPUTotal)
+			deltaSys := (sysCpuTotal - prevSysCpuTotal) / float64(USER_HZ) * 1e9
 			for _, containerDir := range containerDirs {
+
 				control, _ := cgroup1.Load(cgroup1.StaticPath(strings.TrimPrefix(containerDir, "/sys/fs/cgroup/cpu")))
 				stats, _ := control.Stat(cgroup1.IgnoreNotExist)
 				cpuNs := stats.GetCPU().GetUsage().Total
-				prevCpuNs, ok := lastCpuMap[containerDir]
-				if ok {
-					deltaCpuNs := int64(cpuNs) - prevCpuNs
-					stat, _ := fs.Stat()
-					sysCpuTotal := sumWorkingTime(stat.CPUTotal)
-					deltaSys := (sysCpuTotal - prevSysCpuTotal) / float64(USER_HZ) * 1e9
-					deltaWall := time.Since(prevWall).Nanoseconds()
+				prevCpuNs := lastCpuMap[containerDir]
 
-					fmt.Println(stat.CPUTotal, stat.CPUTotal.User, stat.CPUTotal.System, prevStat.CPUTotal)
-					// numCpus := len(stat.CPU) // Assume num. CPU == online CPUs
-					cpuUsage := (float64(deltaCpuNs) / float64(deltaWall))
-					machineUsage := (deltaSys / float64(deltaWall) * 100)
-					fmt.Printf("[%s] %s, deltaCpuNs:%d, deltaSys:%f, deltaWall: %f, CPU Util.: %f, Sys. Util.: %f\n", time.Now(), containerDir, deltaCpuNs, deltaSys, float64(deltaWall), cpuUsage, machineUsage)
-					prevSysCpuTotal = sysCpuTotal
-					prevWall = time.Now()
-				}
+				deltaWall := time.Since(prevWall).Nanoseconds()
+				deltaCpuNs := int64(cpuNs) - prevCpuNs
+
+				fmt.Println(stat.CPUTotal, stat.CPUTotal.User, stat.CPUTotal.System, prevStat.CPUTotal)
+				// numCpus := len(stat.CPU) // Assume num. CPU == online CPUs
+				cpuUsage := (float64(deltaCpuNs) / float64(deltaWall) * 100)
+				machineUsage := (deltaSys / float64(deltaWall) * 100)
+
+				fmt.Printf("[%s] %s, deltaCpuNs:%d, deltaSys:%f, deltaWall: %f, CPU Util.: %f, Sys. Util.: %f\n", time.Now(), containerDir, deltaCpuNs, deltaSys, float64(deltaWall), cpuUsage, machineUsage)
+
 				lastCpuMap[containerDir] = int64(cpuNs)
 				// containerProcs := GetAllProcs(containerDir)
 				// for _, proc := range containerProcs {
@@ -715,6 +717,8 @@ func MonitorCpuUsage(activeContainersCh <-chan []string, MonitorIntervalMs int, 
 				// 	stat, _ := procObj.Stat()
 				// 	fmt.Printf("[%s] ctr-%s pid-%s:utime=%d,stime=%d\n", time.Now(), containerDir, proc, stat.UTime, stat.STime)
 			}
+			prevSysCpuTotal = sysCpuTotal
+			prevWall = time.Now()
 		case <-stopCh:
 			fmt.Println()
 			return
