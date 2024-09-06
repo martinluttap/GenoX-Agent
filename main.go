@@ -181,7 +181,7 @@ func main() {
 	*/
 	containerWatchIntervalMs := slices.Min(nonWatchIntervals)
 
-	wg.Add(4)
+	wg.Add(5)
 	go StopAt(modDuration, stopCh, &wg)
 	go watchActiveContainers(dockerRootPath, containerWatchIntervalMs, activeContainersCh, stopCh, &wg)
 	// go func(activeCh chan []string) {
@@ -201,6 +201,7 @@ func main() {
 	// go metrics.MetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
 	// go metrics.ProcFsMetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
 	// go metrics.PollCAdvisor(activeContainersCh, pollingIntervalMs, stopCh, &wg)
+	go metrics.MonitorCpuUsage(activeContainersCh, pollingIntervalMs, stopCh, &wg)
 	go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
 
 	wg.Wait()

@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/google/cadvisor/client"
@@ -356,7 +357,19 @@ func executeCgtop(cgroup string) string {
 	return out.String()
 }
 
-func GetCpuUsageCgtop(containerDirs []string) map[string]float64 {
+// A utility to convert the values to proper strings.
+func int8ToStr(arr []int8) string {
+	b := make([]byte, 0, len(arr))
+	for _, v := range arr {
+		if v == 0x00 {
+			break
+		}
+		b = append(b, byte(v))
+	}
+	return string(b)
+}
+
+func GetProcStatCpuCgtop(containerDirs []string) map[string]float64 {
 	/*	Execute:
 		systemd-cgtop -b -n 2 -d 25ms docker/6629b5c0395314ab47fd4dec05d71bea3657c0bfb8f6087feecbda6c225702ca
 		---
@@ -608,7 +621,8 @@ func PollAllStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 	outWriterDict := map[string]*csv.Writer{}
 	// csvFds := prepPolling(containerDirs, outWriterDict)
 	csvFds := []*os.File{}
-
+	// hertz, _ := GetSystemHz()
+	// hertz := int64(250)
 	timeStart := time.Now()
 	for {
 		select {
@@ -618,7 +632,7 @@ func PollAllStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 			csvFds = append(csvFds, newFds...)
 
 			profileStart := time.Now()
-			cgtopMap := GetCpuUsageCgtop(containerDirs)
+			cgtopMap := GetProcStatCpuCgtop(containerDirs)
 			kernelStatsMap := BuildKernelStats(containerDirs)
 			profileEnd := time.Now()
 
@@ -647,6 +661,136 @@ func PollAllStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 			for idx, fd := range csvFds {
 				fmt.Printf("Closing fd for container %d: %p\n", idx, fd)
 			}
+			fmt.Println()
+			return
+		}
+	}
+}
+
+func GetSystemHz() (int64, error) {
+	var uname syscall.Utsname
+	if err := syscall.Uname(&uname); err == nil {
+		// extract members:
+		// type Utsname struct {
+		//  Sysname    [65]int8
+		//  Nodename   [65]int8
+		//  Release    [65]int8
+		//  Version    [65]int8
+		//  Machine    [65]int8
+		//  Domainname [65]int8
+		// }
+		fmt.Println(
+			int8ToStr(uname.Release[:]),
+		)
+	}
+	kernelRelease := int8ToStr(uname.Release[:])
+	fmt.Println("GetSystemHz()", kernelRelease)
+	bootConfigFile, openErr := os.OpenFile(fmt.Sprintf("/boot/config-%s", kernelRelease), os.O_RDONLY, 0444)
+	if openErr != nil {
+		log.Fatalf("While opening: %s:\n", openErr)
+	}
+	defer bootConfigFile.Close()
+
+	// Get all procs associated with container
+	s := bufio.NewScanner(bootConfigFile)
+	s.Scan()
+	fmt.Println("Test", s.Text())
+	var hertz string
+	for s.Scan() {
+		fmt.Println(s.Text())
+		if strings.Contains(s.Text(), "CONFIG_HZ=") {
+			hertz = strings.Split(s.Text(), "=")[1]
+			fmt.Println(hertz)
+			break
+		}
+	}
+	if hertz != "" {
+		hzValue, _ := strconv.ParseInt(hertz, 10, 64)
+		return hzValue, nil
+	} else {
+		return 0, errors.New("Failed to read system hertz!")
+	}
+}
+
+type ProcStatCpu struct {
+	userTimeTick int64
+	sysTimeTick  int64
+	uptimeSec    float64
+}
+
+type CtrStat struct {
+	procStatCpuMap map[string]ProcStatCpu
+	timestampTick  int64
+	cpuUsage       float64
+}
+
+func GetProcStatCpu(containerDir string, proc string, hertz int64) ProcStatCpu {
+	/*
+		We calculate CPU usage per container.
+		The components we need:
+		1. Elapsed wallclock time.
+		2. CPU time per process:
+			- user code, in clock ticks
+			- kernel code, in clock ticks
+			- (optional) children process
+		3. Hertz (clock ticks per second)
+		We assume grep 'CONFIG_HZ=' /boot/config-$(uname -r) is the Hertz of running kernel.
+
+		Our pseudocode is as follow:
+		- Get Hertz
+		- Mark starttime of calculation
+		- Given a list of containers,
+		- For each container, get all procs
+		- For each proc, get proc_total = (user + kernel) clock ticks
+		- ctr_total = sum(proc_total / Hertz)
+		- Mark endtime of calculation
+		- ctr_cpu_usage = ctr_total / (endtime - starttime)
+	*/
+	procsInfile, openErr := os.OpenFile(fmt.Sprintf("/proc/%s/stat", proc), os.O_RDONLY, 0444)
+	if openErr != nil {
+		// Most probably process has finished. No need to throw error.
+		// log.Fatalf("While opening: %s:\n", openErr)
+	} else {
+		defer procsInfile.Close()
+		statScanner := bufio.NewScanner(procsInfile)
+		statScanner.Scan()
+		fields := strings.Fields(statScanner.Text())
+		utime, _ := strconv.ParseInt(fields[13], 10, 64)
+		stime, _ := strconv.ParseInt(fields[14], 10, 64)
+		start, _ := strconv.ParseInt(fields[21], 10, 64)
+		procTicks := utime + stime
+
+		uptimeFile, _ := os.OpenFile("/proc/uptime", os.O_RDONLY, 0444)
+		uptimeScanner := bufio.NewScanner(uptimeFile)
+		uptimeScanner.Scan()
+		uptime, _ := strconv.ParseFloat(strings.Fields(uptimeScanner.Text())[0], 64)
+
+		elapsedSeconds := uptime - float64(start/hertz)
+		procUsage := 100 * (float64(procTicks/hertz) / elapsedSeconds)
+
+		fmt.Printf("ctr-%s proc-%s: utime=%d,stime=%d,time=%d,uptime=%f,elasped=%f,usage=%f\n", containerDir, proc, utime, stime, (procTicks / hertz), uptime, elapsedSeconds, procUsage)
+	}
+
+	return ProcStatCpu{}
+}
+
+func MonitorCpuUsage(activeContainersCh <-chan []string, MonitorIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
+
+	defer wg.Done()
+	for {
+		select {
+		case containerDirs := <-activeContainersCh:
+			for _, containerDir := range containerDirs {
+				containerProcs := GetAllProcs(containerDir)
+				for _, proc := range containerProcs {
+					// newProcStat := GetProcStatCpu(containerDir, proc, hertz)
+					pid, _ := strconv.ParseInt(proc, 10, 32)
+					procObj, _ := procfs.NewProc(int(pid))
+					stat, _ := procObj.Stat()
+					fmt.Printf("ctr-%s pid-%s:utime=%d,stime=%d\n", containerDir, proc, stat.UTime, stat.STime)
+				}
+			}
+		case <-stopCh:
 			fmt.Println()
 			return
 		}
