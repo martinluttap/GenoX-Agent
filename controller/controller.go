@@ -109,7 +109,7 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 		oldPeriod := s.Text()
 		// f(x): constant
 		if functionName == "constant" {
-			allocatedCores := int64(8)
+			allocatedCores := int64(1)
 			newPeriod = strconv.FormatInt(allocatedCores*100000, 10)
 		} else if functionName == "continuousIncrease" {
 			// f(x): continuousIncrease

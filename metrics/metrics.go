@@ -14,88 +14,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/containerd/cgroups/v3/cgroup1"
 	"github.com/google/cadvisor/client"
 	v1 "github.com/google/cadvisor/info/v1"
 	"github.com/prometheus/procfs"
 )
-
-type CpuUsage struct {
-	WorkingTime float64
-	IdleTime    float64
-}
-
-type CAdvisorCpu struct {
-	/*
-		Docs:
-		https://docs.kernel.org/scheduler/sched-bwc.html
-		https://docs.kernel.org/scheduler/sched-stats.html
-	*/
-	timeStamp time.Time //
-	// CPU Usage
-	diffUsageTotalNs  int64 //
-	diffUsageUserNs   int64 //
-	diffUsageSystemNs int64 //
-
-	// CFS Management
-	cfsQuotaUs    int64 // run-time replenished within a period (in microseconds)
-	cfsPeriodUs   int64 // the length of a period (in microseconds)
-	cfsNumPeriods int64 // Number of enforcement intervals that have elapsed.
-
-	// CFS Statistics
-	cfsThrottledPeriods int64 // Number of times the group has been throttled/limited.
-	cfsThrottledTimeNs  int64 // The total time duration (in nanoseconds) for which entities of the group have been throttled.
-
-	// Schedstat Statistics
-	schedstatRunTimeNs      int64 // Time spent on the CPU (nanoseconds)
-	schedstatRunqueueTimeNs int64 // Time spent waiting on the runqueue (nanoseconds)
-	schedstatRunPeriods     int64 // # timeslices run on CPU
-}
-
-type CfsStats struct {
-	NrPeriods       int64
-	NrThrottled     int64
-	ThrottledTimeNs int64
-}
-
-type KernelStats struct {
-	// CFS Management
-	cfsQuotaUs  int64 // run-time replenished within a period (in microseconds)
-	cfsPeriodUs int64 // the length of a period (in microseconds)
-
-	// CFS Statistics
-	cfsNumPeriods       int64 // Number of enforcement intervals that have elapsed.
-	cfsThrottledPeriods int64 // Number of times the group has been throttled/limited.
-	cfsThrottledTimeNs  int64 // The total time duration (in nanoseconds) for which entities of the group have been throttled.
-
-	// PidStats Statistics Per Process
-	procsPidStats map[string]PidStats
-
-	// IO Statistics.
-	// Total of all procs within the container.
-	totalRchar               int64
-	totalWchar               int64
-	totalSyscr               int64
-	totalSyscw               int64
-	totalReadBytes           int64
-	totalWriteBytes          int64
-	totalCancelledWriteBytes int64
-}
-
-type PidStats struct {
-	// Schedstat Statistics
-	schedstatRunTimeNs      int64 // Time spent on the CPU (nanoseconds)
-	schedstatRunqueueTimeNs int64 // Time spent waiting on the runqueue (nanoseconds)
-	schedstatRunPeriods     int64 // # timeslices run on CPU
-
-	// I/O Statistics
-	rchar                 int64 // The number of bytes which this task has caused / attempted to be read from storage. This is simply the sum of bytes which this process passed to read() and pread().
-	wchar                 int64 // Same as rchar, but for write.
-	syscr                 int64 // num. syscalls for read.
-	syscw                 int64 // num. syscalls for write.
-	read_bytes            int64 // Actual amount of bytes read from storage.
-	write_bytes           int64 // Same as read_bytes, but for write.
-	cancelled_write_bytes int64 //
-}
 
 func BuildCAdvisorCPUStats(containerInfo *v1.ContainerInfo) CAdvisorCpu {
 	if len(containerInfo.Stats) != 2 {
@@ -300,12 +223,6 @@ func PollCAdvisor(containerDirs []string, pollingIntervalMs int, stopCh chan int
 	}
 }
 
-type DockerStats struct {
-	containerId   string
-	containerName string
-	cpuUsage      float64
-}
-
 func BuildDockerStats(cidToDirMap map[string]string) map[string]DockerStats {
 	/*
 			CONTAINER ID   NAME                           CPU %     MEM USAGE / LIMIT     MEM %     NET I/O          BLOCK I/O     PIDS
@@ -355,18 +272,6 @@ func executeCgtop(cgroup string) string {
 		log.Fatal(err)
 	}
 	return out.String()
-}
-
-// A utility to convert the values to proper strings.
-func int8ToStr(arr []int8) string {
-	b := make([]byte, 0, len(arr))
-	for _, v := range arr {
-		if v == 0x00 {
-			break
-		}
-		b = append(b, byte(v))
-	}
-	return string(b)
 }
 
 func GetProcStatCpuCgtop(containerDirs []string) map[string]float64 {
@@ -712,18 +617,6 @@ func GetSystemHz() (int64, error) {
 	}
 }
 
-type ProcStatCpu struct {
-	userTimeTick int64
-	sysTimeTick  int64
-	uptimeSec    float64
-}
-
-type CtrStat struct {
-	procStatCpuMap map[string]ProcStatCpu
-	timestampTick  int64
-	cpuUsage       float64
-}
-
 func GetProcStatCpu(containerDir string, proc string, hertz int64) ProcStatCpu {
 	/*
 		We calculate CPU usage per container.
@@ -774,21 +667,53 @@ func GetProcStatCpu(containerDir string, proc string, hertz int64) ProcStatCpu {
 	return ProcStatCpu{}
 }
 
+func sumWorkingTime(cpuTotal procfs.CPUStat) float64 {
+	return (cpuTotal.User + cpuTotal.System + cpuTotal.Nice + cpuTotal.Iowait + cpuTotal.IRQ + cpuTotal.SoftIRQ + cpuTotal.Steal)
+}
+
 func MonitorCpuUsage(activeContainersCh <-chan []string, MonitorIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
 
 	defer wg.Done()
+	/*
+		key: containerdir, val: cpu
+	*/
+	lastCpuMap := map[string]int64{}
+	USER_HZ := 100 // getconf CLK_TCK 100
+	fs, _ := procfs.NewFS("/proc")
+	prevStat, _ := fs.Stat()
+	prevSysCpuTotal := sumWorkingTime(prevStat.CPUTotal)
+	prevWall := time.Now()
 	for {
 		select {
 		case containerDirs := <-activeContainersCh:
 			for _, containerDir := range containerDirs {
-				containerProcs := GetAllProcs(containerDir)
-				for _, proc := range containerProcs {
-					// newProcStat := GetProcStatCpu(containerDir, proc, hertz)
-					pid, _ := strconv.ParseInt(proc, 10, 32)
-					procObj, _ := procfs.NewProc(int(pid))
-					stat, _ := procObj.Stat()
-					fmt.Printf("ctr-%s pid-%s:utime=%d,stime=%d\n", containerDir, proc, stat.UTime, stat.STime)
+				control, _ := cgroup1.Load(cgroup1.StaticPath(strings.TrimPrefix(containerDir, "/sys/fs/cgroup/cpu")))
+				stats, _ := control.Stat(cgroup1.IgnoreNotExist)
+				cpuNs := stats.GetCPU().GetUsage().Total
+				prevCpuNs, ok := lastCpuMap[containerDir]
+				if ok {
+					deltaCpuNs := int64(cpuNs) - prevCpuNs
+					stat, _ := fs.Stat()
+					sysCpuTotal := sumWorkingTime(stat.CPUTotal)
+					deltaSys := (sysCpuTotal - prevSysCpuTotal) / float64(USER_HZ) * 1e9
+					deltaWall := time.Since(prevWall).Nanoseconds()
+
+					fmt.Println(stat.CPUTotal, stat.CPUTotal.User, stat.CPUTotal.System, prevStat.CPUTotal)
+					// numCpus := len(stat.CPU) // Assume num. CPU == online CPUs
+					cpuUsage := (float64(deltaCpuNs) / float64(deltaWall))
+					machineUsage := (deltaSys / float64(deltaWall) * 100)
+					fmt.Printf("[%s] %s, deltaCpuNs:%d, deltaSys:%f, deltaWall: %f, CPU Util.: %f, Sys. Util.: %f\n", time.Now(), containerDir, deltaCpuNs, deltaSys, float64(deltaWall), cpuUsage, machineUsage)
+					prevSysCpuTotal = sysCpuTotal
+					prevWall = time.Now()
 				}
+				lastCpuMap[containerDir] = int64(cpuNs)
+				// containerProcs := GetAllProcs(containerDir)
+				// for _, proc := range containerProcs {
+				// 	// newProcStat := GetProcStatCpu(containerDir, proc, hertz)
+				// 	pid, _ := strconv.ParseInt(proc, 10, 32)
+				// 	procObj, _ := procfs.NewProc(int(pid))
+				// 	stat, _ := procObj.Stat()
+				// 	fmt.Printf("[%s] ctr-%s pid-%s:utime=%d,stime=%d\n", time.Now(), containerDir, proc, stat.UTime, stat.STime)
 			}
 		case <-stopCh:
 			fmt.Println()
