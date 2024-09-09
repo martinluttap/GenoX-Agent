@@ -12,6 +12,7 @@ import (
 
 	"github.com/martinluttap/containermod/controller"
 	"github.com/martinluttap/containermod/metrics"
+	"github.com/martinluttap/containermod/policy"
 )
 
 func makeHints() map[string]string {
@@ -168,7 +169,7 @@ func main() {
 	tickIntervalMs := 10
 	// metricsIntervalMs := 1000
 	pollingIntervalMs := 10
-	monitorCpuIntervalMs := 1000
+	monitorCpuIntervalMs := 5
 	modDuration := 3600
 	nonWatchIntervals := []int64{
 		int64(tickIntervalMs),
@@ -204,7 +205,7 @@ func main() {
 	// go metrics.ProcFsMetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
 	// go metrics.PollCAdvisor(activeContainersCh, pollingIntervalMs, stopCh, &wg)
 	go metrics.MonitorCpuUsage(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
-	go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
-
+	// go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
+	go policy.WatchAccruedBurstTime("/sys/fs/cgroup/cpu/docker/schbench")
 	wg.Wait()
 }

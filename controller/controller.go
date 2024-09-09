@@ -35,7 +35,7 @@ func TickWriter(activeContainersCh <-chan []string, intervalMillisecond int, sto
 					ss := strings.Split(containerDir, "/")
 					cid := ss[len(ss)-1]
 					fmt.Println("Adjusting quota for ", cid)
-					adjustQuota(containerDir, elapsedTime, "numThreads")
+					adjustQuota(containerDir, elapsedTime, "constant")
 				}
 				for _, containerDir := range controlVariableContainers {
 					ss := strings.Split(containerDir, "/")
@@ -109,7 +109,7 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 		oldPeriod := s.Text()
 		// f(x): constant
 		if functionName == "constant" {
-			allocatedCores := int64(1)
+			allocatedCores := int64(3)
 			newPeriod = strconv.FormatInt(allocatedCores*100000, 10)
 		} else if functionName == "continuousIncrease" {
 			// f(x): continuousIncrease
