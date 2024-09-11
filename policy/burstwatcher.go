@@ -1,6 +1,14 @@
 package policy
 
-import "time"
+import (
+	"bufio"
+	"errors"
+	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"time"
+)
 
 const (
 	msPerSecond int64 = 1e3
@@ -12,6 +20,7 @@ type BurstWatcher struct {
 	/* External information */
 	periodNs           int64
 	quotaNs            int64
+	originalQuotaUs    int64
 	periodWatchStartNs int64
 	/* Configurable constants */
 	maxBurstNs      int64
@@ -68,10 +77,62 @@ func (b *BurstWatcher) updateQuotaNs(quotaNs int64) {
 	b.quotaNs = quotaNs
 }
 
+func (b *BurstWatcher) setOriginalQuotaUs(originalQuotaUs int64) {
+	b.originalQuotaUs = originalQuotaUs
+}
+
 func (b *BurstWatcher) resetJiffy() {
 	b.deltaJiffyNs -= b.jiffyForSchedNs
 }
 
 func (b *BurstWatcher) resetPeriodWatch() {
 	b.deltaPeriodWatchNs -= b.periodNs
+}
+
+func (b *BurstWatcher) resetToOriginalQuota(containerDir string) error {
+	path := fmt.Sprintf(`%s/cpu.cfs_quota_us`, containerDir)
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		// path/to/whatever does not exist
+		return err
+	}
+	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if openErr != nil {
+		log.Fatalf("While opening: %s:\n", openErr)
+		return openErr
+	}
+	defer infile.Close()
+
+	s := bufio.NewScanner(infile)
+	for s.Scan() {
+		newQuotaUs := strconv.FormatInt(b.originalQuotaUs, 10)
+		fmt.Printf("[%s] old:%s,RESET,new:%s\n", time.Now().Format(time.RFC3339Nano), s.Text(), newQuotaUs)
+		infile.WriteString(newQuotaUs)
+	}
+
+	return nil
+}
+
+func (b *BurstWatcher) applyBurst(containerDir string) error {
+	path := fmt.Sprintf(`%s/cpu.cfs_quota_us`, containerDir)
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		// path/to/whatever does not exist
+		return err
+	}
+	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if openErr != nil {
+		log.Fatalf("While opening: %s:\n", openErr)
+		return openErr
+	}
+	defer infile.Close()
+
+	s := bufio.NewScanner(infile)
+	for s.Scan() {
+		oldQuotaUs, _ := (strconv.ParseInt(s.Text(), 10, 64))
+		newQuotaUs := strconv.FormatInt(oldQuotaUs+(b.availBurstNs*usPerSecond/nsPerSecond), 10)
+		fmt.Printf("[%s] old:%d,applied:%d,new:%s\n", time.Now().Format(time.RFC3339Nano), oldQuotaUs, b.availBurstNs, newQuotaUs)
+		infile.WriteString(newQuotaUs)
+	}
+	b.availBurstNs = 0
+
+	return nil
 }
