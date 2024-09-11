@@ -34,7 +34,7 @@ type BurstWatcher struct {
 
 func NewBurstWatcher() BurstWatcher {
 	burstWatcher := BurstWatcher{
-		maxBurstNs:         100 * nsPerSecond / msPerSecond,
+		maxBurstNs:         1000 * nsPerSecond / msPerSecond,
 		jiffyForSchedNs:    5 * nsPerSecond / msPerSecond,
 		periodWatchStartNs: time.Now().UnixNano(),
 		deltaJiffyNs:       0,
@@ -70,7 +70,7 @@ func (b *BurstWatcher) addPeriodWatchNs(wallNs int64) {
 }
 
 func (b *BurstWatcher) updatePeriodNs(periodNs int64) {
-	b.periodNs = periodNs
+	b.periodNs = periodNs * 10
 }
 
 func (b *BurstWatcher) updateQuotaNs(quotaNs int64) {

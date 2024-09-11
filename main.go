@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/martinluttap/containermod/controller"
 	"github.com/martinluttap/containermod/metrics"
 	"github.com/martinluttap/containermod/policy"
 )
@@ -200,7 +199,7 @@ func main() {
 	// for _, dir := range containerDirs {
 	// 	controller.ResetQuota(dir)
 	// }
-	go controller.TickWriter(activeContainersCh, tickIntervalMs, stopCh, &wg)
+	// go controller.TickWriter(activeContainersCh, tickIntervalMs, stopCh, &wg)
 	// go metrics.MetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
 	// go metrics.ProcFsMetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
 	// go metrics.PollCAdvisor(activeContainersCh, pollingIntervalMs, stopCh, &wg)
