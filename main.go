@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/martinluttap/containermod/controller"
 	"github.com/martinluttap/containermod/metrics"
-	"github.com/martinluttap/containermod/policy"
 )
 
 func makeHints() map[string]string {
@@ -186,25 +186,13 @@ func main() {
 	wg.Add(5)
 	go StopAt(modDuration, stopCh, &wg)
 	go watchActiveContainers(dockerRootPath, containerWatchIntervalMs, activeContainersCh, stopCh, &wg)
-	// go func(activeCh chan []string) {
-	// 	for {
-	// 		select {
-	// 		case activeDirs := <-activeCh:
-	// 			fmt.Println(activeDirs, time.Now().String())
-	// 		case <-stopCh:
-	// 			return
-	// 		}
-	// 	}
-	// }(activeContainersCh)
-	// for _, dir := range containerDirs {
-	// 	controller.ResetQuota(dir)
-	// }
-	// go controller.TickWriter(activeContainersCh, tickIntervalMs, stopCh, &wg)
+	go controller.TickWriter(activeContainersCh, tickIntervalMs, stopCh, &wg)
 	// go metrics.MetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
 	// go metrics.ProcFsMetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
 	// go metrics.PollCAdvisor(activeContainersCh, pollingIntervalMs, stopCh, &wg)
 	go metrics.MonitorCpuUsage(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
-	// go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
-	go policy.WatchAccruedBurstTime("/sys/fs/cgroup/cpu/docker/schbench")
+	go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
+	go metrics.PollCpuStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
+	// go policy.WatchAccruedBurstTime("/sys/fs/cgroup/cpu/docker/schbench")
 	wg.Wait()
 }

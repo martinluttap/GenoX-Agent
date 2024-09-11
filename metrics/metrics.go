@@ -7,40 +7,14 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/containerd/cgroups/v3/cgroup1"
-	"github.com/google/cadvisor/client"
-	v1 "github.com/google/cadvisor/info/v1"
 	"github.com/prometheus/procfs"
 )
-
-func BuildCAdvisorCPUStats(containerInfo *v1.ContainerInfo) CAdvisorCpu {
-	if len(containerInfo.Stats) != 2 {
-		panic("ContainerInfo has too many elements!")
-	}
-	stats := CAdvisorCpu{
-		timeStamp:               containerInfo.Stats[0].Timestamp,
-		diffUsageTotalNs:        int64(containerInfo.Stats[1].Cpu.Usage.Total - containerInfo.Stats[0].Cpu.Usage.Total),
-		diffUsageUserNs:         int64(containerInfo.Stats[1].Cpu.Usage.User - containerInfo.Stats[0].Cpu.Usage.User),
-		diffUsageSystemNs:       int64(containerInfo.Stats[1].Cpu.Usage.System - containerInfo.Stats[0].Cpu.Usage.System),
-		cfsQuotaUs:              int64(containerInfo.Spec.Cpu.Quota),
-		cfsPeriodUs:             int64(containerInfo.Spec.Cpu.Period),
-		cfsNumPeriods:           int64(containerInfo.Stats[0].Cpu.CFS.Periods),
-		cfsThrottledPeriods:     int64(containerInfo.Stats[0].Cpu.CFS.ThrottledPeriods),
-		cfsThrottledTimeNs:      int64(containerInfo.Stats[0].Cpu.CFS.ThrottledTime),
-		schedstatRunTimeNs:      int64(containerInfo.Stats[0].Cpu.Schedstat.RunTime),
-		schedstatRunqueueTimeNs: int64(containerInfo.Stats[0].Cpu.Schedstat.RunqueueTime),
-		schedstatRunPeriods:     int64(containerInfo.Stats[0].Cpu.Schedstat.RunPeriods),
-	}
-
-	return stats
-}
 
 func BuildCpuUsage(stat procfs.Stat) CpuUsage {
 	workingTime := stat.CPUTotal.User + stat.CPUTotal.System + stat.CPUTotal.Nice + stat.CPUTotal.IRQ + stat.CPUTotal.SoftIRQ
@@ -187,127 +161,6 @@ func ProcFsMetricsCollection(containerDirs []string, metricsIntervalMs int, stop
 	}
 }
 
-func PollCAdvisor(containerDirs []string, pollingIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
-
-	defer wg.Done()
-
-	client, err := client.NewClient("http://localhost:8080/")
-	if err != nil {
-		panic(err)
-	}
-	pollingTicker := time.NewTicker(time.Duration(pollingIntervalMs) * time.Millisecond)
-	for {
-		select {
-		case <-pollingTicker.C:
-			request := v1.ContainerInfoRequest{NumStats: 2}
-			for _, cidPath := range containerDirs {
-				ss := strings.Split(cidPath, "/")
-				cid := ss[len(ss)-1]
-				sInfo, reqErr := client.ContainerInfo(fmt.Sprintf("/docker/%s", cid), &request)
-				if reqErr != nil {
-					panic(reqErr)
-				}
-				currCAdvisorCpu := BuildCAdvisorCPUStats(sInfo)
-				usedCpuSeconds := (currCAdvisorCpu.diffUsageSystemNs + currCAdvisorCpu.diffUsageUserNs) / 1000000
-				allocatedCpuSeconds := currCAdvisorCpu.cfsQuotaUs / currCAdvisorCpu.cfsPeriodUs
-
-				usage := usedCpuSeconds / allocatedCpuSeconds
-				fmt.Printf("Usage %s: %d\n", cidPath, usage)
-
-				// newTimestamp, _ := json.MarshalIndent(sInfo.Stats[0].Timestamp, "", "    ")
-				// newCpuStats, _ := json.MarshalIndent(sInfo.Stats[0].Cpu, "", "    ")
-			}
-		case <-stopCh:
-			return
-		}
-	}
-}
-
-func BuildDockerStats(cidToDirMap map[string]string) map[string]DockerStats {
-	/*
-			CONTAINER ID   NAME                           CPU %     MEM USAGE / LIMIT     MEM %     NET I/O          BLOCK I/O     PIDS
-		c1105f0ff4b6   nxf-ApNjNbCU6j9F7z3k015mW07X   375.73%   11.53GiB / 187.4GiB   6.15%     2.45kB / 0B      5.45GB / 0B   103
-		678500ab3f33   cadvisor                       28.72%    270MiB / 187.4GiB     0.14%     5.13MB / 428MB   3.73MB / 0B   96
-	*/
-	// Execute command
-	cmd := exec.Command("docker", "stats", "--no-stream")
-	var out strings.Builder
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Capture and process output
-	lines := strings.Split(strings.TrimSpace(out.String()), "\n")
-	_, data := lines[0], lines[1:]
-	statsMap := map[string]DockerStats{}
-	for _, d := range data {
-		fields := strings.Fields(d)
-		cid, name := fields[0], fields[1]
-		cpuUsage, _ := strconv.ParseFloat(strings.TrimRight(fields[2], `%`), 64)
-		containerDir := cidToDirMap[cid]
-		statsMap[containerDir] = DockerStats{
-			containerId:   cid,
-			containerName: name,
-			cpuUsage:      cpuUsage,
-		}
-	}
-
-	return statsMap
-}
-
-func executeCgtop(cgroup string) string {
-	/*	Execute:
-		systemd-cgtop -b -n 2 -d 25ms docker/6629b5c0395314ab47fd4dec05d71bea3657c0bfb8f6087feecbda6c225702ca
-		---
-		Output:
-		ControlGroup 		 Tasks   %CPU   Memory  Input/s Output/s
-		docker/6629b5...      99   25.7   257.3M        -        -
-	*/
-	cmd := exec.Command("systemd-cgtop", "-b", "-n", "2", "-d", "5ms", cgroup)
-	var out strings.Builder
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return out.String()
-}
-
-func GetProcStatCpuCgtop(containerDirs []string) map[string]float64 {
-	/*	Execute:
-		systemd-cgtop -b -n 2 -d 25ms docker/6629b5c0395314ab47fd4dec05d71bea3657c0bfb8f6087feecbda6c225702ca
-		---
-		Output:
-		ControlGroup 		 Tasks   %CPU   Memory  Input/s Output/s
-		docker/6629b5...      99   25.7   257.3M        -        -
-
-		Return map {"docker/66...": 25.7}
-	*/
-	cgtopMap := map[string]float64{}
-	for _, containerDir := range containerDirs {
-		ss := strings.Split(containerDir, "/")
-		cgroup := strings.Join(ss[len(ss)-2:], `/`)
-		// We take 10 iterations with rate 0.1 ms, but it's possible that not all has cpu usage (or even any).
-		// Thus, we either take the last value, or if there's no value at all, we repeat the process.
-		cpuUsages := []string{}
-		for len(cpuUsages) == 0 {
-			out := executeCgtop(cgroup)
-			allLines := strings.Fields(out)
-			lineLen := 6
-			for i := 0; i < len(allLines); i = i + lineLen {
-				singleLine := allLines[i : i+lineLen]
-				if singleLine[2] != `-` {
-					cpuUsages = append(cpuUsages, singleLine[2])
-				}
-			}
-		}
-		val, _ := strconv.ParseFloat(cpuUsages[len(cpuUsages)-1], 64)
-		cgtopMap[containerDir] = val
-	}
-	return cgtopMap
-}
-
 func GetCpuStatData(containerDir string) (int64, int64, int64) {
 	infile, openErr := os.OpenFile(fmt.Sprintf("%s/cpu.stat", containerDir), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if openErr != nil {
@@ -358,58 +211,6 @@ func GetCFSData(containerDir string) (int64, int64) {
 	cfsPeriod, _ := strconv.Atoi(periodScanner.Text())
 
 	return int64(cfsQuota), int64(cfsPeriod)
-}
-
-func GetIOStatData(containerDir string) (int64, int64, int64, int64, int64, int64, int64) {
-	// Instead of cgroup/cpu, IO statistics are found in cgroup/blkio.
-	// We modify the given path to reflect this.
-	ss := strings.Split(containerDir, "/")
-	ss[4] = "blkio"
-	newContainerDir := strings.Join(ss, "/")
-	fmt.Println(newContainerDir)
-
-	// We do not use cgroups' blkio files because there are mismatches between /proc/pid/io files and them. For example, when running BWA, cgroups' files report no write, while /proc/pid/io shows significant amount of writes. We believe /proc/pid/io is right in this case.
-	procs := GetAllProcs(containerDir)
-	totalRchar := int64(0)
-	totalWchar := int64(0)
-	totalSyscr := int64(0)
-	totalSyscw := int64(0)
-	totalReadBytes := int64(0)
-	totalWriteBytes := int64(0)
-	totalCancelledWriteBytes := int64(0)
-	for _, p := range procs {
-		ioInfile, openErr := os.OpenFile(fmt.Sprintf("/proc/%s/io", p), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-		if openErr != nil {
-			log.Fatalf("While opening: %s:\n", openErr)
-		}
-		defer ioInfile.Close()
-
-		s := bufio.NewScanner(ioInfile)
-		s.Scan()
-		rchar, _ := strconv.ParseInt(strings.Fields(s.Text())[1], 10, 64)
-		s.Scan()
-		wchar, _ := strconv.ParseInt(strings.Fields(s.Text())[1], 10, 64)
-		s.Scan()
-		syscr, _ := strconv.ParseInt(strings.Fields(s.Text())[1], 10, 64)
-		s.Scan()
-		syscw, _ := strconv.ParseInt(strings.Fields(s.Text())[1], 10, 64)
-		s.Scan()
-		read_bytes, _ := strconv.ParseInt(strings.Fields(s.Text())[1], 10, 64)
-		s.Scan()
-		write_bytes, _ := strconv.ParseInt(strings.Fields(s.Text())[1], 10, 64)
-		s.Scan()
-		cancelled_write_bytes, _ := strconv.ParseInt(strings.Fields(s.Text())[1], 10, 64)
-
-		totalRchar += rchar
-		totalWchar += wchar
-		totalSyscr += syscr
-		totalSyscw += syscw
-		totalReadBytes += read_bytes
-		totalWriteBytes += write_bytes
-		totalCancelledWriteBytes += cancelled_write_bytes
-	}
-
-	return totalRchar, totalWchar, totalSyscr, totalSyscw, totalReadBytes, totalWriteBytes, totalCancelledWriteBytes
 }
 
 func GetAllProcs(containerDir string) []string {
@@ -485,46 +286,13 @@ func BuildKernelStats(containerDirs []string) map[string]KernelStats {
 	return kernelStatsD
 }
 
-func prepPolling(containerDirs []string, outWriterDict map[string]*csv.Writer) []*os.File {
-
-	csvFds := []*os.File{}
-	// Check existence of container in map.
-	// If no entry yet, create metrics file and save the pointer towards it.
-	for _, containerDir := range containerDirs {
-		if _, exists := outWriterDict[containerDir]; !exists {
-			fmt.Println("Created new writer for ", containerDir)
-			ss := strings.Split(containerDir, "/")
-			cid := ss[len(ss)-1][:13] // Use first 12 chars as containerId to match Docker's stats
-			outFile, err := os.Create(fmt.Sprintf("%s.csv", cid))
-			if err != nil {
-				panic(err)
-			}
-			// defer outFile.Close()
-			csvFds = append(csvFds, outFile)
-			writer := csv.NewWriter(outFile)
-			defer writer.Flush()
-			// this defines the header value and data values for the new csv file
-			headers := []string{"timestampNs", "cid", "totalCpu", "quotaUs", "periodUs", "numPeriods", "trPeriods", "trTimeNs"}
-			writer.Write(headers)
-			outWriterDict[containerDir] = writer
-		}
-	}
-
-	return csvFds
-	// Build cid -> containerDir map to join DockerStats and KernelStats
-	// cidToDirMap := map[string]string{}
-	// ss := strings.Split(containerDir, "/")
-	// cid := ss[len(ss)-1][:12]
-	// cidToDirMap[cid] = containerDir
-}
-
 func PollAllStats(activeContainersCh <-chan []string, pollingIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
 	// containerDirs := <-activeContainersCh
 	outWriterDict := map[string]*csv.Writer{}
-	// csvFds := prepPolling(containerDirs, outWriterDict)
+	// csvFds := prepPollingAllStats(containerDirs, outWriterDict)
 	csvFds := []*os.File{}
 	// hertz, _ := GetSystemHz()
 	// hertz := int64(250)
@@ -533,11 +301,11 @@ func PollAllStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 		select {
 		case containerDirs := <-activeContainersCh:
 			fmt.Println(time.Now().String(), "Active contianers", containerDirs)
-			newFds := prepPolling(containerDirs, outWriterDict)
+			newFds := prepPollingAllStats(containerDirs, outWriterDict)
 			csvFds = append(csvFds, newFds...)
 
 			profileStart := time.Now()
-			cgtopMap := GetProcStatCpuCgtop(containerDirs)
+			// cgtopMap := GetProcStatCpuCgtop(containerDirs)
 			kernelStatsMap := BuildKernelStats(containerDirs)
 			profileEnd := time.Now()
 
@@ -546,7 +314,7 @@ func PollAllStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 			for containerDir, writer := range outWriterDict {
 				ss := strings.Split(containerDir, "/")
 				cid := ss[len(ss)-1][:12]
-				totalCpu := fmt.Sprintf("%.2f", cgtopMap[containerDir])
+				// totalCpu := fmt.Sprintf("%.2f", cgtopMap[containerDir])
 				quotaUs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsQuotaUs)
 				periodUs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsPeriodUs)
 				numPeriods := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsNumPeriods)
@@ -554,7 +322,7 @@ func PollAllStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 				trTimeNs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsThrottledTimeNs)
 
 				row := []string{
-					ts, cid, totalCpu, quotaUs, periodUs, numPeriods, trPeriods, trTimeNs,
+					ts, cid, quotaUs, periodUs, numPeriods, trPeriods, trTimeNs,
 				}
 				fmt.Println("Wrote ", row, "to ", containerDir)
 				writer.Write(row)
@@ -569,51 +337,6 @@ func PollAllStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 			fmt.Println()
 			return
 		}
-	}
-}
-
-func GetSystemHz() (int64, error) {
-	var uname syscall.Utsname
-	if err := syscall.Uname(&uname); err == nil {
-		// extract members:
-		// type Utsname struct {
-		//  Sysname    [65]int8
-		//  Nodename   [65]int8
-		//  Release    [65]int8
-		//  Version    [65]int8
-		//  Machine    [65]int8
-		//  Domainname [65]int8
-		// }
-		fmt.Println(
-			int8ToStr(uname.Release[:]),
-		)
-	}
-	kernelRelease := int8ToStr(uname.Release[:])
-	fmt.Println("GetSystemHz()", kernelRelease)
-	bootConfigFile, openErr := os.OpenFile(fmt.Sprintf("/boot/config-%s", kernelRelease), os.O_RDONLY, 0444)
-	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
-	}
-	defer bootConfigFile.Close()
-
-	// Get all procs associated with container
-	s := bufio.NewScanner(bootConfigFile)
-	s.Scan()
-	fmt.Println("Test", s.Text())
-	var hertz string
-	for s.Scan() {
-		fmt.Println(s.Text())
-		if strings.Contains(s.Text(), "CONFIG_HZ=") {
-			hertz = strings.Split(s.Text(), "=")[1]
-			fmt.Println(hertz)
-			break
-		}
-	}
-	if hertz != "" {
-		hzValue, _ := strconv.ParseInt(hertz, 10, 64)
-		return hzValue, nil
-	} else {
-		return 0, errors.New("Failed to read system hertz!")
 	}
 }
 
@@ -671,6 +394,65 @@ func sumWorkingTime(cpuTotal procfs.CPUStat) float64 {
 	// https://github.com/moby/moby/blob/master/daemon/stats_unix.go#L321
 	// man 5 proc
 	return (cpuTotal.User + cpuTotal.Nice + cpuTotal.System + cpuTotal.Iowait + cpuTotal.IRQ + cpuTotal.SoftIRQ + cpuTotal.Steal)
+}
+
+func PollCpuStats(activeContainersCh <-chan []string, pollingIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
+
+	defer wg.Done()
+
+	outWriterDict := map[string]*csv.Writer{}
+	csvFds := []*os.File{}
+	lastCpuMap := map[string]int64{}
+	prevWall := time.Now()
+	timeStart := time.Now()
+	USER_HZ := 100 // getconf CLK_TCK 100
+	fs, _ := procfs.NewFS("/proc")
+	prevStat, _ := fs.Stat()
+	prevSysCpuTotal := sumWorkingTime(prevStat.CPUTotal)
+
+	for {
+		select {
+		case containerDirs := <-activeContainersCh:
+			newFds := prepPollingCpuStats(containerDirs, outWriterDict)
+			csvFds = append(csvFds, newFds...)
+
+			ts := strconv.FormatInt((time.Since(timeStart) * time.Nanosecond).Nanoseconds(), 10)
+
+			deltaWall := time.Since(prevWall).Nanoseconds()
+			stat, _ := fs.Stat()
+			sysCpuTotal := sumWorkingTime(stat.CPUTotal)
+			deltaSys := (sysCpuTotal - prevSysCpuTotal) / float64(USER_HZ) * 1e9
+
+			for containerDir, writer := range outWriterDict {
+				control, _ := cgroup1.Load(cgroup1.StaticPath(strings.TrimPrefix(containerDir, "/sys/fs/cgroup/cpu")))
+				stats, _ := control.Stat(cgroup1.IgnoreNotExist)
+				ctrCpuNs := stats.GetCPU().GetUsage().Total
+				prevctrCpuNs := lastCpuMap[containerDir]
+				deltaCtrCpuNs := int64(ctrCpuNs) - prevctrCpuNs
+
+				ctrCpuUsage := strconv.FormatFloat(float64(deltaCtrCpuNs)/float64(deltaWall)*100, 'f', 2, 64)
+				machineUsage := strconv.FormatFloat(deltaSys/float64(deltaWall)*100, 'f', 2, 64)
+
+				ss := strings.Split(containerDir, "/")
+				cid := ss[len(ss)-1]
+				row := []string{
+					ts, cid, ctrCpuUsage, machineUsage,
+				}
+				writer.Write(row)
+				writer.Flush()
+				fmt.Println(writer.Error())
+			}
+			prevSysCpuTotal = sysCpuTotal
+			prevWall = time.Now()
+
+		case <-stopCh:
+			for idx, fd := range csvFds {
+				fmt.Printf("Closing fd for container %d: %p\n", idx, fd)
+			}
+			fmt.Println()
+			return
+		}
+	}
 }
 
 func MonitorCpuUsage(activeContainersCh <-chan []string, MonitorIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {

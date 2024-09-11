@@ -1,7 +1,7 @@
 import groovy.time.TimeCategory 
 import groovy.time.TimeDuration
 
-include { BWA_NO_LIMIT as BWA1 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
+include { BWA_NO_LIMIT as BWA1 } from "/home/cc//elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
 
 REF_PATH = "/home/cc/nextflow/reference-files"
 ref_fa = Channel.fromPath(REF_PATH + '/*.fa')
