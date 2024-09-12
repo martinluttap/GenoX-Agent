@@ -43,7 +43,7 @@ func prepPollingCpuStats(containerDirs []string, outWriterDict map[string]*csv.W
 		if _, exists := outWriterDict[containerDir]; !exists {
 			fmt.Println("Created new writer for ", containerDir)
 			ss := strings.Split(containerDir, "/")
-			cid := ss[len(ss)-1][:13] // Use first 12 chars as containerId to match Docker's stats
+			cid := ss[len(ss)-1][:5]
 			outFile, err := os.Create(fmt.Sprintf("%s-cpu.csv", cid))
 			if err != nil {
 				panic(err)

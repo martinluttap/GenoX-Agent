@@ -41,6 +41,11 @@ func setBurstValue(containerDir string, newValue int64) {
 }
 
 func DefaultBurstController(activeContainersCh <-chan []string, intervalMillisecond int, stopCh chan int, wg *sync.WaitGroup) {
+
+	/*
+		When kernel burst is enabled, for each of active container,
+		we set the burst value to an integer N multiple of current quota value.
+	*/
 	for {
 		select {
 		case containerDirs := <-activeContainersCh:
@@ -48,14 +53,14 @@ func DefaultBurstController(activeContainersCh <-chan []string, intervalMillisec
 				/*
 					Third-party packages do not support burstable CFS, so we need to build our own cfs_burst_us control utilities here.
 				*/
-				burstValueUs := getBurstValue(containerDir)
-				if burstValueUs == 0 {
-					fmt.Printf("[%s] %s SET TO 100000 current burst: %d\n", time.Now().Format(time.RFC3339Nano), containerDir, burstValueUs)
-					setBurstValue(containerDir, 100000)
-				} else {
-					fmt.Printf("[%s] %s SET TO 0 current burst: %d\n", time.Now().Format(time.RFC3339Nano), containerDir, burstValueUs)
-					setBurstValue(containerDir, 0)
-				}
+				// burstValueUs := getBurstValue(containerDir)
+				setBurstValue(containerDir, 400000)
+				// if burstValueUs == 0 {
+				// 	fmt.Printf("[%s] %s SET TO 100000 current burst: %d\n", time.Now().Format(time.RFC3339Nano), containerDir, burstValueUs)
+				// 	setBurstValue(containerDir, 100000)
+				// } else {
+				// 	fmt.Printf("[%s] %s SET TO 0 current burst: %d\n", time.Now().Format(time.RFC3339Nano), containerDir, burstValueUs)
+				// 	setBurstValue(containerDir, 0)
 			}
 		}
 	}
