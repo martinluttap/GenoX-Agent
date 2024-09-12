@@ -12,6 +12,7 @@ import (
 
 	"github.com/martinluttap/containermod/controller"
 	"github.com/martinluttap/containermod/metrics"
+	"github.com/martinluttap/containermod/policy"
 )
 
 func makeHints() map[string]string {
@@ -150,16 +151,6 @@ func disableBurst() error {
 	return writeErr
 }
 
-func setBurst(isBurstEnabled bool) {
-	if isBurstEnabled {
-		fmt.Println("Burst enabled!")
-		enableBurst()
-	} else {
-		fmt.Println("Burst disabled!")
-		disableBurst()
-	}
-}
-
 func main() {
 	// Log filename and timestamp for debugging
 	log.SetFlags(log.Lshortfile | log.Ltime)
@@ -178,13 +169,25 @@ func main() {
 	// subsystem := flag.String("subsystem", "cpu", hints["subsystem"])
 	// period := flag.String("cpu.cfs_period_us", "100000", hints["cpu.cfs_period_us"])
 	// quota := flag.String("cpu.cfs_quota_us", "-1", hints["cpu.cfs_quota_us"])
-	var burstFlag bool
-	flag.BoolVar(&burstFlag, "enable-burst", false, hints["enableBurst"])
+	var (
+		flagBurst      bool
+		flagCfsBurstUs int64
+	)
+	flag.BoolVar(&flagBurst, "enable-burst", false, hints["enableBurst"])
+	flag.Int64Var(&flagCfsBurstUs, "cpu.cfs_burst_us", 0, hints["cpu.cfs_burst_us"])
 	flag.Parse()
 
-	setBurst(burstFlag)
+	if flagBurst {
+		enableBurst()
+		fmt.Printf("[%s] Burst enabled!", time.Now().Format(time.RFC3339Nano))
+	} else {
+		disableBurst()
+		fmt.Printf("[%s] Burst disabled!", time.Now().Format(time.RFC3339Nano))
+	}
 
-	panic("Exit")
+	/*
+		Our algorithm is a follows. For each execution, we received from the user a flag indicating whether burst disabled or enabled. Following that, we decide on the amount of burst we need to allocate for each contianer. This should happen using 'monitor' pattern, since we do not have any information about active containers at this point.
+	*/
 
 	// Prepare results folder
 	prepareResultsFolder()
@@ -232,6 +235,10 @@ func main() {
 	// go metrics.MonitorCpuUsage(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 	// go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
 	go metrics.PollCpuStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
+
+	if flagBurst {
+		go policy.DefaultBurstController(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
+	}
 	// go policy.WatchAccruedBurstTime("/sys/fs/cgroup/cpu/docker/schbench")
 	wg.Wait()
 }
