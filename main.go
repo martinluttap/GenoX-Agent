@@ -21,17 +21,13 @@ func makeHints() map[string]string {
 	hints["subsystem"] = `Cgroup subsystems.`
 	hints["cpu.cfs_period_us"] = `CFS period in us, conforms to Linux's convention.`
 	hints["cpu.cfs_quota_us"] = `CFS quota in us, conforms to Linux's convention.`
+	hints["enableBurst"] = `Enable burstable CFS by putting 1 in /proc/sys/kernel/sched_cfs_bw_burst_enabled.`
 
 	return hints
 }
 
-func makeFlagMap(cgroup *string, subsystem *string, period *string, quota *string) map[string]string {
+func makeFlagMap(enableBurst *string) map[string]string {
 	flagMaps := make(map[string]string)
-
-	flagMaps["cgroup"] = *cgroup
-	flagMaps["subsystem"] = *subsystem
-	flagMaps["period"] = *period
-	flagMaps["quota"] = *quota
 
 	return flagMaps
 }
@@ -126,6 +122,44 @@ func StopAt(limit int, stopCh chan int, wg *sync.WaitGroup) {
 	stopCh <- 0
 }
 
+func enableBurst() error {
+	path := "/proc/sys/kernel/sched_cfs_bw_burst_enabled"
+	infile, openErr := os.OpenFile(path, os.O_RDWR, 0644)
+	if openErr != nil {
+		panic("Error opening burst file!")
+	}
+	defer infile.Close()
+
+	enabled := "1"
+	_, writeErr := infile.WriteString(enabled)
+
+	return writeErr
+}
+
+func disableBurst() error {
+	path := "/proc/sys/kernel/sched_cfs_bw_burst_enabled"
+	infile, openErr := os.OpenFile(path, os.O_RDWR, 0644)
+	if openErr != nil {
+		panic("Error opening burst file!")
+	}
+	defer infile.Close()
+
+	enabled := "0"
+	_, writeErr := infile.WriteString(enabled)
+
+	return writeErr
+}
+
+func setBurst(isBurstEnabled bool) {
+	if isBurstEnabled {
+		fmt.Println("Burst enabled!")
+		enableBurst()
+	} else {
+		fmt.Println("Burst disabled!")
+		disableBurst()
+	}
+}
+
 func main() {
 	// Log filename and timestamp for debugging
 	log.SetFlags(log.Lshortfile | log.Ltime)
@@ -140,12 +174,17 @@ func main() {
 	*/
 	hints := makeHints()
 
-	cgroup := flag.String("cgroup", "docker", hints["cgroupName"])
-	subsystem := flag.String("subsystem", "cpu", hints["subsystem"])
-	period := flag.String("cpu.cfs_period_us", "100000", hints["cpu.cfs_period_us"])
-	quota := flag.String("cpu.cfs_quota_us", "-1", hints["cpu.cfs_quota_us"])
+	// cgroup := flag.String("cgroup", "docker", hints["cgroupName"])
+	// subsystem := flag.String("subsystem", "cpu", hints["subsystem"])
+	// period := flag.String("cpu.cfs_period_us", "100000", hints["cpu.cfs_period_us"])
+	// quota := flag.String("cpu.cfs_quota_us", "-1", hints["cpu.cfs_quota_us"])
+	var burstFlag bool
+	flag.BoolVar(&burstFlag, "enable-burst", false, hints["enableBurst"])
 	flag.Parse()
-	_ = makeFlagMap(cgroup, subsystem, period, quota)
+
+	setBurst(burstFlag)
+
+	panic("Exit")
 
 	// Prepare results folder
 	prepareResultsFolder()
@@ -190,9 +229,9 @@ func main() {
 	// go metrics.MetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
 	// go metrics.ProcFsMetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
 	// go metrics.PollCAdvisor(activeContainersCh, pollingIntervalMs, stopCh, &wg)
-	go metrics.MonitorCpuUsage(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
-	go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
-	go metrics.PollCpuStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
+	// go metrics.MonitorCpuUsage(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
+	// go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
+	go metrics.PollCpuStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 	// go policy.WatchAccruedBurstTime("/sys/fs/cgroup/cpu/docker/schbench")
 	wg.Wait()
 }

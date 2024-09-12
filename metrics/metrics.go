@@ -430,7 +430,7 @@ func PollCpuStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 				prevctrCpuNs := lastCpuMap[containerDir]
 				deltaCtrCpuNs := int64(ctrCpuNs) - prevctrCpuNs
 
-				ctrCpuUsage := strconv.FormatFloat(float64(deltaCtrCpuNs)/float64(deltaWall)*100, 'f', 2, 64)
+				ctrCpuUsage := strconv.FormatFloat(float64(deltaCtrCpuNs)/float64(deltaWall)/92, 'f', 2, 64)
 				machineUsage := strconv.FormatFloat(deltaSys/float64(deltaWall)*100, 'f', 2, 64)
 
 				ss := strings.Split(containerDir, "/")
@@ -438,6 +438,7 @@ func PollCpuStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 				row := []string{
 					ts, cid, ctrCpuUsage, machineUsage,
 				}
+				fmt.Printf("[%s] %s: %s (CTR), %s (MACHINE)\n", time.Now().Format(time.RFC3339Nano), cid, ctrCpuUsage, machineUsage)
 				writer.Write(row)
 				writer.Flush()
 				fmt.Println(writer.Error())
@@ -491,13 +492,6 @@ func MonitorCpuUsage(activeContainersCh <-chan []string, MonitorIntervalMs int, 
 				fmt.Printf("[%s] %s, deltaCpuNs:%d, deltaSys:%f, deltaWall: %f, CPU Util.: %f, Sys. Util.: %f\n", time.Now(), containerDir, deltaCpuNs, deltaSys, float64(deltaWall), cpuUsage, machineUsage)
 
 				lastCpuMap[containerDir] = int64(cpuNs)
-				// containerProcs := GetAllProcs(containerDir)
-				// for _, proc := range containerProcs {
-				// 	// newProcStat := GetProcStatCpu(containerDir, proc, hertz)
-				// 	pid, _ := strconv.ParseInt(proc, 10, 32)
-				// 	procObj, _ := procfs.NewProc(int(pid))
-				// 	stat, _ := procObj.Stat()
-				// 	fmt.Printf("[%s] ctr-%s pid-%s:utime=%d,stime=%d\n", time.Now(), containerDir, proc, stat.UTime, stat.STime)
 			}
 			prevSysCpuTotal = sysCpuTotal
 			prevWall = time.Now()
