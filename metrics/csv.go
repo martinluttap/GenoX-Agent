@@ -34,7 +34,7 @@ func prepPollingAllStats(containerDirs []string, outWriterDict map[string]*csv.W
 	return csvFds
 }
 
-func prepPollingCpuStats(containerDirs []string, outWriterDict map[string]*csv.Writer) []*os.File {
+func PrepPollingCpuStats(containerDirs []string, outWriterDict map[string]*csv.Writer) []*os.File {
 
 	csvFds := []*os.File{}
 	// Check existence of container in map.

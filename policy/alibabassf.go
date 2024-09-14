@@ -14,6 +14,66 @@ import (
 	"github.com/martinluttap/containermod/metrics"
 )
 
+func AIMD(activeContainersCh chan []string) {
+	/*
+		We implement the userspace policy used by AlibabaSSF to do AIMD similar to TCP quick drop but slow rebound. There are a couple factors we need to consider:
+		1. There is a constant for average and maximum CPU utilization for each app which will be used to decide whther the application is throttle.d
+		2. We consider the interference of hyperthreading when we share workload on different set of physical cores.
+
+		N_CORES ← number of physical cores in the machine
+		Split N_CORES into two sets: EXCLUSIVE and SHARED.
+		Classify applications into Sensitive (S), Bursty (B), and Insensitive (I).
+		U_thres ← determine threshold s.t. hyperthread interference is negligible for all  cores.
+		e ← constant for additive increase
+		r ← constant for multiplicative decrease
+		for app in (B + I):
+		U ← determine threshold s.t. hyperthread interference is negligible only for SHARED cores.
+		P_avg ← average CPU utilization of app.
+		P_lim ← max. allowed CPU utilization for app.
+		if (U < U_thres) and (P_avg < P_lim):
+			if app is throttled:
+					app_quota += e
+		else:
+			app_quota = (app_quota / r)
+	*/
+	ADD_CONST := 50000 // Addition value for increasing quota in step-wise manner.
+	MULT_CONST := 4    // (De)multiplication value for rapidly decrease quota.
+	prevCidTTMap := map[string]int64{}
+	for {
+		select {
+		case containerDirs := <-activeContainersCh:
+			prevWallTime := time.Now()
+			for _, containerDir := range containerDirs {
+				/*
+					For each active container, we maintain a map of previous throttled time. We then compare the value on each polling period -- if there are delta, the application is being throttled, and we may do additive increase. Else we multiplicatively decrease.
+
+					We need to make sure that, if possible, everything we do is faster than a single period. 100ms is too coarse for the rapid response needed in our case.
+				*/
+				cid := strings.TrimPrefix(containerDir, "/sys/fs/cgroup/cpu/docker")
+				control, _ := cgroup1.Load(cgroup1.StaticPath(cid))
+				stats, _ := control.Stat()
+				cidThrotTimeNs := stats.GetCPU().GetThrottling().GetThrottledTime()
+
+				prevThrotTimens := prevCidTTMap[cid]
+				deltaThrotTimeNs := cidThrotTimeNs - uint64(prevThrotTimens)
+
+				if deltaThrotTimeNs > 0 {
+					deltaTimeNs := time.Since(prevWallTime).Nanoseconds()
+					fmt.Printf("[%s] %s has delta %d in %d\n", time.Now().Format(time.RFC3339Nano), cid, deltaThrotTimeNs, deltaTimeNs)
+
+					/* Increase quota here */
+					infile
+				}
+				prevCidTTMap[cid] = int64(cidThrotTimeNs)
+
+				fmt.Printf("[%s] ACTIVE %s\n", time.Now().Format(time.RFC3339Nano), containerDir)
+			}
+
+		}
+	}
+
+}
+
 func WatchAccruedBurstTime(containerDir string) {
 	prevCpuNs := 0
 	prevWall := time.Now()

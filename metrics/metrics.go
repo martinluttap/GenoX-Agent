@@ -413,7 +413,7 @@ func PollCpuStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 	for {
 		select {
 		case containerDirs := <-activeContainersCh:
-			newFds := prepPollingCpuStats(containerDirs, outWriterDict)
+			newFds := PrepPollingCpuStats(containerDirs, outWriterDict)
 			csvFds = append(csvFds, newFds...)
 
 			ts := strconv.FormatInt((time.Since(timeStart) * time.Nanosecond).Nanoseconds(), 10)
