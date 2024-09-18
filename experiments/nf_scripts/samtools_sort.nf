@@ -38,7 +38,7 @@ workflow {
     SAMTOOLS_SORT1(
         bam_file
     )
-    SAMTOOLS_SORT2(
-        bam_file
-    )
+    // SAMTOOLS_SORT2(
+    //     bam_file
+    // )
 }

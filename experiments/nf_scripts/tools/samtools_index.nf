@@ -3,13 +3,12 @@ process SAMTOOLS_INDEX_NO_LIMIT {
 
     input:
       path input_bam
-	    path input_bai
     
     output:
-      path "${input_bam.getBaseName()}.idxstats", emit: bam_index
+      path "${input_bam.getBaseName()}.bai", emit: bam_index
 
     script:
       """
-      samtools idxstats  -@ 96 ${input_bam} > ${input_bam.getBaseName()}.idxstats
+      samtools index  -@ 96 ${input_bam} > ${input_bam.getBaseName()}.bai
       """
 }

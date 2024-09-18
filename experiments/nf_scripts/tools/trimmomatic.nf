@@ -6,6 +6,6 @@ process TRIMMOMATIC_NO_LIMIT {
 		
     script:
         """
-        java -Xmx32G -jar /bin/trimmomatic.jar PE -threads 64 ${forward_fastq} ${reverse_fastq} -baseout ${forward_fastq.getBaseName()}.out TOPHRED33
+        java -Xmx32G -jar /bin/trimmomatic.jar PE -threads 96 ${forward_fastq} ${reverse_fastq} -baseout ${forward_fastq.getBaseName()}.out TOPHRED33
         """        
 }
