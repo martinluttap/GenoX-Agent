@@ -171,9 +171,11 @@ func CappedNumThreads(containerDir string, cap int) string {
 		counter = counter + 1
 	}
 	target := int64(math.Round(math.Min(float64(counter), float64(cap))))
+	base := int64(1) // Same as policy 'constant'
+	decision := int64(math.Round(math.Max(float64(base), float64(target))))
 
 	QUOTA_ONE_CORE := 100000
-	return strconv.FormatInt(target*int64(QUOTA_ONE_CORE), 10)
+	return strconv.FormatInt(decision*int64(QUOTA_ONE_CORE), 10)
 }
 
 /*********************************************************/

@@ -36,8 +36,8 @@ func AIMD(activeContainersCh chan []string) {
 		else:
 			app_quota = (app_quota / r)
 	*/
-	ADD_CONST := 50000 // Addition value for increasing quota in step-wise manner.
-	MULT_CONST := 4    // (De)multiplication value for rapidly decrease quota.
+	// ADD_CONST := 50000 // Addition value for increasing quota in step-wise manner.
+	// MULT_CONST := 4    // (De)multiplication value for rapidly decrease quota.
 	prevCidTTMap := map[string]int64{}
 	for {
 		select {
@@ -62,7 +62,7 @@ func AIMD(activeContainersCh chan []string) {
 					fmt.Printf("[%s] %s has delta %d in %d\n", time.Now().Format(time.RFC3339Nano), cid, deltaThrotTimeNs, deltaTimeNs)
 
 					/* Increase quota here */
-					infile
+					// infile
 				}
 				prevCidTTMap[cid] = int64(cidThrotTimeNs)
 

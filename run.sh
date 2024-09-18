@@ -10,6 +10,8 @@ getMode() {
     case "${FLAGS}" in 
         "-enable-burst")
             echo "burst" ;;
+        "-elastic")
+            echo "ectr" ;;
         *)
             echo "noburst" ;;
     esac
@@ -38,10 +40,10 @@ MODE=$(getMode $FLAGS)
 # - samtools_sort
 # - star
 # - trimmomatic
-APPS="trimmomatic"
-NUM_RUNS=$((3))
+APPS="bwa"
+NUM_RUNS=$((6))
 
-for i in $(seq 1 $NUM_RUNS); do
+for i in $(seq 4 $NUM_RUNS); do
     for APP in $APPS; do 
         START_TIME=$(date +%H-%M-%S)
         LABEL=$MODE-$APP-$i

@@ -44,6 +44,6 @@ process GATK4_BASERECAL_SPARK_NO_LIMIT {
 		
     script:
         """
-        java -jar /usr/local/bin/gatk.jar BaseRecalibratorSpark --output ${input.baseName}_bqsr.grp --input ${input} --known-sites ${known_sites} --reference ${ref_fa} --spark-master local[16]
+        java -jar /usr/local/bin/gatk.jar BaseRecalibratorSpark --output ${input.baseName}_bqsr.grp --input ${input} --known-sites ${known_sites} --reference ${ref_fa} --spark-master local[92]
         """
 }

@@ -53,8 +53,9 @@ func DefaultBurstController(activeContainersCh <-chan []string, intervalMillisec
 				/*
 					Third-party packages do not support burstable CFS, so we need to build our own cfs_burst_us control utilities here.
 				*/
-				// burstValueUs := getBurstValue(containerDir)
-				setBurstValue(containerDir, 400000)
+				setBurstValue(containerDir, 9100000)
+				burstValueUs := getBurstValue(containerDir)
+				fmt.Printf("[%s] %s has burst %d\n", time.Now().Format(time.RFC3339Nano), containerDir, burstValueUs)
 				// if burstValueUs == 0 {
 				// 	fmt.Printf("[%s] %s SET TO 100000 current burst: %d\n", time.Now().Format(time.RFC3339Nano), containerDir, burstValueUs)
 				// 	setBurstValue(containerDir, 100000)

@@ -30,19 +30,19 @@ func TickWriter(activeContainersCh <-chan []string, intervalMillisecond int, sto
 
 				numTargets := 1
 				targetContainers := containerDirs[:numTargets]
-				controlVariableContainers := containerDirs[numTargets:]
+				// controlVariableContainers := containerDirs[numTargets:]
 				for _, containerDir := range targetContainers {
 					ss := strings.Split(containerDir, "/")
 					cid := ss[len(ss)-1]
 					fmt.Println("Adjusting quota for ", cid)
-					adjustQuota(containerDir, elapsedTime, "constant")
+					adjustQuota(containerDir, elapsedTime, "numThreads")
 				}
-				for _, containerDir := range controlVariableContainers {
-					ss := strings.Split(containerDir, "/")
-					cid := ss[len(ss)-1]
-					fmt.Println("Adjusting quota for ", cid)
-					adjustQuota(containerDir, elapsedTime, "constant")
-				}
+				// for _, containerDir := range controlVariableContainers {
+				// 	ss := strings.Split(containerDir, "/")
+				// 	cid := ss[len(ss)-1]
+				// 	fmt.Println("Adjusting quota for ", cid)
+				// 	adjustQuota(containerDir, elapsedTime, "constant")
+				// }
 			}
 		case <-stopCh:
 			fmt.Println("Ticker stopped!")
@@ -109,7 +109,7 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 		oldPeriod := s.Text()
 		// f(x): constant
 		if functionName == "constant" {
-			allocatedCores := int64(6)
+			allocatedCores := int64(1)
 			newPeriod = strconv.FormatInt(allocatedCores*100000, 10)
 		} else if functionName == "continuousIncrease" {
 			// f(x): continuousIncrease

@@ -188,10 +188,12 @@ func main() {
 	// period := flag.String("cpu.cfs_period_us", "100000", hints["cpu.cfs_period_us"])
 	// quota := flag.String("cpu.cfs_quota_us", "-1", hints["cpu.cfs_quota_us"])
 	var (
+		flagElastic    bool
 		flagBurst      bool
 		flagCfsBurstUs int64
 	)
 	flag.BoolVar(&flagBurst, "enable-burst", false, hints["enableBurst"])
+	flag.BoolVar(&flagElastic, "elastic", false, hints["elastic"])
 	flag.Int64Var(&flagCfsBurstUs, "cpu.cfs_burst_us", 0, hints["cpu.cfs_burst_us"])
 	flag.Parse()
 
