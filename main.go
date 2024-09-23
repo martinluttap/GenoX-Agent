@@ -228,6 +228,7 @@ func main() {
 	tickIntervalMs := 10
 	metricsIntervalMs := 1000
 	pollingIntervalMs := 10
+	burstMetricsIntervalMs := 5000
 	monitorCpuIntervalMs := 5
 	modDuration := 3600
 	nonWatchIntervals := []int64{
@@ -235,6 +236,7 @@ func main() {
 		int64(pollingIntervalMs),
 		int64(monitorCpuIntervalMs),
 		int64(metricsIntervalMs),
+		int64(burstMetricsIntervalMs),
 	}
 
 	/*
@@ -243,7 +245,7 @@ func main() {
 	*/
 	containerWatchIntervalMs := slices.Min(nonWatchIntervals)
 
-	wg.Add(5)
+	wg.Add(6)
 	go StopAt(modDuration, stopCh, &wg)
 	go watchActiveContainers(dockerRootPath, containerWatchIntervalMs, activeContainersCh, stopCh, &wg)
 	go controller.TickWriter(activeContainersCh, tickIntervalMs, stopCh, &wg)
@@ -251,6 +253,8 @@ func main() {
 	go metrics.MonitorCpuUsage(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 	// go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
 	go metrics.PollCpuStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
+	go metrics.PollBurstStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
+	go metrics.GetProcSched(activeContainersCh, burstMetricsIntervalMs, stopCh, &wg)
 
 	if flagBurst {
 		go policy.DefaultBurstController(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)

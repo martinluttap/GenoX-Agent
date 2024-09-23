@@ -213,26 +213,8 @@ func GetCFSData(containerDir string) (int64, int64) {
 	return int64(cfsQuota), int64(cfsPeriod)
 }
 
-func GetAllProcs(containerDir string) []string {
-	procsInfile, openErr := os.OpenFile(fmt.Sprintf("%s/cgroup.procs", containerDir), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
-	}
-	defer procsInfile.Close()
-
-	// Get all procs associated with container
-	var procs []string
-	s := bufio.NewScanner(procsInfile)
-	for s.Scan() {
-		procs = append(procs, strings.TrimSpace(s.Text()))
-	}
-
-	return procs
-}
-
 func GetProcsPidStats(containerDir string) map[string]PidStats {
-	var procs []string
-	procs = GetAllProcs(containerDir)
+	procs := GetAllProcs(containerDir)
 
 	// For each proc, gather its schedstats
 	procsPidStats := map[string]PidStats{}
