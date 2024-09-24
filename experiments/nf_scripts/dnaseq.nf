@@ -3,7 +3,10 @@ import groovy.time.TimeDuration
 
 include { BWA_NO_LIMIT as BWA_PE } from "/home/cc//elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
 include { FASTQC_NO_LIMIT as FASTQC } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/fastqc.nf"
+include { GATK4_APPLYBQSR as GATK_APPLYBQSR } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_applybqsr.nf"
 include { GATK4_BASERECAL as GATK_BASERECAL } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_baserecal.nf"
+include { PICARD_COLLECTWGSMETRICS as PICARD_COLLECTWGSMETRICS } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/picard_collectwgsmetrics.nf"
+include { PICARD_COLLECT0XOGMETRICS as PICARD_COLLECT0XOGMETRICS } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/picard_collect0xogmetrics.nf"
 include { PICARD_MARKDUPLICATES as PICARD_MARKDUPLICATES } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/picard_markduplicates.nf"
 include { PICARD_VALIDATESAMFILE as PICARD_VALIDATESAMFILE } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/picard_validatesamfile.nf"
 include { SAMTOOLS_INDEX_NO_LIMIT as SAMTOOLS_INDEX } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/samtools_index.nf"
@@ -65,10 +68,21 @@ workflow {
     GATK_APPLYBQSR(
         SAMTOOLS_SORT.out.sorted_bam,
         SAMTOOLS_INDEX.out.bam_index,
-        GATK_BASERECAL.out.output_grp,
-        ref_known_sites, ref_known_sites_tbi, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
+        GATK_BASERECAL.out.output_grp
     )
-    // PICARD_VALIDATESAMFILE()
-    // PICARD_COLLECTWGS()
-    // PICARD_COLLECT0XO()
+    PICARD_VALIDATESAMFILE(
+        GATK_APPLYBQSR.out.out_bam,
+        SAMTOOLS_INDEX.out.bam_index
+    )
+    // PICARD_COLLECTWGSMETRICS(
+    //     GATK_APPLYBQSR.out.out_bam,
+    //     SAMTOOLS_INDEX.out.bam_index,
+    //     ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
+    // )
+    // PICARD_COLLECT0XOGMETRICS(
+    //     GATK_APPLYBQSR.out.out_bam,
+    //     SAMTOOLS_INDEX.out.bam_index,
+    //     ref_known_sites, ref_known_sites_tbi,
+    //     ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
+    // )
 }
