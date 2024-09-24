@@ -28,6 +28,6 @@ process GATK4_APPLYBQSR_SPARK_NO_LIMIT {
 				
     script:
         """
-        java -jar /usr/local/bin/gatk.jar ApplyBQSR --output ${bam.baseName}_out.bam --base-recal-file ${bqsr_recal_file} --emit-original-quals true --input ${bam} --tmp-dir . --spark-master local[92]
+        java -jar /usr/local/bin/gatk.jar ApplyBQSRSpark --output ${bam.baseName}_out.bam --bqsr-recal-file ${bqsr_recal_file} --emit-original-quals true --input ${bam} --tmp-dir . --spark-master local[92]
         """
 }

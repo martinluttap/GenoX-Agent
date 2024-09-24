@@ -406,8 +406,14 @@ func PollCpuStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 			deltaSys := (sysCpuTotal - prevSysCpuTotal) / float64(USER_HZ) * 1e9
 
 			for containerDir, writer := range outWriterDict {
-				control, _ := cgroup1.Load(cgroup1.StaticPath(strings.TrimPrefix(containerDir, "/sys/fs/cgroup/cpu")))
-				stats, _ := control.Stat(cgroup1.IgnoreNotExist)
+				control, loadErr := cgroup1.Load(cgroup1.StaticPath(strings.TrimPrefix(containerDir, "/sys/fs/cgroup/cpu")))
+				if loadErr != nil {
+					continue
+				}
+				stats, statErr := control.Stat(cgroup1.IgnoreNotExist)
+				if statErr != nil {
+					continue
+				}
 				ctrCpuNs := stats.GetCPU().GetUsage().Total
 				prevctrCpuNs := lastCpuMap[containerDir]
 				deltaCtrCpuNs := int64(ctrCpuNs) - prevctrCpuNs
@@ -458,8 +464,14 @@ func MonitorCpuUsage(activeContainersCh <-chan []string, MonitorIntervalMs int, 
 			deltaSys := (sysCpuTotal - prevSysCpuTotal) / float64(USER_HZ) * 1e9
 			for _, containerDir := range containerDirs {
 
-				control, _ := cgroup1.Load(cgroup1.StaticPath(strings.TrimPrefix(containerDir, "/sys/fs/cgroup/cpu")))
-				stats, _ := control.Stat(cgroup1.IgnoreNotExist)
+				control, loadErr := cgroup1.Load(cgroup1.StaticPath(strings.TrimPrefix(containerDir, "/sys/fs/cgroup/cpu")))
+				if loadErr != nil {
+					continue
+				}
+				stats, statErr := control.Stat(cgroup1.IgnoreNotExist)
+				if statErr != nil {
+					continue
+				}
 				cpuNs := stats.GetCPU().GetUsage().Total
 				prevCpuNs := lastCpuMap[containerDir]
 

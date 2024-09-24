@@ -4,7 +4,7 @@ import groovy.time.TimeDuration
 include { BWA_NO_LIMIT as BWA_PE } from "/home/cc//elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
 include { FASTQC_NO_LIMIT as FASTQC } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/fastqc.nf"
 include { GATK4_APPLYBQSR as GATK_APPLYBQSR } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_applybqsr.nf"
-include { GATK4_BASERECAL as GATK_BASERECAL } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_baserecal.nf"
+include { GATK4_BASERECAL_SPARK_NO_LIMIT as GATK_BASERECAL } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_baserecal.nf"
 include { PICARD_COLLECTWGSMETRICS as PICARD_COLLECTWGSMETRICS } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/picard_collectwgsmetrics.nf"
 include { PICARD_COLLECT0XOGMETRICS as PICARD_COLLECT0XOGMETRICS } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/picard_collect0xogmetrics.nf"
 include { PICARD_MARKDUPLICATES as PICARD_MARKDUPLICATES } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/picard_markduplicates.nf"
@@ -37,16 +37,27 @@ fastq_files_bulk = fastq_files.collect()
 // fastq_files_bulk = Channel.fromPath(READ_PATH + '/SRR*_1.part_{001,002,003,004,005,006,007,008,009,010,011,012,013,014,015,016,017,018,019,020,021,022,023,024,025,026,027,028,029,030,031,032,033,034,035,036,037,038,039,040,041,042,043,044,045,046,047,048,049,050,051,055,053,054,055,056,057,058,059,060,061,062,063}.fastq').collect()
 
 /* Per application runtime parameters */
-fastqc_num_threads = params.num_threads
+/* ... */
 
 workflow {
+    fastq_files.view {
+        "Input files: ${it}, num_files=${it.size()}"
+    }.subscribe {
+        Date loadEnd = new Date()
+
+        TimeDuration td = TimeCategory.minus(loadEnd, loadStart)
+
+        def logFile = new File("LoadDuration.txt")
+        logFile.delete()
+        logFile.append(td)
+        println ("Loading done! Took " + td)
+    }
+
     // FASTQ_CLEANER()
+
     FASTQC(
         fastq_files_bulk
     )
-    fastq_files_bulk.view {
-        "Paired FASTQ: ${it}"
-    }
     BWA_PE(
         fastq_files_bulk, 
         ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
@@ -62,7 +73,7 @@ workflow {
     )
     GATK_BASERECAL(
         SAMTOOLS_SORT.out.sorted_bam,
-        SAMTOOLS_INDEX.out.bam_index,
+        // SAMTOOLS_INDEX.out.bam_index,
         ref_known_sites, ref_known_sites_tbi, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
     )
     GATK_APPLYBQSR(
@@ -74,15 +85,15 @@ workflow {
         GATK_APPLYBQSR.out.out_bam,
         SAMTOOLS_INDEX.out.bam_index
     )
-    // PICARD_COLLECTWGSMETRICS(
-    //     GATK_APPLYBQSR.out.out_bam,
-    //     SAMTOOLS_INDEX.out.bam_index,
-    //     ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )
-    // PICARD_COLLECT0XOGMETRICS(
-    //     GATK_APPLYBQSR.out.out_bam,
-    //     SAMTOOLS_INDEX.out.bam_index,
-    //     ref_known_sites, ref_known_sites_tbi,
-    //     ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    // )
+    PICARD_COLLECTWGSMETRICS(
+        GATK_APPLYBQSR.out.out_bam,
+        SAMTOOLS_INDEX.out.bam_index,
+        ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
+    )
+    PICARD_COLLECT0XOGMETRICS(
+        GATK_APPLYBQSR.out.out_bam,
+        SAMTOOLS_INDEX.out.bam_index,
+        ref_known_sites, ref_known_sites_tbi,
+        ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
+    )
 }
