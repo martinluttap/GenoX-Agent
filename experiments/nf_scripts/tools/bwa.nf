@@ -37,7 +37,7 @@ process BWA {
         path ref_dict
 
     output:
-        path "*.bam"
+        path "*.bam", emit: bam
 
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
@@ -62,7 +62,7 @@ process BWA_32c {
         path ref_dict
 
     output:
-        path "*.bam"
+        path "*.bam", emit: bam
 
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
@@ -88,7 +88,7 @@ process BWA_16c {
         path ref_dict
 
     output:
-        path "*.bam"
+        path "*.bam", emit: bam
 
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
@@ -113,7 +113,7 @@ process BWA_8c {
         path ref_sa
         path ref_dict
     output:
-        path "*.bam"
+        path "*.bam", emit: bam
 
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
@@ -138,7 +138,7 @@ process BWA_4c {
         path ref_sa
         path ref_dict
     output:
-        path "*.bam"
+        path "*.bam", emit: bam
 
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
@@ -161,7 +161,7 @@ process BWA_NO_LIMIT {
         path ref_sa
         path ref_dict
     output:
-        path "*.bam"
+        path "*.bam", emit: bam
 
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
@@ -184,7 +184,7 @@ process BWA_NO_LIMIT2 {
         path ref_sa
         path ref_dict
     output:
-        path "*.bam"
+        path "*.bam", emit: bam
 
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
@@ -207,7 +207,7 @@ process BWA_NO_LIMIT3 {
         path ref_sa
         path ref_dict
     output:
-        path "*.bam"
+        path "*.bam", emit: bam
 
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
@@ -230,7 +230,7 @@ process BWA_NO_LIMIT4 {
         path ref_sa
         path ref_dict
     output:
-        path "*.bam"
+        path "*.bam", emit: bam
 
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
@@ -253,7 +253,7 @@ process BWA_NO_LIMIT5 {
         path ref_sa
         path ref_dict
     output:
-        path "*.bam"
+        path "*.bam", emit: bam
 
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""
@@ -276,7 +276,7 @@ process BWA_NO_LIMIT6 {
         path ref_sa
         path ref_dict
     output:
-        path "*.bam"
+        path "*.bam", emit: bam
 
     script: 
         METADATA = "\"@RG\\tID:SRR24039108\\tPL:ILLUMINA\\tSM:Sample\""

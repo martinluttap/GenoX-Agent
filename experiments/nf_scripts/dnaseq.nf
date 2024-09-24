@@ -4,6 +4,7 @@ import groovy.time.TimeDuration
 include { BWA_NO_LIMIT as BWA_PE } from "/home/cc//elastic-container/containermod/experiments/nf_scripts/tools/bwa.nf"
 include { FASTQC_NO_LIMIT as FASTQC } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/fastqc.nf"
 include { GATK4_BASERECAL as GATK_BASERECAL } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_baserecal.nf"
+include { PICARD_MARKDUPLICATES as PICARD_MARKDUPLICATES } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/picard_markduplicates.nf"
 include { PICARD_VALIDATESAMFILE as PICARD_VALIDATESAMFILE } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/picard_validatesamfile.nf"
 include { SAMTOOLS_INDEX_NO_LIMIT as SAMTOOLS_INDEX } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/samtools_index.nf"
 include { SAMTOOLS_SORT_NO_LIMIT as SAMTOOLS_SORT } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/samtools_sort.nf"
@@ -23,6 +24,8 @@ ref_fai = Channel.fromPath(REF_PATH + '/*.fai')
 ref_pac = Channel.fromPath(REF_PATH + '/*.pac')
 ref_sa = Channel.fromPath(REF_PATH + '/*.sa')
 ref_dict = Channel.fromPath(REF_PATH + '/*.dict')
+ref_known_sites = Channel.fromPath(REF_PATH + '/*.vcf.gz')
+ref_known_sites_tbi = Channel.fromPath(REF_PATH + '/*.vcf.gz.tbi')
 
 /* Input files */
 READ_PATH = "/home/cc/nextflow/read-files/SRR24039108/SRR24039108_1.fastq.split"
@@ -45,11 +48,26 @@ workflow {
         fastq_files_bulk, 
         ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
     )
-    // PICARD_MARKDUPLICATE()
-    // SAMTOOLS_INDEX()
-    // SAMTOOLS_SORT()
-    // GATK_BASERECAL()
-    // GATK_APPLYBQSR()
+    PICARD_MARKDUPLICATES(
+        BWA_PE.out.bam
+    )
+    SAMTOOLS_SORT(
+        PICARD_MARKDUPLICATES.out.outbam
+    )
+    SAMTOOLS_INDEX(
+        SAMTOOLS_SORT.out.sorted_bam
+    )
+    GATK_BASERECAL(
+        SAMTOOLS_SORT.out.sorted_bam,
+        SAMTOOLS_INDEX.out.bam_index,
+        ref_known_sites, ref_known_sites_tbi, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
+    )
+    GATK_APPLYBQSR(
+        SAMTOOLS_SORT.out.sorted_bam,
+        SAMTOOLS_INDEX.out.bam_index,
+        GATK_BASERECAL.out.output_grp,
+        ref_known_sites, ref_known_sites_tbi, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
+    )
     // PICARD_VALIDATESAMFILE()
     // PICARD_COLLECTWGS()
     // PICARD_COLLECT0XO()

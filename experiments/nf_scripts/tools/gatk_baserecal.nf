@@ -3,6 +3,7 @@ process GATK4_BASERECAL {
 
     input:
         path input
+        path input_bai
         path known_sites
         path known_sites_tbi
         path ref_fa
