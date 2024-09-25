@@ -30,7 +30,6 @@ nextflow run ${LABEL}.nf \
     -with-timeline ${OUT_LOG%.log}-timeline.html \
     -with-trace ${OUT_LOG%.log}-trace.txt \
     -with-report ${OUT_LOG%.log}-report.html \
-    -resume
 
 sleep 5
 kill ${RESMON_PID}
