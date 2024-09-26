@@ -35,7 +35,7 @@ func TickWriter(activeContainersCh <-chan []string, intervalMillisecond int, sto
 					ss := strings.Split(containerDir, "/")
 					cid := ss[len(ss)-1]
 					fmt.Println("Adjusting quota for ", cid)
-					adjustQuota(containerDir, elapsedTime, "numThreads")
+					adjustQuota(containerDir, elapsedTime, "constant")
 				}
 				// for _, containerDir := range controlVariableContainers {
 				// 	ss := strings.Split(containerDir, "/")
