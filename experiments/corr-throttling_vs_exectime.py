@@ -18,6 +18,13 @@ AGENT_DIR = Path(os.path.join(TOP_DIR, "../")).resolve()
 
 APPS: List[str] = [
     "bwa",
+    "fastqc",
+    "gatk_applybqsr",
+    "gatk_baserecal",
+    "samtools_index",
+    "samtools_sort",
+    "star",
+    "trimmomatic"
 ]
 
 parser = argparse.ArgumentParser(
@@ -32,7 +39,7 @@ args = parser.parse_args()
 
 def run_agent() -> subprocess.Popen:
     timestamp: str = datetime.datetime.now().isoformat()
-    agent_outfile = open(f"agent-{LABEL}.log", "w")
+    agent_outfile = open(f"{LABEL}-agent.log", "w")
     agent_command: str = f"sudo /usr/local/go/bin/go run main.go".split()
     agent_ps = subprocess.Popen(
         agent_command,
@@ -42,7 +49,8 @@ def run_agent() -> subprocess.Popen:
         stdout=agent_outfile,
         close_fds=True,
     )
-    print(f"Agent started with PID: {agent_ps.pid}")
+    outpath = Path(f"{AGENT_DIR}/agent-{LABEL}.log").resolve()
+    print(f"Agent started with PID: {agent_ps.pid}, outfile: {outpath}")
 
     return agent_ps
 
@@ -62,12 +70,13 @@ def run_nextflow(exp_dir: str = '') -> subprocess.Popen:
 
 
 def run_resmon(exp_dir: str = '') -> subprocess.Popen:
-    resmon_command: str = f"resmon -o resmon-{LABEL}.csv".split()
+    resmon_command: str = f"resmon -o {LABEL}-resmon.csv".split()
     resmon_ps = subprocess.Popen(
         resmon_command,
-        cwd=AGENT_DIR,
+        cwd=TOP_DIR,
     )
-    print(f"Resmon started with PID: {resmon_ps.pid}")
+    outpath = Path(f"{TOP_DIR}/{LABEL}-resmon.csv").resolve()
+    print(f"Resmon started with PID: {resmon_ps.pid}, outfile: {outpath}")
 
     return resmon_ps
 
@@ -106,62 +115,89 @@ def run_exp_prep(exp_dir: str = '') -> None:
     # Modify allocatedCores
     run_cmd(f'sed -E "s|allocatedCores :=.*|allocatedCores := int64({STEP})|" -i {PATH_CONTROLLER}')
 
+    # Removed -cpu and -all csv files
+    for (root, dirs, files) in os.walk(f'{AGENT_DIR}', topdown=True):
+        for f in files:
+            if LABEL not in f and f.endswith('.csv'):
+                path = Path(f'{AGENT_DIR}/{f}').resolve()
+                run_cmd(f"sudo rm -f {path}")
+                print(f'Removed {path} ...')
+        break # Check only the first level
+
+
     return
 
 def run_exp_cleanup(exp_dir: str = '') -> None:
     run_cmd(f"mkdir -p results/{LABEL}")
 
     # Gather NF report, timeline, trace, config, and script
-    suffixes: List[str] = ["-report.html", "-timeline.html", "-trace.txt", ".config", ".nf"]
+    suffixes: List[str] = ["-report.html", "-timeline.html", 
+                           "-trace.txt", "-resmon.csv", "-agent.log", 
+                           ".config", ".nf"]
     for suffix in suffixes:
-        run_cmd(f"cp {LABEL}{suffix} results/{LABEL}")
+        run_cmd(f"mv {LABEL}{suffix} results/{LABEL}")
+        print(f'Moved {LABEL}{suffix} to results/{LABEL} ...')
 
-    run_cmd(f"cp ../*-all.csv results/{LABEL}")
-    run_cmd(f"cp ../*-cpu.csv results/{LABEL}")
+    # Get <cid>-all and <cid>-cpu csv files.
+    for (root, dirs, files) in os.walk(f'{AGENT_DIR}', topdown=True):
+        for f in files:
+            if LABEL not in f and f.endswith('.csv'):
+                new_name: str = f"{LABEL}-{f.rstrip('.csv').split('-')[-1]}.csv"
+                path = Path(f'{AGENT_DIR}/{f}').resolve()
+                run_cmd(f"mv {path} results/{LABEL}/{new_name}")
+                print(f'Moved {path} to results/{LABEL}/{new_name} ...')
+        break # Check only the first level
+    
+    # Change ownership of results
+    run_cmd(f"sudo chown -R cc:cc results/{LABEL}")
 
     return
 
 if __name__ == "__main__":
     print(f"{TOP_DIR}, running program: {args.app}")
     
-    global WORKFLOW, INPUT_CONFIG, LABEL, STEP, OUT_LOG, PATH_CONTROLLER
-    WORKFLOW=f"/home/cc//elastic-container/containermod/experiments/nf_scripts/bwa.nf"
-    INPUT_CONFIG=f"/home/cc//elastic-container/containermod/experiments/configs/bwa.config"
-    PATH_CONTROLLER=f"/home/cc//elastic-container/containermod/controller/controller.go"
-    STEP=10
-    LABEL=f"base-bwa_corrstep{STEP}"
-    OUT_LOG=f"{LABEL}.log"
-
+    global WORKFLOW, INPUT_CONFIG, LABEL, STEP, OUT_LOG, PATH_CONTROLLER, APP
+    STEPS=[i for i in range(10, 160, 4)]
     try:
         assert args.app, "Application not provided"
 
-        # Run prep
-        run_exp_prep(exp_dir=TOP_DIR)
+        WORKFLOW=f"/home/cc//elastic-container/containermod/experiments/nf_scripts/{args.app}.nf"
+        INPUT_CONFIG=f"/home/cc//elastic-container/containermod/experiments/configs/{args.app}.config"
+        PATH_CONTROLLER=f"/home/cc//elastic-container/containermod/controller/controller.go"
+        APP=args.app
 
-        # Run Agent
-        agent_ps = run_agent()
-        # Run Resmon
-        resmon_ps = run_resmon()
-        # Run Nextflow
-        nextflow_ps = run_nextflow()
+        for STEP in STEPS:
+            print(f'============ Timestamp:{datetime.datetime.now()},app={APP},step={STEP}  ============')
 
-        while nextflow_ps.poll() is None:
-            for line in nextflow_ps.stdout:
-                print(line.decode('utf-8'))
-            time.sleep(1)
+            LABEL=f"base-{APP}_corrstep{STEP}"
+            OUT_LOG=f"{LABEL}.log"
 
-        print('Nextflow process finished!')
-        # while agent_ps.poll() is None:
-        subprocess.check_output(f"sudo kill -9 {agent_ps.pid}".split())
-        print('Agent killed!')
-        # while resmon_ps.poll() is None:
-        subprocess.check_output(f"sudo kill -9 {resmon_ps.pid}".split())
-        print('Resmon killed!')
+            # Run prep
+            run_exp_prep(exp_dir=TOP_DIR)
 
-        # Cleanup
-        run_exp_cleanup(exp_dir=TOP_DIR)
+            # Run Agent
+            agent_ps = run_agent()
+            # Run Resmon
+            resmon_ps = run_resmon()
+            # Run Nextflow
+            nextflow_ps = run_nextflow()
 
-        pass
+            while nextflow_ps.poll() is None:
+                for line in nextflow_ps.stdout:
+                    print(line.decode('utf-8'))
+                time.sleep(1)
+
+            print('Nextflow process finished!')
+            # while agent_ps.poll() is None:
+            subprocess.check_output(f"sudo kill -9 {agent_ps.pid}".split())
+            print('Agent killed!')
+            # while resmon_ps.poll() is None:
+            subprocess.check_output(f"sudo kill -9 {resmon_ps.pid}".split())
+            print('Resmon killed!')
+
+            # Cleanup
+            run_exp_cleanup(exp_dir=TOP_DIR)
+
     except Exception as e:
         print(f"Error: {e}")
         # parser.print_help()
