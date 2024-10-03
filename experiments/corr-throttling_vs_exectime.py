@@ -79,9 +79,13 @@ def run_cmd(cmd: str) -> None:
     return
 
 def run_exp_prep(exp_dir: str = '') -> None:
-    # Kill previous resmon process
-    cmd: str = "ps aux | grep resmon | tr -s ' ' | cut -d ' ' -f 2 | xargs -I {} kill -9 {}"
-    print(f'Killing previous resmon process ...')
+    # Kill previous resmon and agent process
+    print(f'Killing previous resmon and agent process ...')
+    cmd: str = "ps aux | grep resmon | tr -s ' ' | cut -d ' ' -f 2 | xargs -I {} sudo kill -9 {}"
+    run_cmd(cmd)
+    cmd: str = "ps aux | grep \"main.go\" | tr -s ' ' | cut -d ' ' -f 2 | xargs -I {} sudo kill -9 {}"
+    run_cmd(cmd)
+    cmd: str = "ps aux | grep \"go-build\" | tr -s ' ' | cut -d ' ' -f 2 | xargs -I {} sudo kill -9 {}"
     run_cmd(cmd)
 
     # Clear PageCache, dentries, indoes, and swap
@@ -99,21 +103,35 @@ def run_exp_prep(exp_dir: str = '') -> None:
     run_cmd(f'cp {WORKFLOW} {LABEL}.nf')
     run_cmd(f'cp {INPUT_CONFIG} {LABEL}.config')
 
+    # Modify allocatedCores
+    run_cmd(f'sed -E "s|allocatedCores :=.*|allocatedCores := int64({STEP})|" -i {PATH_CONTROLLER}')
+
     return
 
 def run_exp_cleanup(exp_dir: str = '') -> None:
     run_cmd(f"mkdir -p results/{LABEL}")
-    run_cmd(f"cp {LABEL}* results/{LABEL}")
+
+    # Gather NF report, timeline, trace, config, and script
+    suffixes: List[str] = ["-report.html", "-timeline.html", "-trace.txt", ".config", ".nf"]
+    for suffix in suffixes:
+        run_cmd(f"cp {LABEL}{suffix} results/{LABEL}")
+
+    run_cmd(f"cp ../*-all.csv results/{LABEL}")
+    run_cmd(f"cp ../*-cpu.csv results/{LABEL}")
 
     return
 
-WORKFLOW=f"/home/cc//elastic-container/containermod/experiments/nf_scripts/bwa.nf"
-INPUT_CONFIG=f"/home/cc//elastic-container/containermod/experiments/configs/bwa.config"
-LABEL=f"base-bwa_corrstep80"
-OUT_LOG=f"{LABEL}.log"
-
 if __name__ == "__main__":
     print(f"{TOP_DIR}, running program: {args.app}")
+    
+    global WORKFLOW, INPUT_CONFIG, LABEL, STEP, OUT_LOG, PATH_CONTROLLER
+    WORKFLOW=f"/home/cc//elastic-container/containermod/experiments/nf_scripts/bwa.nf"
+    INPUT_CONFIG=f"/home/cc//elastic-container/containermod/experiments/configs/bwa.config"
+    PATH_CONTROLLER=f"/home/cc//elastic-container/containermod/controller/controller.go"
+    STEP=10
+    LABEL=f"base-bwa_corrstep{STEP}"
+    OUT_LOG=f"{LABEL}.log"
+
     try:
         assert args.app, "Application not provided"
 
@@ -131,6 +149,7 @@ if __name__ == "__main__":
             for line in nextflow_ps.stdout:
                 print(line.decode('utf-8'))
             time.sleep(1)
+
         print('Nextflow process finished!')
         # while agent_ps.poll() is None:
         subprocess.check_output(f"sudo kill -9 {agent_ps.pid}".split())
