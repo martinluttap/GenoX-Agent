@@ -104,13 +104,14 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 	// buckets := functions.GenerateBuckets()
 	s := bufio.NewScanner(infile)
 	var newPeriod string
-	allowedFunctions := map[string]bool{"constant": true, "continuousIncrease": true, "continuousDecrease": true, "numThreads": true, "sineWave": true, "randomStep": true}
+	allowedFunctions := map[string]bool{"constant": true, "continuousIncrease": true, "continuousDecrease": true, "numThreads": true, "sineWave": true, "randomStep": true, "cappedNumThreads": true}
 	for s.Scan() {
 		oldPeriod := s.Text()
 		// f(x): constant
 		if functionName == "constant" {
-			allocatedCores := int64(1)
-			newPeriod = strconv.FormatInt(allocatedCores*100000, 10)
+			allocatedCores := int64(80)
+			newPeriod = strconv.FormatInt(allocatedCores*10000, 10)
+			// newPeriod = strconv.FormatInt(allocatedCores*100000, 10)
 		} else if functionName == "continuousIncrease" {
 			// f(x): continuousIncrease
 			newPeriod = functions.ContinuousIncrease(elapsedTime)
@@ -131,7 +132,7 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 			// newPeriod = functions.RandomStep(elapsedTime, buckets)
 			newPeriod = oldPeriod
 		} else if functionName == "cappedNumThreads" {
-			newPeriod = functions.CappedNumThreads(containerDir, 64)
+			newPeriod = functions.CappedNumThreads(containerDir, 4)
 		}
 		if val, ok := allowedFunctions[functionName]; !ok {
 			fmt.Println("Function ", val, " not allowed!")

@@ -62,6 +62,9 @@ type KernelStats struct {
 	cfsThrottledPeriods int64 // Number of times the group has been throttled/limited.
 	cfsThrottledTimeNs  int64 // The total time duration (in nanoseconds) for which entities of the group have been throttled.
 
+	// CpuAcct
+	cpuacctUsage int64 // The total CPU time (in nanoseconds) consumed by all tasks in this cgroup (including tasks lower in the hierarchy)
+
 	// PidStats Statistics Per Process
 	procsPidStats map[string]PidStats
 

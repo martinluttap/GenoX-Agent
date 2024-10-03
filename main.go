@@ -197,13 +197,13 @@ func main() {
 	flag.Int64Var(&flagCfsBurstUs, "cpu.cfs_burst_us", 0, hints["cpu.cfs_burst_us"])
 	flag.Parse()
 
-	if flagBurst {
-		enableBurst()
-		fmt.Printf("[%s] Burst enabled!", time.Now().Format(time.RFC3339Nano))
-	} else {
-		disableBurst()
-		fmt.Printf("[%s] Burst disabled!", time.Now().Format(time.RFC3339Nano))
-	}
+	// if flagBurst {
+	// 	enableBurst()
+	// 	fmt.Printf("[%s] Burst enabled!", time.Now().Format(time.RFC3339Nano))
+	// } else {
+	// 	disableBurst()
+	// 	fmt.Printf("[%s] Burst disabled!", time.Now().Format(time.RFC3339Nano))
+	// }
 
 	/*
 		Our algorithm is a follows. For each execution, we received from the user a flag indicating whether burst disabled or enabled. Following that, we decide on the amount of burst we need to allocate for each contianer. This should happen using 'monitor' pattern, since we do not have any information about active containers at this point.
@@ -251,9 +251,9 @@ func main() {
 	go controller.TickWriter(activeContainersCh, tickIntervalMs, stopCh, &wg)
 	// go metrics.MetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
 	go metrics.MonitorCpuUsage(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
-	// go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
+	go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
 	go metrics.PollCpuStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
-	go metrics.PollBurstStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
+	// go metrics.PollBurstStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 	go metrics.GetProcSched(activeContainersCh, burstMetricsIntervalMs, stopCh, &wg)
 
 	if flagBurst {

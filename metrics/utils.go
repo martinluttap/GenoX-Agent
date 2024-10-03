@@ -139,7 +139,7 @@ func GetSystemHz() (int64, error) {
 
 func GetAllProcs(containerDir string) []string {
 	var procs []string
-	if _, err := os.Stat("/path/to/whatever"); err == nil {
+	if _, err := os.Stat(fmt.Sprintf("%s/cgroup.procs", containerDir)); err == nil {
 		procsInfile, openErr := os.Open(fmt.Sprintf("%s/cgroup.procs", containerDir))
 		if openErr != nil {
 			log.Fatalf("While opening: %s:\n", openErr)

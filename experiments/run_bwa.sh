@@ -3,7 +3,7 @@
 
 WORKFLOW="/home/cc//elastic-container/containermod/experiments/nf_scripts/bwa.nf"
 INPUT_CONFIG="/home/cc//elastic-container/containermod/experiments/configs/bwa.config"
-LABEL="1bwa-8c_req-4c_alloc"
+LABEL="base-bwa_corrstep80"
 OUT_LOG="${LABEL}.log"
 
 # Kill existing resmon processes
@@ -19,8 +19,8 @@ rm LoadDuration.txt
 cp $WORKFLOW ${LABEL}.nf
 cp $INPUT_CONFIG ${LABEL}.config
 
-# resmon -o ${OUT_LOG%.log}.csv &
-# export RESMON_PID=$!
+resmon -o ${OUT_LOG%.log}.csv &
+export RESMON_PID=$!
 nextflow run ${LABEL}.nf \
     -c $INPUT_CONFIG \
     -with-timeline ${OUT_LOG%.log}-timeline.html \
@@ -28,7 +28,7 @@ nextflow run ${LABEL}.nf \
     -with-report ${OUT_LOG%.log}-report.html \
 
 sleep 5
-# kill ${RESMON_PID}
+kill ${RESMON_PID}
 
-mkdir -p results/"${LABEL}"
-cp experiments/${LABEL}.csv results/${LABEL}
+# mkdir -p results/"${LABEL}"
+# cp experiments/${LABEL}.csv results/${LABEL}
