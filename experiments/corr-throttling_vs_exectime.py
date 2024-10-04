@@ -135,7 +135,7 @@ def run_exp_cleanup(exp_dir: str = '') -> None:
                            "-trace.txt", "-resmon.csv", "-agent.log", 
                            ".config", ".nf"]
     for suffix in suffixes:
-        run_cmd(f"mv {LABEL}{suffix} results/{LABEL}")
+        run_cmd(f"sudo mv -f {LABEL}{suffix} results/{LABEL}")
         print(f'Moved {LABEL}{suffix} to results/{LABEL} ...')
 
     # Get <cid>-all and <cid>-cpu csv files.
@@ -144,7 +144,7 @@ def run_exp_cleanup(exp_dir: str = '') -> None:
             if LABEL not in f and f.endswith('.csv'):
                 new_name: str = f"{LABEL}-{f.rstrip('.csv').split('-')[-1]}.csv"
                 path = Path(f'{AGENT_DIR}/{f}').resolve()
-                run_cmd(f"mv {path} results/{LABEL}/{new_name}")
+                run_cmd(f"sudo mv -f {path} results/{LABEL}/{new_name}")
                 print(f'Moved {path} to results/{LABEL}/{new_name} ...')
         break # Check only the first level
     
@@ -167,6 +167,8 @@ if __name__ == "__main__":
         APP=args.app
 
         for STEP in STEPS:
+            if APP== "samtools_sort" and STEP < 106:
+                continue
             print(f'============ Timestamp:{datetime.datetime.now()},app={APP},step={STEP}  ============')
 
             LABEL=f"base-{APP}_corrstep{STEP}"
