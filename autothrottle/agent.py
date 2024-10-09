@@ -42,7 +42,7 @@ def get_pod_map(namespace, components):
     #         pass
     #     else:
     for name in components:
-        pod_map[name] = f'test'
+        pod_map[name] = f'docker/{name}/'
     return pod_map
 
 
@@ -52,7 +52,6 @@ def stat_path(pod_map, name, stat):
     # slices = f'kubepods.slice/kubepods-{qos}.slice/kubepods-{qos}-pod{uid.replace("-", "_")}.slice'
     # return pathlib.Path(f'/sys/fs/cgroup/{family}/{slices}/{family}.{name}')
     group = pod_map[name]
-    print(pathlib.Path(f'/sys/fs/cgroup/cpu/{group}/{stat}'))
     return pathlib.Path(f'/sys/fs/cgroup/cpu/{group}/{stat}')
 
 
@@ -64,10 +63,13 @@ def set_cpu_limit(pod_map, name, limit, period=0.1):
     else:
         quota_us = round(limit * period_us)
         assert quota_us >= 1000
+    print(f'At t={datetime.datetime.now()}, Got period:{period_us},quota:{quota_us}')
+
     stat_path(pod_map, name, 'cpu.cfs_period_us').write_text(str(period_us))
     stat_path(pod_map, name, 'cpu.cfs_quota_us').write_text(str(quota_us))
     print(f'{datetime.datetime.now()} Written period={period_us},quota={quota_us} to name={name},(qos,uid)={pod_map[name]}')
 
+    return 
 
 class ConstScaler:
     def __init__(self, limit):
@@ -128,7 +130,7 @@ class K8sCPUFastScaler(K8sCPUScalerBase):
 class CaptainScaler:
     def __init__(self, target, initial_limit=1):
         # read-only parameters
-        self.target = 0 # Force captain to try minimize throttling rate
+        self.target = 0.0 # Force captain to try minimize throttling rate
         self.period = 1
 
         # state
@@ -195,6 +197,7 @@ class CaptainScaler:
 
 
 def init_scaler(data):
+    print(f'Init scaler with data={data}')
     return {
         'const': ConstScaler,
         'k8s-cpu-fast': K8sCPUFastScaler,
@@ -280,11 +283,15 @@ def run(control, namespace, components, scalers):
             limit = scaler(t, stats[name])
             print(f'At t={t}, scaler={name}, target={scaler.target}, limit={limit}, usage_history={scaler.usage_history}, tr_history={scaler.throttled_history}')
             if limit is not None:
+                print(f'Limit is not none')
                 limit = max(0.01, limit)
                 if limits[name] is not None:
+                    print(f'Limit is not none, and limits[name] is not none. Limits[{name}]= {limits[name]}')
                     if abs(limit - limits[name]) < 0.00001:
+                        print(f'Limit is not none, and limits[name] is not none, and abs(limit - limits[name]) < 0.00001')
                         limit = limits[name]
             if limit != limits[name]:
+                print(f'limit != limits[name], setting limit')
                 limits[name] = limit
                 set_cpu_limit(pod_map, name, limit)
             stats[name]['scaler.limit'] = limits[name]
@@ -310,6 +317,9 @@ def process_client(client_socket):
         'update': {},
     }
     scalers = {k: init_scaler(v) for k, v in data['scalers'].items()}
+
+
+    print(data)
     thread = threading.Thread(target=run, args=(control, data['namespace'], data['components'], scalers))
     thread.start()
     client_socket.write(json.dumps({'ok': True}) + '\n')
@@ -326,6 +336,7 @@ def process_client(client_socket):
                 continue
             elif data['method'] == 'stats':
                 stats = {}
+                print(json.dumps(control['stats_current']))
                 for i in control['stats_current']:
                     stats[i] = control['stats_current'][i]
                     control['stats_current'][i] = []
@@ -365,19 +376,6 @@ def main():
         print(f'accepted connection from {address}')
         process_client(client_socket.makefile('rw'))
         print('finished')
-
-
-def stub():
-    serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    serversocket.bind(('0.0.0.0', 8089))
-    serversocket.listen(5) # become a server socket, maximum 5 connections
-
-    while True:
-        connection, address = serversocket.accept()
-        buf = connection.recv(64)
-        if len(buf) > 0:
-            print(buf)
-            break
 
 if __name__ == '__main__':
     main()

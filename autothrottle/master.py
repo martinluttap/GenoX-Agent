@@ -276,7 +276,7 @@ def application(name, slo, nodes, target1components, deploy, teardown, traces_an
     components = sorted(sum(nodes.values(), []))
     tower_targets = [0.0, 0.02, 0.04, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3]  # see section 4 in the paper
     samples = []
-    initial_limit = 32
+    initial_limit = 1
     warmup_minutes = 3
 
     # see section A.7 in the paper for the warmup process
@@ -356,11 +356,6 @@ def nextflow():
         aggregate_samples=20,
     )
 
-
-def stub():
-    clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    clientsocket.connect(('0.0.0.0', 12200))
-    clientsocket.send(b'hello')
 
 nextflow()
 # stub()
