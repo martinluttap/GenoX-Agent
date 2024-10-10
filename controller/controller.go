@@ -29,7 +29,7 @@ func TickWriter(activeContainersCh <-chan []string, intervalMillisecond int, sto
 				elapsedTime := time.Since(startTime).Seconds()
 
 				// numTargets := 1
-				targetContainers := containerDirs //[:numTargets]
+				targetContainers := []string{} //containerDirs //[:numTargets]
 				// controlVariableContainers := containerDirs[numTargets:]
 				for _, containerDir := range targetContainers {
 					ss := strings.Split(containerDir, "/")
@@ -109,7 +109,7 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 		oldPeriod := s.Text()
 		// f(x): constant
 		if functionName == "constant" {
-			allocatedCores := int64(106)
+			allocatedCores := int64(10)
 			newPeriod = strconv.FormatInt(allocatedCores*10000, 10)
 			fmt.Printf("Test %d\n", allocatedCores)
 			// newPeriod = strconv.FormatInt(allocatedCores*100000, 10)

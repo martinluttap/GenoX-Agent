@@ -18,14 +18,18 @@ AGENT_DIR = Path(os.path.join(TOP_DIR, "../")).resolve()
 
 APPS: List[str] = [
     "bwa",
-    "fastqc",
-    "gatk_applybqsr",
-    "gatk_baserecal",
-    "samtools_index",
-    "samtools_sort",
-    "star",
-    "trimmomatic"
+    # "fastqc",
+    # "gatk_applybqsr",
+    # "gatk_baserecal",
+    # "samtools_index",
+    # "samtools_sort",
+    # "star",
+    # "trimmomatic"
 ]
+START_STEP: int = 160 # Will get *10000 and written into cfs\quota_us
+END_STEP: int =  160
+INTERVAL_STEP: int = 4
+
 
 parser = argparse.ArgumentParser(
     prog="corr-throttling_vs_exectime",
@@ -157,7 +161,7 @@ if __name__ == "__main__":
     print(f"{TOP_DIR}, running program: {args.app}")
     
     global WORKFLOW, INPUT_CONFIG, LABEL, STEP, OUT_LOG, PATH_CONTROLLER, APP
-    STEPS=[i for i in range(10, 160, 4)]
+    STEPS=[i for i in range(START_STEP, END_STEP, INTERVAL_STEP)]
     try:
         assert args.app, "Application not provided"
 
