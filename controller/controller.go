@@ -109,11 +109,7 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 		oldPeriod := s.Text()
 		// f(x): constant
 		if functionName == "constant" {
-<<<<<<< HEAD
 			allocatedCores := int64(10)
-=======
-			allocatedCores := int64(158)
->>>>>>> d84d343ccfcf1b39c40086cde97ba3ede4a0ec5e
 			newPeriod = strconv.FormatInt(allocatedCores*10000, 10)
 			fmt.Printf("Test %d\n", allocatedCores)
 			// newPeriod = strconv.FormatInt(allocatedCores*100000, 10)
