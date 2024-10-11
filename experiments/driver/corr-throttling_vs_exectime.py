@@ -26,7 +26,7 @@ APPS: List[str] = [
     "star",
     "trimmomatic"
 ]
-START_STEP: int = 170 # Will get *10000 and written into cfs\quota_us
+START_STEP: int = 10 # Will get *10000 and written into cfs\quota_us
 END_STEP: int =  171
 INTERVAL_STEP: int = 4
 
