@@ -14,20 +14,20 @@ Script for throttling vs exec. time correlation experiment.
 """
 
 TOP_DIR = Path(os.path.dirname(os.path.realpath(__file__))).resolve()
-AGENT_DIR = Path(os.path.join(TOP_DIR, "../")).resolve()
+AGENT_DIR = Path(os.path.join(TOP_DIR, "../../")).resolve()
 
 APPS: List[str] = [
     "bwa",
-    # "fastqc",
-    # "gatk_applybqsr",
-    # "gatk_baserecal",
-    # "samtools_index",
-    # "samtools_sort",
-    # "star",
-    # "trimmomatic"
+    "fastqc",
+    "gatk_applybqsr",
+    "gatk_baserecal",
+    "samtools_index",
+    "samtools_sort",
+    "star",
+    "trimmomatic"
 ]
-START_STEP: int = 10 # Will get *10000 and written into cfs\quota_us
-END_STEP: int =  11
+START_STEP: int = 170 # Will get *10000 and written into cfs\quota_us
+END_STEP: int =  171
 INTERVAL_STEP: int = 4
 
 
@@ -63,7 +63,7 @@ def run_nextflow(exp_dir: str = '') -> subprocess.Popen:
 
     nextflow_ps = subprocess.Popen(
         nextflow_command,
-        cwd=TOP_DIR,
+        # cwd=TOP_DIR,
         stdin=subprocess.DEVNULL,
         stderr=subprocess.STDOUT,
         stdout=subprocess.PIPE,
@@ -74,7 +74,7 @@ def run_nextflow(exp_dir: str = '') -> subprocess.Popen:
 
 
 def run_resmon(exp_dir: str = '') -> subprocess.Popen:
-    resmon_command: str = f"resmon -o {LABEL}-resmon.csv".split()
+    resmon_command: str = f"resmon -o {TOP_DIR}/{LABEL}-resmon.csv".split()
     resmon_ps = subprocess.Popen(
         resmon_command,
         cwd=TOP_DIR,
@@ -113,6 +113,8 @@ def run_exp_prep(exp_dir: str = '') -> None:
 
     # Backup NF script
     print(f'Backing up NF script & config ...')
+    run_cmd(f'stat {WORKFLOW}')
+    run_cmd(f'pwd')
     run_cmd(f'cp {WORKFLOW} {LABEL}.nf')
     run_cmd(f'cp {INPUT_CONFIG} {LABEL}.config')
 
@@ -139,7 +141,10 @@ def run_exp_cleanup(exp_dir: str = '') -> None:
                            "-trace.txt", "-resmon.csv", "-agent.log", 
                            ".config", ".nf"]
     for suffix in suffixes:
-        run_cmd(f"sudo mv -f {LABEL}{suffix} results/{LABEL}")
+        DIR: str = '.'
+        if suffix == "-resmon.csv":
+            DIR = TOP_DIR
+        run_cmd(f"sudo mv -f {DIR}/{LABEL}{suffix} results/{LABEL}")
         print(f'Moved {LABEL}{suffix} to results/{LABEL} ...')
 
     # Get <cid>-all and <cid>-cpu csv files.
@@ -154,6 +159,9 @@ def run_exp_cleanup(exp_dir: str = '') -> None:
     
     # Change ownership of results
     run_cmd(f"sudo chown -R cc:cc results/{LABEL}")
+
+    # Cleanup Nextflow's work folder
+    run_cmd(f"sudo rm -rf {TOP_DIR}/../work")
 
     return
 
@@ -175,7 +183,7 @@ if __name__ == "__main__":
                 continue
             print(f'============ Timestamp:{datetime.datetime.now()},app={APP},step={STEP}  ============')
 
-            LABEL=f"burst-{APP}_corrdata"
+            LABEL=f"base-{APP}_corrstep{STEP}"
             OUT_LOG=f"{LABEL}.log"
 
             # Run prep
