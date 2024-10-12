@@ -337,6 +337,7 @@ def process_client(client_socket):
             elif data['method'] == 'stats':
                 stats = {}
                 print(json.dumps(control['stats_current']))
+                print(control)
                 for i in control['stats_current']:
                     stats[i] = control['stats_current'][i]
                     control['stats_current'][i] = []
@@ -368,7 +369,7 @@ def process_client(client_socket):
 
 def main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('localhost', 12201))
+    server_socket.bind(('localhost', 12200))
     server_socket.listen()
     print('listening')
     while True:

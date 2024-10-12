@@ -14,7 +14,7 @@ import (
 	"github.com/martinluttap/containermod/functions"
 )
 
-func TickWriter(activeContainersCh <-chan []string, intervalMillisecond int, stopCh chan int, wg *sync.WaitGroup) {
+func TickWriter(activeContainersCh <-chan []string, policy string, intervalMillisecond int, stopCh chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	tickCh := time.NewTicker(time.Duration(intervalMillisecond) * time.Millisecond)
@@ -28,14 +28,36 @@ func TickWriter(activeContainersCh <-chan []string, intervalMillisecond int, sto
 				fmt.Println("Tick writing at ", time.Now().String())
 				elapsedTime := time.Since(startTime).Seconds()
 
-				numTargets := 1
-				targetContainers := containerDirs[:numTargets]
+				/* DO NOT FORGET TO MODIFY THE LINES BELOW !!!
+				- EC: all containers
+				- AT (Autothrottle): No containers (AT's agent will handle)
+				...
+				*/
+				numTargets := 0
+				var funcName string
+				policy = strings.ToUpper(policy)
+				if policy == "EC" {
+					numTargets = len(containerDirs)
+					funcName = "cappedNumThreads"
+				} else if policy == "AT" {
+					numTargets = 0
+					funcName = "constant"
+				} else if policy == "BK" {
+					numTargets = len(containerDirs)
+					funcName = "constant"
+				} else if policy == "BASE" {
+					numTargets = len(containerDirs)
+					funcName = "constant"
+				} else {
+					panic("Policy not recognized!")
+				}
+				targetContainers := containerDirs[:numTargets] // []string{}
 				// controlVariableContainers := containerDirs[numTargets:]
 				for _, containerDir := range targetContainers {
 					ss := strings.Split(containerDir, "/")
 					cid := ss[len(ss)-1]
 					fmt.Println("Adjusting quota for ", cid)
-					adjustQuota(containerDir, elapsedTime, "numThreads")
+					adjustQuota(containerDir, elapsedTime, funcName)
 				}
 				// for _, containerDir := range controlVariableContainers {
 				// 	ss := strings.Split(containerDir, "/")
@@ -104,13 +126,14 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 	// buckets := functions.GenerateBuckets()
 	s := bufio.NewScanner(infile)
 	var newPeriod string
-	allowedFunctions := map[string]bool{"constant": true, "continuousIncrease": true, "continuousDecrease": true, "numThreads": true, "sineWave": true, "randomStep": true}
+	allowedFunctions := map[string]bool{"constant": true, "continuousIncrease": true, "continuousDecrease": true, "numThreads": true, "sineWave": true, "randomStep": true, "cappedNumThreads": true}
 	for s.Scan() {
 		oldPeriod := s.Text()
 		// f(x): constant
 		if functionName == "constant" {
-			allocatedCores := int64(1)
-			newPeriod = strconv.FormatInt(allocatedCores*100000, 10)
+			allocatedCores := int64(10)
+			newPeriod = strconv.FormatInt(allocatedCores*10000, 10)
+			// newPeriod = strconv.FormatInt(allocatedCores*100000, 10)
 		} else if functionName == "continuousIncrease" {
 			// f(x): continuousIncrease
 			newPeriod = functions.ContinuousIncrease(elapsedTime)
@@ -131,7 +154,7 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 			// newPeriod = functions.RandomStep(elapsedTime, buckets)
 			newPeriod = oldPeriod
 		} else if functionName == "cappedNumThreads" {
-			newPeriod = functions.CappedNumThreads(containerDir, 64)
+			newPeriod = functions.CappedNumThreads(containerDir, 4)
 		}
 		if val, ok := allowedFunctions[functionName]; !ok {
 			fmt.Println("Function ", val, " not allowed!")

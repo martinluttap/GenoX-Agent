@@ -8,7 +8,7 @@ import subprocess
 import time
 
 TOP_DIR = Path(os.path.dirname(os.path.realpath(__file__))).resolve()
-AGENT_DIR = Path(os.path.join(TOP_DIR, "../")).resolve()
+AGENT_DIR = Path(os.path.join(TOP_DIR, "../../")).resolve()
 
 APPS: List[str] = [
     "bwa",
@@ -35,7 +35,7 @@ def run_agent(LABEL: str, policy: str) -> subprocess.Popen:
     policy_flags: Dict[str, str] = {
         'base': '',
         'burst': '--enable-burst',
-        'autothrottle': '--enable-autothrottle',
+        'autothrottle': '--policy at',
     }
     assert(policy in policy_flags.keys()), f"Policy {policy} not found!"
 

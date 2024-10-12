@@ -152,7 +152,7 @@ def benchmark(output_dir, namespace, nodes, deploy, teardown, scalers, tower):
     node_sockets = {}
     for node, node_components in nodes.items():
         node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        node_socket.connect((node, 12201))
+        node_socket.connect((node, 12200))
         node_sockets[node] = node_socket.makefile('rw')
         node_sockets[node].write(json.dumps({
             'method': 'start',

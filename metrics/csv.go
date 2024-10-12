@@ -25,7 +25,7 @@ func prepPollingAllStats(containerDirs []string, outWriterDict map[string]*csv.W
 			writer := csv.NewWriter(outFile)
 			defer writer.Flush()
 			// this defines the header value and data values for the new csv file
-			headers := []string{"timestampNs", "cid", "totalCpu", "quotaUs", "periodUs", "numPeriods", "trPeriods", "trTimeNs"}
+			headers := []string{"timestampNs", "cid", "quotaUs", "periodUs", "numPeriods", "trPeriods", "trTimeNs", "cpuacctUsage"}
 			writer.Write(headers)
 			outWriterDict[containerDir] = writer
 		}
