@@ -368,7 +368,7 @@ def process_client(client_socket):
 
 def main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('localhost', 12200))
+    server_socket.bind(('localhost', 12201))
     server_socket.listen()
     print('listening')
     while True:

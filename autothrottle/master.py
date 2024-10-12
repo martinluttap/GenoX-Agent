@@ -149,20 +149,10 @@ class VwTower:
         return updates
     
 def benchmark(output_dir, namespace, nodes, deploy, teardown, scalers, tower):
-    # print('In benchmark!')
-    # if output_dir.exists():
-    #     print('skipped:', output_dir)
-    #     return False
-
-    # print('start:', output_dir)
-    # pathlib.Path('request.log').unlink(missing_ok=True)
-    # deploy()
-
-    print('Past dpeloy')
     node_sockets = {}
     for node, node_components in nodes.items():
         node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        node_socket.connect((node, 12200))
+        node_socket.connect((node, 12201))
         node_sockets[node] = node_socket.makefile('rw')
         node_sockets[node].write(json.dumps({
             'method': 'start',
@@ -175,7 +165,6 @@ def benchmark(output_dir, namespace, nodes, deploy, teardown, scalers, tower):
         line = node_socket.readline()
         data = json.loads(line)
         assert data['ok']
-    print('all nodes started')
 
     time_ = datetime.datetime.utcnow().isoformat() + 'Z'
     temp_dir = pathlib.Path('tmp')/time_
@@ -197,7 +186,6 @@ def benchmark(output_dir, namespace, nodes, deploy, teardown, scalers, tower):
                 mock_stats = {'target': 0}
                 stats['_tower'] = mock_stats
             except Exception:
-                print('parse_locust_stats_history failed')
                 traceback.print_exc()
 
             print(f'At t={t}, tower see stats={json.dumps(stats, indent=4)}')
@@ -254,30 +242,28 @@ def benchmark(output_dir, namespace, nodes, deploy, teardown, scalers, tower):
         traceback.print_exc()
         raise e
  
-    for node_socket in node_sockets.values():
-        node_socket.write(json.dumps({
-            'method': 'stop',
-        }) + '\n')
-        node_socket.flush()
-    for node_socket in node_sockets.values():
-        line = node_socket.readline()
-        data = json.loads(line)
-        assert data['ok']
-        for k, v in data['stats'].items():
-            assert k not in stats_history
-            stats_history[k] = v
+    # for node_socket in node_sockets.values():
+    #     node_socket.write(json.dumps({
+    #         'method': 'stop',
+    #     }) + '\n')
+    #     node_socket.flush()
+    # for node_socket in node_sockets.values():
+    #     line = node_socket.readline()
+    #     data = json.loads(line)
+    #     assert data['ok']
+    #     for k, v in data['stats'].items():
+    #         assert k not in stats_history
+    #         stats_history[k] = v
 
-    teardown()
-    print('finished')
-    return True
+    # teardown()
+    # print('finished')
+    # return True
 
-def application(name, slo, nodes, target1components, deploy, teardown, traces_and_targets, trace_multiplier, aggregate_samples):
+def application(name, nodes, target1components, deploy, teardown):
     namespace = name
     components = sorted(sum(nodes.values(), []))
     tower_targets = [0.0, 0.02, 0.04, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3]  # see section 4 in the paper
-    samples = []
-    initial_limit = 1
-    warmup_minutes = 3
+    initial_limit = 32
 
     # see section A.7 in the paper for the warmup process
     for i in range(1):
@@ -324,10 +310,13 @@ def nextflow():
 
         return ctrs
 
-    running_ctrs: List[str] = get_running_containers(f'/sys/fs/cgroup/cpu/docker')
+    running_ctrs: List[str] = []
+    while len(running_ctrs) == 0:
+        running_ctrs = get_running_containers(f'/sys/fs/cgroup/cpu/docker')
+        print(f'Waiting for containers to start ...')
+        time.sleep(1)
     application(
         name='nextflow',
-        slo=0.2,  # see section 5.1 in the paper
         nodes={
             'localhost': running_ctrs
             # 'autothrottle-4': [
@@ -342,18 +331,6 @@ def nextflow():
         },
         deploy=deploy,
         teardown=teardown,
-        traces_and_targets={  # see section A.6 in the paper
-            500: {
-                'k8s-cpu': [0.5],
-                'k8s-cpu-fast': [0.6],
-            },
-            # 'noisy': {
-            #     'k8s-cpu': [0.5],
-            #     'k8s-cpu-fast': [0.4],
-            # },
-        },
-        trace_multiplier=1.0,
-        aggregate_samples=20,
     )
 
 
