@@ -1,8 +1,9 @@
 #!/bin/bash
 
-WORKFLOW="/home/cc//elastic-container/containermod/experiments/nf_scripts/dnaseq.nf"
-INPUT_CONFIG="/home/cc//elastic-container/containermod/experiments/configs/dnaseq.config"
-LABEL="dnaseq_test"
+
+WORKFLOW="/home/cc//elastic-container/containermod/experiments/nf_scripts/bwa.nf"
+INPUT_CONFIG="/home/cc//elastic-container/containermod/experiments/configs/bwa.config"
+LABEL="base-bwa_corrstep80"
 OUT_LOG="${LABEL}.log"
 
 # Kill existing resmon processes
@@ -25,10 +26,9 @@ nextflow run ${LABEL}.nf \
     -with-timeline ${OUT_LOG%.log}-timeline.html \
     -with-trace ${OUT_LOG%.log}-trace.txt \
     -with-report ${OUT_LOG%.log}-report.html \
-    -resume \
 
 sleep 5
 kill ${RESMON_PID}
 
-mkdir -p results/"${LABEL}"
-cp experiments/${LABEL}.csv results/${LABEL}
+# mkdir -p results/"${LABEL}"
+# cp experiments/${LABEL}.csv results/${LABEL}

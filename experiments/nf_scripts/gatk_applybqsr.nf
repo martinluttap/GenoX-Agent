@@ -1,9 +1,8 @@
 import groovy.time.TimeCategory 
 import groovy.time.TimeDuration
 
-include { GATK4_BASERECAL as BASERECAL_DEF1 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_baserecal.nf"
-include { GATK4_BASERECAL_SPARK_NO_LIMIT as BASERECAL_SPARK1 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_baserecal.nf"
-include { GATK4_BASERECAL_SPARK_NO_LIMIT as BASERECAL_SPARK2 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_baserecal.nf"
+include { GATK4_APPLYBQSR as APPLYBQSR_DEF1 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_applybqsr.nf"
+include { GATK4_APPLYBQSR_SPARK_NO_LIMIT as APPLYBQSR_SPARK1 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/gatk_applybqsr.nf"
 
 
 Date loadStart = new Date()
@@ -37,7 +36,7 @@ workflow {
         logFile.append(td)
         println ("Loading done! Took " + td)
     }
-    BASERECAL_SPARK1(
-        bam_file, ref_known_sites, ref_known_sites_tbi, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
+    APPLYBQSR_DEF1(
+        bam_file, bai_file, bqsr_recal_file
     )
 }

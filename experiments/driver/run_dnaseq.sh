@@ -1,9 +1,9 @@
 #!/bin/bash
 
 EXP_DIR="/home/cc/elastic-container/containermod/experiments/"
-WORKFLOW="${EXP_DIR}/nf_scripts/gatk_baserecal.nf"
-INPUT_CONFIG="${EXP_DIR}/configs/gatk_baserecal.config"
-LABEL="2baserecal_spark-96c_req-numThreads"
+WORKFLOW="${EXP_DIR}/nf_scripts/dnaseq.nf"
+INPUT_CONFIG="${EXP_DIR}/configs/dnaseq.config"
+LABEL="dnaseq_test"
 OUT_LOG="${LABEL}.log"
 
 # Kill existing resmon processes
@@ -42,4 +42,4 @@ mv ${EXP_DIR}/${OUT_LOG%.log}.csv ${EXP_DIR}/results/${LABEL}/${OUT_LOG%.log}.cs
 # awk -f ${EXP_DIR}/parse.awk ${EXP_DIR}/${OUT_LOG%.log}.csv \
 #     > ${EXP_DIR}/results/${LABEL}/${OUT_LOG%.log}.csv
 
-echo "All gatk_baserecal done!"
+echo "All gatk_applybqsr done!"
