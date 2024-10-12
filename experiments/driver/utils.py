@@ -30,7 +30,43 @@ POLICIES: List[str] = [
 START_RUN: int = 1
 END_RUN: int =  2
 
-def run_agent(LABEL: str, policy: str) -> subprocess.Popen:
+def run_autothrottle(LABEL: str) -> List[subprocess.Popen]:
+    AUTOTHROTTLE_DIR: str = f'{AGENT_DIR}/autothrottle'    
+    AT_AGENT_OUTPATH: str = f"{LABEL}-at_agent.log"
+
+    at_agent_outfile = open(f"{AT_AGENT_OUTPATH}", "w")
+    at_agent_command: str = f"sudo python3 agent.py".split()
+    at_agent_ps = subprocess.Popen(
+        at_agent_command,
+        cwd=AUTOTHROTTLE_DIR,
+        stdin=subprocess.DEVNULL,
+        stderr=at_agent_outfile,
+        stdout=at_agent_outfile,
+        close_fds=True,
+    )
+    outpath = Path(f"{AUTOTHROTTLE_DIR}/{AT_AGENT_OUTPATH}").resolve()
+    print(f"AT-Agent started with PID: {at_agent_ps.pid}, outfile: {outpath}")
+
+
+    AT_MASTER_OUTPATH: str = f"{LABEL}-at_master.log"
+
+    at_master_outfile = open(f"{AT_MASTER_OUTPATH}", "w")
+    at_master_command: str = f"sudo python3 master.py".split()
+    at_master_ps = subprocess.Popen(
+        at_master_command,
+        cwd=AUTOTHROTTLE_DIR,
+        stdin=subprocess.DEVNULL,
+        stderr=at_master_outfile,
+        stdout=at_master_outfile,
+        close_fds=True,
+    )
+    outpath = Path(f"{AUTOTHROTTLE_DIR}/{AT_MASTER_OUTPATH}").resolve()
+    print(f"AT-Master started with PID: {at_master_ps.pid}, outfile: {outpath}")
+
+    return at_master_ps, at_agent_ps
+
+
+def run_agent(LABEL: str, policy: str) -> List[subprocess.Popen]:
 
     policy_flags: Dict[str, str] = {
         'base': '',
@@ -52,7 +88,13 @@ def run_agent(LABEL: str, policy: str) -> subprocess.Popen:
     outpath = Path(f"{AGENT_DIR}/agent-{LABEL}.log").resolve()
     print(f"Agent started with PID: {agent_ps.pid}, outfile: {outpath}")
 
-    return agent_ps
+    all_processes: List[subprocess.Popen] = [agent_ps]
+    if policy == 'autothrottle':
+        at_master_ps, at_agent_ps = run_autothrottle(LABEL)
+        all_processes.append(at_master_ps)
+        all_processes.append(at_agent_ps)
+
+    return all_processes
 
 def run_nextflow(INPUT_CONFIG: str, LABEL: str, OUT_LOG: str) -> subprocess.Popen:
     DIR: str = f'{TOP_DIR}/../'
@@ -132,10 +174,16 @@ def run_exp_cleanup(LABEL: str) -> None:
     # Gather NF report, timeline, trace, config, and script
     suffixes: List[str] = ["-report.html", "-timeline.html", 
                            "-trace.txt", "-resmon.csv", "-agent.log", 
-                           ".config", ".nf"]
+                           ".config", ".nf", "-at_agent.log", "-at_master.log"]
     for suffix in suffixes:
-        run_cmd(f"sudo mv -f {LABEL}{suffix} results/{LABEL}")
-        print(f'Moved {LABEL}{suffix} to results/{LABEL} ...')
+        DIR: str = '.'
+        if suffix == "-resmon.csv":
+            DIR = AGENT_DIR
+        try:
+            run_cmd(f"sudo mv -f {DIR}/{LABEL}{suffix} results/{LABEL}")
+            print(f'Moved {LABEL}{suffix} to results/{LABEL} ...')
+        except Exception as e:
+            print(e)
 
     # Get <cid>-all and <cid>-cpu csv files.
     for (root, dirs, files) in os.walk(f'{AGENT_DIR}', topdown=True):
@@ -149,5 +197,8 @@ def run_exp_cleanup(LABEL: str) -> None:
     
     # Change ownership of results
     run_cmd(f"sudo chown -R cc:cc results/{LABEL}")
+
+    # Cleanup Nextflow's work folder
+    run_cmd(f"sudo rm -rf {TOP_DIR}/work")
 
     return

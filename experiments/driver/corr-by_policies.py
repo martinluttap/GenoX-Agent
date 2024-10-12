@@ -46,14 +46,14 @@ if __name__ == "__main__":
 
             print(f'============ Timestamp:{datetime.datetime.now()},app={APP},policy={POLICY}, RUN={RUN}  ============')
 
-            LABEL = f"{POLICY}-{APP}_corrdata"
+            LABEL = f"{RUN}-{POLICY}-{APP}"
             OUT_LOG = f"{LABEL}.log"
 
             # Run prep
             run_exp_prep(INPUT_CONFIG, LABEL, WORKFLOW)
 
             # Run Agent
-            agent_ps = run_agent(LABEL, POLICY)
+            all_agent_ps = run_agent(LABEL, POLICY)
             # Run Resmon
             resmon_ps = run_resmon(LABEL)
             # Run Nextflow
@@ -66,8 +66,15 @@ if __name__ == "__main__":
 
             print('Nextflow process finished!')
             # while agent_ps.poll() is None:
-            subprocess.check_output(f"sudo kill -9 {agent_ps.pid}".split())
-            print('Agent killed!')
+            for ps in all_agent_ps:
+                subprocess.check_output(f"sudo kill -9 {ps.pid}".split())
+                print(f'Agent PID {ps.pid} killed!')
+                try:
+                    subprocess.check_output(f"sudo pkill -TERM -P {ps.pid}".split())
+                    print(f'Child processes of PPID {ps.pid} killed!')
+                except Exception as e:
+                    print(e)
+
             # while resmon_ps.poll() is None:
             subprocess.check_output(f"sudo kill -9 {resmon_ps.pid}".split())
             print('Resmon killed!')

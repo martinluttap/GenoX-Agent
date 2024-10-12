@@ -336,8 +336,7 @@ def process_client(client_socket):
                 continue
             elif data['method'] == 'stats':
                 stats = {}
-                print(json.dumps(control['stats_current']))
-                print(control)
+                # print(json.dumps(control['stats_current']))
                 for i in control['stats_current']:
                     stats[i] = control['stats_current'][i]
                     control['stats_current'][i] = []
