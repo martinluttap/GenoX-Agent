@@ -120,6 +120,9 @@ def run_exp_prep(exp_dir: str = '') -> None:
 
     # Modify allocatedCores
     run_cmd(f'sed -E "s|allocatedCores :=.*|allocatedCores := int64({STEP})|" -i {PATH_CONTROLLER}')
+    run_cmd(f'grep -A2 -B2 -E "allocatedCores" -i {PATH_CONTROLLER}')
+
+
 
     # Removed -cpu and -all csv files
     for (root, dirs, files) in os.walk(f'{AGENT_DIR}', topdown=True):
@@ -179,7 +182,7 @@ if __name__ == "__main__":
         APP=args.app
 
         for STEP in STEPS:
-            if APP== "samtools_sort" and STEP < 106:
+            if APP== "trimmomatic" and STEP < 150:
                 continue
             print(f'============ Timestamp:{datetime.datetime.now()},app={APP},step={STEP}  ============')
 

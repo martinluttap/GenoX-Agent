@@ -28,8 +28,13 @@ func TickWriter(activeContainersCh <-chan []string, intervalMillisecond int, sto
 				fmt.Println("Tick writing at ", time.Now().String())
 				elapsedTime := time.Since(startTime).Seconds()
 
+				/* DO NOT FORGET TO MODIFY THE LINES BELOW !!!
+				- EC: all containers
+				- AT (Autothrottle): No containers (AT's agent will handle)
+				...
+				*/
 				// numTargets := 1
-				targetContainers := []string{} //containerDirs //[:numTargets]
+				targetContainers := containerDirs //[:numTargets] // []string{}
 				// controlVariableContainers := containerDirs[numTargets:]
 				for _, containerDir := range targetContainers {
 					ss := strings.Split(containerDir, "/")
