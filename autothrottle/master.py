@@ -16,6 +16,10 @@ import vowpalwabbit
 
 from typing import Any, Callable, Dict, List, Set, Tuple
 
+
+PORT = int(sys.argv[1])
+assert PORT, 'port not provided'
+
 class VwTower:
     learning_rate = 0.5
 
@@ -152,7 +156,7 @@ def benchmark(output_dir, namespace, nodes, deploy, teardown, scalers, tower):
     node_sockets = {}
     for node, node_components in nodes.items():
         node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        node_socket.connect((node, 12200))
+        node_socket.connect((node, PORT))
         node_sockets[node] = node_socket.makefile('rw')
         node_sockets[node].write(json.dumps({
             'method': 'start',
@@ -332,7 +336,6 @@ def nextflow():
         deploy=deploy,
         teardown=teardown,
     )
-
 
 nextflow()
 # stub()

@@ -5,6 +5,7 @@ import datetime
 import os
 from pathlib import Path
 import subprocess
+import random
 import time
 
 TOP_DIR = Path(os.path.dirname(os.path.realpath(__file__))).resolve()
@@ -28,14 +29,16 @@ POLICIES: List[str] = [
 ]
 
 START_RUN: int = 1
-END_RUN: int =  2
+END_RUN: int =  4
 
 def run_autothrottle(LABEL: str) -> List[subprocess.Popen]:
     AUTOTHROTTLE_DIR: str = f'{AGENT_DIR}/autothrottle'    
     AT_AGENT_OUTPATH: str = f"{LABEL}-at_agent.log"
 
+
+    port = random.randint(10000,60000)
     at_agent_outfile = open(f"{AT_AGENT_OUTPATH}", "w")
-    at_agent_command: str = f"sudo python3 agent.py".split()
+    at_agent_command: str = f"sudo python3 agent.py {port}".split()
     at_agent_ps = subprocess.Popen(
         at_agent_command,
         cwd=AUTOTHROTTLE_DIR,
@@ -51,7 +54,7 @@ def run_autothrottle(LABEL: str) -> List[subprocess.Popen]:
     AT_MASTER_OUTPATH: str = f"{LABEL}-at_master.log"
 
     at_master_outfile = open(f"{AT_MASTER_OUTPATH}", "w")
-    at_master_command: str = f"sudo python3 master.py".split()
+    at_master_command: str = f"sudo python3 master.py {port}".split()
     at_master_ps = subprocess.Popen(
         at_master_command,
         cwd=AUTOTHROTTLE_DIR,
@@ -139,6 +142,10 @@ def run_exp_prep(INPUT_CONFIG: str, LABEL: str, WORKFLOW: str) -> None:
     cmd: str = "ps aux | grep \"main.go\" | tr -s ' ' | cut -d ' ' -f 2 | xargs -I {} sudo kill -9 {}"
     run_cmd(cmd)
     cmd: str = "ps aux | grep \"go-build\" | tr -s ' ' | cut -d ' ' -f 2 | xargs -I {} sudo kill -9 {}"
+    run_cmd(cmd)
+    cmd: str = "ps aux | grep \"python3 master.py\" | tr -s ' ' | cut -d ' ' -f 2 | xargs -I {} sudo kill -9 {}"
+    run_cmd(cmd)
+    cmd: str = "ps aux | grep \"python3 agent.py\" | tr -s ' ' | cut -d ' ' -f 2 | xargs -I {} sudo kill -9 {}"
     run_cmd(cmd)
 
     # Clear PageCache, dentries, indoes, and swap

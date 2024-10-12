@@ -5,6 +5,8 @@ import json
 import pathlib
 import socket
 import statistics
+import struct
+import sys
 import subprocess
 import time
 import threading
@@ -367,8 +369,10 @@ def process_client(client_socket):
 
 
 def main():
+    PORT = int(sys.argv[1])
+    assert PORT, 'port not provided'
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('localhost', 12200))
+    server_socket.bind(('localhost', PORT))
     server_socket.listen()
     print('listening')
     while True:
