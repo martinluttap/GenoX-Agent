@@ -123,7 +123,6 @@ def run_exp_prep(exp_dir: str = '') -> None:
     run_cmd(f'grep -A2 -B2 -E "allocatedCores" -i {PATH_CONTROLLER}')
 
 
-
     # Removed -cpu and -all csv files
     for (root, dirs, files) in os.walk(f'{AGENT_DIR}', topdown=True):
         for f in files:
