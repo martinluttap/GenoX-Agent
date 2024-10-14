@@ -25,7 +25,8 @@ APPS: List[str] = [
 POLICIES: List[str] = [
     "base",
     "burst",
-    "autothrottle"
+    "autothrottle",
+    "elasticcontainer"
 ]
 
 START_RUN: int = 1
@@ -75,6 +76,7 @@ def run_agent(LABEL: str, policy: str) -> List[subprocess.Popen]:
         'base': '',
         'burst': '--enable-burst',
         'autothrottle': '--policy at',
+        'elasticcontainer': '--policy ec',
     }
     assert(policy in policy_flags.keys()), f"Policy {policy} not found!"
 

@@ -38,7 +38,7 @@ func TickWriter(activeContainersCh <-chan []string, policy string, intervalMilli
 				policy = strings.ToUpper(policy)
 				if policy == "EC" {
 					numTargets = len(containerDirs)
-					funcName = "cappedNumThreads"
+					funcName = "numThreads"
 				} else if policy == "AT" {
 					numTargets = 0
 					funcName = "constant"
