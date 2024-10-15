@@ -30,7 +30,7 @@ POLICIES: List[str] = [
 ]
 
 START_RUN: int = 1
-END_RUN: int =  2
+END_RUN: int =  4
 
 def run_autothrottle(LABEL: str) -> List[subprocess.Popen]:
     AUTOTHROTTLE_DIR: str = f'{AGENT_DIR}/autothrottle'    
@@ -74,7 +74,7 @@ def run_agent(LABEL: str, policy: str) -> List[subprocess.Popen]:
 
     policy_flags: Dict[str, str] = {
         'base': '--policy base',
-        'burst': '--enable-burst',
+        'burst': '--policy bk',
         'autothrottle': '--policy at',
         'elasticcontainer': '--policy ec',
     }

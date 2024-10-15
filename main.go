@@ -219,7 +219,7 @@ func main() {
 		log.Fatal("Policy must be specified!")
 	}
 
-	if flagBurst {
+	if flagPolicy == "bk" {
 		enableBurst()
 	} else {
 		disableBurst()
@@ -276,7 +276,7 @@ func main() {
 	go metrics.PollCpuStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 	// go metrics.GetProcSched(activeContainersCh, burstMetricsIntervalMs, stopCh, &wg)
 
-	if flagBurst {
+	if flagPolicy == "bk" {
 		go policy.DefaultBurstController(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 		// go metrics.PollBurstStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 		// go policy.WatchAccruedBurstTime("/sys/fs/cgroup/cpu/docker/schbench")
