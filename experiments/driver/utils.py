@@ -74,7 +74,7 @@ def run_agent(LABEL: str, policy: str) -> List[subprocess.Popen]:
 
     policy_flags: Dict[str, str] = {
         'base': '--policy base',
-        'burst': '--enable-burst',
+        'burst': '--policy bk',
         'autothrottle': '--policy at',
         'elasticcontainer': '--policy ec',
     }
@@ -104,7 +104,7 @@ def run_agent(LABEL: str, policy: str) -> List[subprocess.Popen]:
 def run_nextflow(INPUT_CONFIG: str, LABEL: str, OUT_LOG: str) -> subprocess.Popen:
     DIR: str = f'{TOP_DIR}/../'
 
-    nextflow_command: str = f"nextflow run {DIR}/{LABEL}.nf -c {INPUT_CONFIG} -with-timeline {DIR}/{OUT_LOG.rstrip('.log')}-timeline.html -with-trace {DIR}/{OUT_LOG.rstrip('.log')}-trace.txt -with-report {DIR}/{OUT_LOG.rstrip('.log')}-report.html".split()
+    nextflow_command: str = f"nextflow run {DIR}/{LABEL}.nf -c {INPUT_CONFIG} -with-timeline {DIR}/{OUT_LOG[:-4]}-timeline.html -with-trace {DIR}/{OUT_LOG[:-4]}-trace.txt -with-report {DIR}/{OUT_LOG[:-4]}-report.html".split()
 
     nextflow_ps = subprocess.Popen(
         nextflow_command,
