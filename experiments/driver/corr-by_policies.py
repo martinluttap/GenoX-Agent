@@ -11,7 +11,7 @@ import time
 
 from utils import (
     TOP_DIR,
-    APPS, POLICIES, START_RUN, END_RUN, run_agent, run_nextflow, run_exp_prep, run_exp_cleanup, run_resmon
+    APPS, POLICIES, START_RUN, END_RUN, kill_associated_processes, run_agent, run_nextflow, run_exp_prep, run_exp_cleanup, run_resmon
 )
 
 """
@@ -46,10 +46,11 @@ if __name__ == "__main__":
 
             print(f'============ Timestamp:{datetime.datetime.now()},app={APP},policy={POLICY}, RUN={RUN}  ============')
 
-            LABEL = f"{RUN}-{POLICY}-{APP}"
+            LABEL = f"at_target0.1-{RUN}-{POLICY}-{APP}"
             OUT_LOG = f"{LABEL}.log"
 
             # Run prep
+            kill_associated_processes()
             run_exp_prep(INPUT_CONFIG, LABEL, WORKFLOW)
 
             # Run Agent
@@ -81,6 +82,8 @@ if __name__ == "__main__":
 
             # Cleanup
             run_exp_cleanup(LABEL)
+
+            kill_associated_processes()
 
         except Exception as e:
             print(f"Error: {e}")

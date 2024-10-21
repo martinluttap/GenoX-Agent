@@ -267,7 +267,7 @@ def application(name, nodes, target1components, deploy, teardown):
     namespace = name
     components = sorted(sum(nodes.values(), []))
     tower_targets = [0.0, 0.02, 0.04, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3]  # see section 4 in the paper
-    initial_limit = 32
+    initial_limit = 1
 
     # see section A.7 in the paper for the warmup process
     for i in range(1):

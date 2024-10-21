@@ -30,7 +30,7 @@ POLICIES: List[str] = [
 ]
 
 START_RUN: int = 1
-END_RUN: int =  4
+END_RUN: int =  2
 
 def run_autothrottle(LABEL: str) -> List[subprocess.Popen]:
     AUTOTHROTTLE_DIR: str = f'{AGENT_DIR}/autothrottle'    
@@ -136,7 +136,7 @@ def run_cmd(cmd: str) -> None:
     
     return
 
-def run_exp_prep(INPUT_CONFIG: str, LABEL: str, WORKFLOW: str) -> None:
+def kill_associated_processes():
     # Kill previous resmon and agent process
     print(f'Killing previous resmon and agent process ...')
     cmd: str = "ps aux | grep resmon | tr -s ' ' | cut -d ' ' -f 2 | xargs -I {} sudo kill -9 {}"
@@ -150,6 +150,8 @@ def run_exp_prep(INPUT_CONFIG: str, LABEL: str, WORKFLOW: str) -> None:
     cmd: str = "ps aux | grep \"python3 agent.py\" | tr -s ' ' | cut -d ' ' -f 2 | xargs -I {} sudo kill -9 {}"
     run_cmd(cmd)
 
+
+def run_exp_prep(INPUT_CONFIG: str, LABEL: str, WORKFLOW: str) -> None:
     # Clear PageCache, dentries, indoes, and swap
     cmd: str = "sudo sync; echo 3 | sudo tee /proc/sys/vm/drop_caches ; sudo swapoff -a && sudo swapon -a"
     print(f'Clearing PageCache, dentries, indoes, and swap ...')

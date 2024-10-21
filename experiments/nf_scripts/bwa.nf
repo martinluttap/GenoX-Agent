@@ -19,7 +19,7 @@ READ_PATH = "/home/cc/nextflow/read-files/SRR24039108"
 Date loadStart = new Date()
 println ("Data loading started ...")
 fastq_pair = Channel.fromFilePairs(READ_PATH + '/*_{1,2}.fastq', flat: true)
-                    .splitFastq(by: 1000000, limit: 1000000, pe:true, file: true)
+                    .splitFastq(by: 4000000, limit: 4000000, pe:true, file: true)
 
 fastq_pair2 = Channel.fromFilePairs(READ_PATH + '/*_{1,2}.fastq', flat: true)
             .splitFastq(by: 250000, limit:250000, pe:true, file: true)
