@@ -48,6 +48,9 @@ func TickWriter(activeContainersCh <-chan []string, policy string, intervalMilli
 				} else if policy == "BASE" {
 					numTargets = len(containerDirs)
 					funcName = "constant"
+				} else if policy == "EC_CAPPED" {
+					numTargets = len(containerDirs)
+					funcName = "cappedNumThreads"
 				} else {
 					panic("Policy not recognized!")
 				}
@@ -154,7 +157,7 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 			// newPeriod = functions.RandomStep(elapsedTime, buckets)
 			newPeriod = oldPeriod
 		} else if functionName == "cappedNumThreads" {
-			newPeriod = functions.CappedNumThreads(containerDir, 4)
+			newPeriod = functions.CappedNumThreads(containerDir, 96)
 		}
 		if val, ok := allowedFunctions[functionName]; !ok {
 			fmt.Println("Function ", val, " not allowed!")

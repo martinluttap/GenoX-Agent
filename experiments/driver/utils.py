@@ -26,11 +26,12 @@ POLICIES: List[str] = [
     "base",
     "burst",
     "autothrottle",
-    "elasticcontainer"
+    "elasticcontainer",
+    "ec_capped"
 ]
 
-START_RUN: int = 1
-END_RUN: int =  2
+START_RUN: int = 2
+END_RUN: int =  4
 
 def run_autothrottle(LABEL: str) -> List[subprocess.Popen]:
     AUTOTHROTTLE_DIR: str = f'{AGENT_DIR}/autothrottle'    
@@ -77,6 +78,7 @@ def run_agent(LABEL: str, policy: str) -> List[subprocess.Popen]:
         'burst': '--policy bk',
         'autothrottle': '--policy at',
         'elasticcontainer': '--policy ec',
+        'ec_capped': '--policy ec_capped'
     }
     assert(policy in policy_flags.keys()), f"Policy {policy} not found!"
 
