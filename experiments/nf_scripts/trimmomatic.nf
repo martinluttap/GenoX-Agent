@@ -3,6 +3,13 @@ import groovy.time.TimeDuration
 
 include { TRIMMOMATIC_NO_LIMIT as TRIMMOMATIC1 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/trimmomatic.nf"
 include { TRIMMOMATIC_NO_LIMIT as TRIMMOMATIC2 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/trimmomatic.nf"
+include { TRIMMOMATIC_NO_LIMIT as TRIMMOMATIC3 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/trimmomatic.nf"
+include { TRIMMOMATIC_NO_LIMIT as TRIMMOMATIC4 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/trimmomatic.nf"
+include { TRIMMOMATIC_NO_LIMIT as TRIMMOMATIC5 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/trimmomatic.nf"
+include { TRIMMOMATIC_NO_LIMIT as TRIMMOMATIC6 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/trimmomatic.nf"
+include { TRIMMOMATIC_NO_LIMIT as TRIMMOMATIC7 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/trimmomatic.nf"
+include { TRIMMOMATIC_NO_LIMIT as TRIMMOMATIC8 } from "/home/cc/elastic-container/containermod/experiments/nf_scripts/tools/trimmomatic.nf"
+
 
 Date loadStart = new Date()
 println ("Data loading started ...")
@@ -41,7 +48,25 @@ workflow {
     TRIMMOMATIC1(
         fastq_pair
     )
-    // TRIMMOMATIC2(
-    //     fastq_pair
-    // )
+    TRIMMOMATIC2(
+        fastq_pair
+    )
+    TRIMMOMATIC3(
+        fastq_pair
+    )
+    TRIMMOMATIC4(
+        fastq_pair
+    )
+    TRIMMOMATIC5(
+        fastq_pair
+    )
+    TRIMMOMATIC6(
+        fastq_pair
+    )
+    TRIMMOMATIC7(
+        fastq_pair
+    )
+    TRIMMOMATIC8(
+        fastq_pair
+    )
 }

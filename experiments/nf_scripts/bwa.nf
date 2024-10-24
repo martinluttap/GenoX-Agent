@@ -39,5 +39,5 @@ workflow {
     }
     BWA1(
         fastq_pair, ref_fa, ref_amb, ref_ann, ref_bwt, ref_fai, ref_pac, ref_sa, ref_dict
-    ) 
+    )
 }

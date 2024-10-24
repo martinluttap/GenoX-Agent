@@ -30,7 +30,7 @@ POLICIES: List[str] = [
     "ec_capped"
 ]
 
-START_RUN: int = 2
+START_RUN: int = 1
 END_RUN: int =  4
 
 def run_autothrottle(LABEL: str) -> List[subprocess.Popen]:

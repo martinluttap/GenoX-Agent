@@ -131,7 +131,7 @@ class CaptainScaler:
     def __init__(self, target, initial_limit=1):
         # read-only parameters
         # self.target = 0.0 # Force captain to try minimize throttling rate
-        self.target = 0.1
+        self.target = 0.001
         self.period = 1
 
         # state
@@ -166,7 +166,7 @@ class CaptainScaler:
         except Exception as e:
             return self.limit
 
-        # self.rollback_mechanism()       
+        self.rollback_mechanism()       
 
         if t < self.last_scale_t + self.period - 0.0001:
             return self.limit
@@ -210,15 +210,8 @@ class CaptainScaler:
             # self.additive_scaleup(throttled_rate)
         else:
             # Instantaneously scale down
-            print(f'Instant scale down')
-            usage_limit = usage_max + usage_std * self.margin
-            print(f'usage_max={usage_max}, usage_std={usage_std}, margin={self.margin}, usage_limit={usage_limit}, self.limit={self.limit}')
-            if usage_limit <= self.limit * 0.9 and self.scale_down_cd == 0:
-                print(f'Instance scale down -- usage limit less than threshold and cd==0')
-                print(f'Prev limit: {self.limit}')
-                self.limit = max(self.limit * 0.5, usage_limit)
-                print(f'New limit: {self.limit}')
-                self.last_scale_down = True
+            self.default_scaledown(usage_max, usage_std)
+            # self.additive_scaledown(usage_max, usage_std)
         print(f'At t={self.last_t}, tr_rate={throttled_rate}, limit={self.limit}, last_usage={self.usage_history[-1]}, quotaus={self.last_stats["cpu_cfs_quota_us"]}')
 
     def default_scaleup(self, throttled_rate):
@@ -228,6 +221,17 @@ class CaptainScaler:
         self.limit *= 1 + (throttled_rate - 3 * self.target)
         print(f'New limit: {self.limit}')
 
+    def default_scaledown(self, usage_max, usage_std): 
+        print(f'Instant scale down')
+        usage_limit = usage_max + usage_std * self.margin
+        print(f'usage_max={usage_max}, usage_std={usage_std}, margin={self.margin}, usage_limit={usage_limit}, self.limit={self.limit}')
+        if usage_limit <= self.limit * 0.9 and self.scale_down_cd == 0:
+            print(f'Instance scale down -- usage limit less than threshold and cd==0')
+            print(f'Prev limit: {self.limit}')
+            self.limit = max(self.limit * 0.5, usage_limit)
+            print(f'New limit: {self.limit}')
+            self.last_scale_down = True
+
     def additive_scaleup(self, throttled_rate):
         # Additive scale up 
         print(f'Additive scale up')
@@ -235,6 +239,18 @@ class CaptainScaler:
         # self.limit *= 1 + (throttled_rate - 3 * self.target)
         self.limit += 1
         print(f'New limit: {self.limit}')
+
+    def additive_scaledown(self, usage_max, usage_std):
+        print(f'Additive scale down')
+        usage_limit = usage_max + usage_std * self.margin
+        print(f'usage_max={usage_max}, usage_std={usage_std}, margin={self.margin}, usage_limit={usage_limit}, self.limit={self.limit}')
+        if usage_limit <= self.limit * 0.9 and self.scale_down_cd == 0:
+            print(f'Prev limit: {self.limit}')
+            # self.limit = max(self.limit * 0.5, usage_limit)
+            self.limit -= 1
+            print(f'New limit: {self.limit}')
+            self.last_scale_down = True
+
 
 def init_scaler(data):
     print(f'Init scaler with data={data}')
