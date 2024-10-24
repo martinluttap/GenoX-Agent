@@ -1,6 +1,6 @@
 #!/bin/bash
 
-POLICIES="elasticcontainer"
+POLICIES="autothrottle"
 APPS="trimmomatic"
 # APPS="samtools_sort"
 for POLICY in $POLICIES; do

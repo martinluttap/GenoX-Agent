@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
             print(f'============ Timestamp:{datetime.datetime.now()},app={APP},policy={POLICY}, RUN={RUN}  ============')
 
-            LABEL = f"msu_msd-{RUN}-{POLICY}-{APP}"
+            LABEL = f"asu_msd-{RUN}-{POLICY}-{APP}"
             OUT_LOG = f"{LABEL}.log"
 
             # Run prep

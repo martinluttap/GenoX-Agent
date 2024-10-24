@@ -48,25 +48,25 @@ workflow {
     TRIMMOMATIC1(
         fastq_pair
     )
-    TRIMMOMATIC2(
-        fastq_pair
-    )
-    TRIMMOMATIC3(
-        fastq_pair
-    )
-    TRIMMOMATIC4(
-        fastq_pair
-    )
-    TRIMMOMATIC5(
-        fastq_pair
-    )
-    TRIMMOMATIC6(
-        fastq_pair
-    )
-    TRIMMOMATIC7(
-        fastq_pair
-    )
-    TRIMMOMATIC8(
-        fastq_pair
-    )
+    // TRIMMOMATIC2(
+    //     fastq_pair
+    // )
+    // TRIMMOMATIC3(
+    //     fastq_pair
+    // )
+    // TRIMMOMATIC4(
+    //     fastq_pair
+    // )
+    // TRIMMOMATIC5(
+    //     fastq_pair
+    // )
+    // TRIMMOMATIC6(
+    //     fastq_pair
+    // )
+    // TRIMMOMATIC7(
+    //     fastq_pair
+    // )
+    // TRIMMOMATIC8(
+    //     fastq_pair
+    // )
 }
