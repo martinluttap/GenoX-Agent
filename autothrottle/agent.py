@@ -206,12 +206,12 @@ class CaptainScaler:
         self.last_scale_down = False
         print(f'Throttled rate = {throttled_rate}, thres={3*self.target}')
         if throttled_rate > 3 * self.target:
-            # self.default_scaleup(throttled_rate)
-            self.additive_scaleup(throttled_rate)
+            self.default_scaleup(throttled_rate)
+            # self.additive_scaleup(throttled_rate)
         else:
             # Instantaneously scale down
-            self.default_scaledown(usage_max, usage_std)
-            # self.additive_scaledown(usage_max, usage_std)
+            # self.default_scaledown(usage_max, usage_std)
+            self.additive_scaledown(usage_max, usage_std)
         print(f'At t={self.last_t}, tr_rate={throttled_rate}, limit={self.limit}, last_usage={self.usage_history[-1]}, quotaus={self.last_stats["cpu_cfs_quota_us"]}')
 
     def default_scaleup(self, throttled_rate):
