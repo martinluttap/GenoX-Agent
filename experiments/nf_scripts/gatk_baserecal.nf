@@ -10,8 +10,8 @@ Date loadStart = new Date()
 println ("Data loading started ...")
 
 REF_PATH = "/home/cc/nextflow/reference-files"
-ref_known_sites = Channel.fromPath(REF_PATH + '/*.vcf.gz')
-ref_known_sites_tbi = Channel.fromPath(REF_PATH + '/*.vcf.gz.tbi')
+ref_known_sites = Channel.fromPath(REF_PATH + '/dbsnp*.vcf.gz')
+ref_known_sites_tbi = Channel.fromPath(REF_PATH + '/dbsnp*.vcf.gz.tbi')
 ref_fa = Channel.fromPath(REF_PATH + '/*.fa')
 ref_amb = Channel.fromPath(REF_PATH + '/*.amb')
 ref_ann = Channel.fromPath(REF_PATH + '/*.ann')

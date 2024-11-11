@@ -162,7 +162,29 @@ func ProcFsMetricsCollection(containerDirs []string, metricsIntervalMs int, stop
 }
 
 func GetCpuStatData(containerDir string) (int64, int64, int64) {
-	infile, openErr := os.OpenFile(fmt.Sprintf("%s/cpu.stat", containerDir), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if _, statErr := os.Stat(fmt.Sprintf("%s/cpu.stat", containerDir)); statErr == nil {
+		infile, openErr := os.OpenFile(fmt.Sprintf("%s/cpu.stat", containerDir), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		if openErr != nil {
+			log.Fatalf("While opening: %s:\n", openErr)
+		}
+		defer infile.Close()
+
+		s := bufio.NewScanner(infile)
+		s.Scan()
+		nrPeriod, _ := strconv.Atoi(strings.Fields(s.Text())[1])
+		s.Scan()
+		nrThrottled, _ := strconv.Atoi(strings.Fields(s.Text())[1])
+		s.Scan()
+		throttledTime, _ := strconv.Atoi(strings.Fields(s.Text())[1])
+
+		return int64(nrPeriod), int64(nrThrottled), int64(throttledTime)
+	} else {
+		return -1, -1, -1
+	}
+}
+
+func GetCpuacctUsageData(containerDir string) int64 {
+	infile, openErr := os.OpenFile(fmt.Sprintf("%s/cpuacct.usage", containerDir), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if openErr != nil {
 		log.Fatalf("While opening: %s:\n", openErr)
 	}
@@ -170,13 +192,9 @@ func GetCpuStatData(containerDir string) (int64, int64, int64) {
 
 	s := bufio.NewScanner(infile)
 	s.Scan()
-	nrPeriod, _ := strconv.Atoi(strings.Fields(s.Text())[1])
-	s.Scan()
-	nrThrottled, _ := strconv.Atoi(strings.Fields(s.Text())[1])
-	s.Scan()
-	throttledTime, _ := strconv.Atoi(strings.Fields(s.Text())[1])
+	cpuUsage, _ := strconv.Atoi(s.Text())
 
-	return int64(nrPeriod), int64(nrThrottled), int64(throttledTime)
+	return int64(cpuUsage)
 }
 
 func GetCFSData(containerDir string) (int64, int64) {
@@ -253,6 +271,7 @@ func BuildKernelStats(containerDirs []string) map[string]KernelStats {
 	for _, containerDir := range containerDirs {
 		cfsQuota, cfsPeriod := GetCFSData(containerDir)
 		nrPeriod, nrThrottled, throttledTime := GetCpuStatData(containerDir)
+		cpuUsage := GetCpuacctUsageData(containerDir)
 		// totalRchar, totalWchar, totalSyscr, totalSyscw, totalReadBytes, totalWriteBytes, totalCancelledWriteBytes := GetIOStatData(containerDir)
 
 		kernelStatsD[containerDir] = KernelStats{
@@ -261,6 +280,7 @@ func BuildKernelStats(containerDirs []string) map[string]KernelStats {
 			cfsNumPeriods:       nrPeriod,
 			cfsThrottledPeriods: nrThrottled,
 			cfsThrottledTimeNs:  throttledTime,
+			cpuacctUsage:        cpuUsage,
 			// procsPidStats:       procsPidStats,
 		}
 	}
@@ -302,9 +322,10 @@ func PollAllStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 				numPeriods := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsNumPeriods)
 				trPeriods := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsThrottledPeriods)
 				trTimeNs := fmt.Sprintf("%d", kernelStatsMap[containerDir].cfsThrottledTimeNs)
+				cpuacctUsage := fmt.Sprintf("%d", kernelStatsMap[containerDir].cpuacctUsage)
 
 				row := []string{
-					ts, cid, quotaUs, periodUs, numPeriods, trPeriods, trTimeNs,
+					ts, cid, quotaUs, periodUs, numPeriods, trPeriods, trTimeNs, cpuacctUsage,
 				}
 				fmt.Println("Wrote ", row, "to ", containerDir)
 				writer.Write(row)
@@ -406,8 +427,14 @@ func PollCpuStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 			deltaSys := (sysCpuTotal - prevSysCpuTotal) / float64(USER_HZ) * 1e9
 
 			for containerDir, writer := range outWriterDict {
-				control, _ := cgroup1.Load(cgroup1.StaticPath(strings.TrimPrefix(containerDir, "/sys/fs/cgroup/cpu")))
-				stats, _ := control.Stat(cgroup1.IgnoreNotExist)
+				control, loadErr := cgroup1.Load(cgroup1.StaticPath(strings.TrimPrefix(containerDir, "/sys/fs/cgroup/cpu")))
+				if loadErr != nil {
+					continue
+				}
+				stats, statErr := control.Stat(cgroup1.IgnoreNotExist)
+				if statErr != nil {
+					continue
+				}
 				ctrCpuNs := stats.GetCPU().GetUsage().Total
 				prevctrCpuNs := lastCpuMap[containerDir]
 				deltaCtrCpuNs := int64(ctrCpuNs) - prevctrCpuNs
@@ -458,8 +485,14 @@ func MonitorCpuUsage(activeContainersCh <-chan []string, MonitorIntervalMs int, 
 			deltaSys := (sysCpuTotal - prevSysCpuTotal) / float64(USER_HZ) * 1e9
 			for _, containerDir := range containerDirs {
 
-				control, _ := cgroup1.Load(cgroup1.StaticPath(strings.TrimPrefix(containerDir, "/sys/fs/cgroup/cpu")))
-				stats, _ := control.Stat(cgroup1.IgnoreNotExist)
+				control, loadErr := cgroup1.Load(cgroup1.StaticPath(strings.TrimPrefix(containerDir, "/sys/fs/cgroup/cpu")))
+				if loadErr != nil {
+					continue
+				}
+				stats, statErr := control.Stat(cgroup1.IgnoreNotExist)
+				if statErr != nil {
+					continue
+				}
 				cpuNs := stats.GetCPU().GetUsage().Total
 				prevCpuNs := lastCpuMap[containerDir]
 
