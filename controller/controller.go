@@ -14,7 +14,7 @@ import (
 	"github.com/martinluttap/containermod/functions"
 )
 
-func TickWriter(activeContainersCh <-chan []string, intervalMillisecond int, stopCh chan int, wg *sync.WaitGroup) {
+func TickWriter(activeContainersCh <-chan []string, policy string, intervalMillisecond int, stopCh chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	tickCh := time.NewTicker(time.Duration(intervalMillisecond) * time.Millisecond)
@@ -33,14 +33,34 @@ func TickWriter(activeContainersCh <-chan []string, intervalMillisecond int, sto
 				- AT (Autothrottle): No containers (AT's agent will handle)
 				...
 				*/
-				// numTargets := 1
-				targetContainers := containerDirs //[:numTargets] // []string{}
+				numTargets := 0
+				var funcName string
+				policy = strings.ToUpper(policy)
+				if policy == "EC" {
+					numTargets = len(containerDirs)
+					funcName = "numThreads"
+				} else if policy == "AT" {
+					numTargets = 0
+					funcName = "constant"
+				} else if policy == "BK" {
+					numTargets = len(containerDirs)
+					funcName = "constant"
+				} else if policy == "BASE" {
+					numTargets = len(containerDirs)
+					funcName = "constant"
+				} else if policy == "EC_CAPPED" {
+					numTargets = len(containerDirs)
+					funcName = "cappedNumThreads"
+				} else {
+					panic("Policy not recognized!")
+				}
+				targetContainers := containerDirs[:numTargets] // []string{}
 				// controlVariableContainers := containerDirs[numTargets:]
 				for _, containerDir := range targetContainers {
 					ss := strings.Split(containerDir, "/")
 					cid := ss[len(ss)-1]
 					fmt.Println("Adjusting quota for ", cid)
-					adjustQuota(containerDir, elapsedTime, "constant")
+					adjustQuota(containerDir, elapsedTime, funcName)
 				}
 				// for _, containerDir := range controlVariableContainers {
 				// 	ss := strings.Split(containerDir, "/")
@@ -114,9 +134,8 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 		oldPeriod := s.Text()
 		// f(x): constant
 		if functionName == "constant" {
-			allocatedCores := int64(170)
+			allocatedCores := int64(10)
 			newPeriod = strconv.FormatInt(allocatedCores*10000, 10)
-			fmt.Printf("Test %d\n", allocatedCores)
 			// newPeriod = strconv.FormatInt(allocatedCores*100000, 10)
 		} else if functionName == "continuousIncrease" {
 			// f(x): continuousIncrease
@@ -138,7 +157,7 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 			// newPeriod = functions.RandomStep(elapsedTime, buckets)
 			newPeriod = oldPeriod
 		} else if functionName == "cappedNumThreads" {
-			newPeriod = functions.CappedNumThreads(containerDir, 4)
+			newPeriod = functions.CappedNumThreads(containerDir, 96)
 		}
 		if val, ok := allowedFunctions[functionName]; !ok {
 			fmt.Println("Function ", val, " not allowed!")

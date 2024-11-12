@@ -11,7 +11,7 @@ import time
 
 from utils import (
     TOP_DIR,
-    APPS, POLICIES, START_RUN, END_RUN, run_agent, run_nextflow, run_exp_prep, run_exp_cleanup, run_resmon
+    APPS, POLICIES, START_RUN, END_RUN, kill_associated_processes, run_agent, run_nextflow, run_exp_prep, run_exp_cleanup, run_resmon
 )
 
 """
@@ -46,14 +46,16 @@ if __name__ == "__main__":
 
             print(f'============ Timestamp:{datetime.datetime.now()},app={APP},policy={POLICY}, RUN={RUN}  ============')
 
-            LABEL = f"{POLICY}-{APP}_corrdata"
+            LABEL = f"io_throttling-{RUN}-{POLICY}-{APP}"
             OUT_LOG = f"{LABEL}.log"
 
             # Run prep
+            kill_associated_processes()
             run_exp_prep(INPUT_CONFIG, LABEL, WORKFLOW)
 
             # Run Agent
-            agent_ps = run_agent(LABEL, POLICY)
+            all_agent_ps = run_agent(LABEL, POLICY)
+
             # Run Resmon
             resmon_ps = run_resmon(LABEL)
             # Run Nextflow
@@ -66,8 +68,15 @@ if __name__ == "__main__":
 
             print('Nextflow process finished!')
             # while agent_ps.poll() is None:
-            subprocess.check_output(f"sudo kill -9 {agent_ps.pid}".split())
-            print('Agent killed!')
+            for ps in all_agent_ps:
+                subprocess.check_output(f"sudo kill -9 {ps.pid}".split())
+                print(f'Agent PID {ps.pid} killed!')
+                try:
+                    subprocess.check_output(f"sudo pkill -TERM -P {ps.pid}".split())
+                    print(f'Child processes of PPID {ps.pid} killed!')
+                except Exception as e:
+                    print(e)
+
             # while resmon_ps.poll() is None:
             subprocess.check_output(f"sudo kill -9 {resmon_ps.pid}".split())
             print('Resmon killed!')
@@ -75,6 +84,10 @@ if __name__ == "__main__":
             # Cleanup
             run_exp_cleanup(LABEL)
 
+            kill_associated_processes()
+
         except Exception as e:
             print(f"Error: {e}")
             # parser.print_help()
+
+        time.sleep(3)

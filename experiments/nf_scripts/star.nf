@@ -23,7 +23,7 @@ genome_dir = Channel.fromPath(REF_PATH + '/star-2.7.5c_GRCh38.d1.vd1_gencode.v36
 READ_PATH = "/home/cc/nextflow/read-files/star/"
 meta_id = Channel.of(READ_PATH.tokenize('/')[-1])
 fastq_pair = Channel.fromFilePairs(READ_PATH + '/SRR*_{1,2}.{1,2}.fastq', flat: true)
-                    .splitFastq(by: 15000000, limit:15000000, pe:true, file: true)
+                    .splitFastq(by: 30000000, limit:30000000, pe:true, file: true)
 
 workflow {
     fastq_pair.view {

@@ -2,6 +2,12 @@ main
 containermod
 
 results/*
+=======
+**work/*
+**__pycache__**
+**work**
+**.nextflow**
+**LoadDuration.txt**
 out-metrics/*
 
 experiments/.*
@@ -14,6 +20,6 @@ experiments/work/
 experiments/junk/
 experiments/results/*
 experiments/.nextflow.*
-experiments/**.nextflow**
+experiments/**nextflow**
 
 *.csv
