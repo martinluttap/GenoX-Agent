@@ -34,7 +34,7 @@ func prepPollingAllStats(containerDirs []string, outWriterDict map[string]*csv.W
 	return csvFds
 }
 
-func PrepPollingCpuStats(containerDirs []string, outWriterDict map[string]*csv.Writer) []*os.File {
+func PrepPollingCpuStats(containerDirs []string, metricName string, headers []string, outWriterDict map[string]*csv.Writer) []*os.File {
 
 	csvFds := []*os.File{}
 	// Check existence of container in map.
@@ -44,7 +44,7 @@ func PrepPollingCpuStats(containerDirs []string, outWriterDict map[string]*csv.W
 			fmt.Println("Created new writer for ", containerDir)
 			ss := strings.Split(containerDir, "/")
 			cid := ss[len(ss)-1][:5]
-			outFile, err := os.Create(fmt.Sprintf("%s-cpu.csv", cid))
+			outFile, err := os.Create(fmt.Sprintf("%s-%s.csv", cid, metricName))
 			if err != nil {
 				panic(err)
 			}
@@ -53,7 +53,6 @@ func PrepPollingCpuStats(containerDirs []string, outWriterDict map[string]*csv.W
 			writer := csv.NewWriter(outFile)
 			defer writer.Flush()
 			// this defines the header value and data values for the new csv file
-			headers := []string{"timestampNs", "cid", "cidCpuPercent", "machineCpuPercent"}
 			writer.Write(headers)
 			outWriterDict[containerDir] = writer
 		}
