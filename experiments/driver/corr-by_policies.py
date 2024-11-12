@@ -55,6 +55,7 @@ if __name__ == "__main__":
 
             # Run Agent
             all_agent_ps = run_agent(LABEL, POLICY)
+
             # Run Resmon
             resmon_ps = run_resmon(LABEL)
             # Run Nextflow
