@@ -118,7 +118,6 @@ type CGroupSlice struct {
 
 func NewCGroupSlice(slicePath string) *CGroupSlice {
 	rs := GetResourceStat(slicePath)
-
 	return &CGroupSlice{
 		slicePath:      slicePath,
 		resourceStat:   rs,
@@ -137,7 +136,9 @@ func GetResourceStat(slicePath string) *ResourceStat {
 		io:  &IO{},
 	}
 
+	fmt.Printf("Resource stat: %s\n", slicePath)
 	rs.cpu = GetCPUStat(slicePath)
+	fmt.Println("quota: ", rs.cpu.periodUs)
 	// rs.io = GetIOStat(slicePath)
 
 	// Read CPU stat
@@ -159,11 +160,14 @@ func GetCPUStat(slicePath string) *CPU {
 	cpu.weight = ParseCPUWeightFile(slicePath)
 	cpu.weightNice = ParseCPUWeightNiceFile(slicePath)
 
+	fmt.Printf("idle=%d, quotaUs=%d, periodUs=%d, burstUs=%d, uclampMin=%f, uclampMax=%f, weight=%d, weightNice=%d\n", cpu.idle, cpu.quotaUs, cpu.periodUs, cpu.burstUs, cpu.uclampMin, cpu.uclampMax, cpu.weight, cpu.weightNice)
+	fmt.Printf("stat=%+v\n", cpu.stat)
+
 	return cpu
 }
 
 func ParseCPUPressureFile(slicePath string) *CPUPressure {
-	filePath := fmt.Sprintf("%s/%s/%s", rootPath, slicePath, cpuStatFile)
+	filePath := fmt.Sprintf("%s/%s", slicePath, cpuPressureFile)
 	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
 	if openErr != nil {
 		log.Fatalf("While opening: %s:\n", openErr)
@@ -196,7 +200,7 @@ func ParseCPUPressureFile(slicePath string) *CPUPressure {
 }
 
 func ParseCPUStatFile(slicePath string) *CPUStat {
-	filePath := fmt.Sprintf("%s/%s/%s", rootPath, slicePath, cpuStatFile)
+	filePath := fmt.Sprintf("%s/%s", slicePath, cpuStatFile)
 	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
 	if openErr != nil {
 		log.Fatalf("While opening: %s:\n", openErr)
@@ -232,12 +236,12 @@ func ParseCPUStatFile(slicePath string) *CPUStat {
 }
 
 func ParseCPUUclampMinFile(slicePath string) float64 {
-	filePath := fmt.Sprintf("%s/%s/%s", rootPath, slicePath, cpuUclampMinFile)
+	filePath := fmt.Sprintf("%s/%s", slicePath, cpuUclampMinFile)
 	return ReadFloat64FromFile(filePath)
 }
 
 func ParseCPUUclampMaxFile(slicePath string) float64 {
-	filePath := fmt.Sprintf("%s/%s/%s", rootPath, slicePath, cpuUclampMaxFile)
+	filePath := fmt.Sprintf("%s/%s", slicePath, cpuUclampMaxFile)
 	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
 	if openErr != nil {
 		log.Fatalf("While opening: %s:\n", openErr)
@@ -262,12 +266,12 @@ func ParseCPUUclampMaxFile(slicePath string) float64 {
 }
 
 func ParseBurstUs(slicePath string) int64 {
-	filePath := fmt.Sprintf("%s/%s/%s", rootPath, slicePath, cpuMaxBurstFile)
+	filePath := fmt.Sprintf("%s/%s", slicePath, cpuMaxBurstFile)
 	return ReadInt64FromFile(filePath)
 }
 
 func ParseCPUMaxFile(slicePath string) (int64, int64) {
-	filePath := fmt.Sprintf("%s/%s/%s", rootPath, slicePath, cpuMaxFile)
+	filePath := fmt.Sprintf("%s/%s", slicePath, cpuMaxFile)
 	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
 	if openErr != nil {
 		log.Fatalf("While opening: %s:\n", openErr)
@@ -291,22 +295,22 @@ func ParseCPUMaxFile(slicePath string) (int64, int64) {
 }
 
 func ParseCPUIdleFile(slicePath string) int64 {
-	filePath := fmt.Sprintf("%s/%s/%s", rootPath, slicePath, cpuIdleFile)
+	filePath := fmt.Sprintf("%s/%s", slicePath, cpuIdleFile)
 	return ReadInt64FromFile(filePath)
 }
 
 func ParseCPUWeightFile(slicePath string) int64 {
-	filePath := fmt.Sprintf("%s/%s/%s", rootPath, slicePath, cpuWeightFile)
+	filePath := fmt.Sprintf("%s/%s", slicePath, cpuWeightFile)
 	return ReadInt64FromFile(filePath)
 }
 
 func ParseCPUWeightNiceFile(slicePath string) int64 {
-	filePath := fmt.Sprintf("%s/%s/%s", rootPath, slicePath, cpuWeightNiceFile)
+	filePath := fmt.Sprintf("%s/%s", slicePath, cpuWeightNiceFile)
 	return ReadInt64FromFile(filePath)
 }
 
 func ParseCPUMaxBurstFile(slicePath string) int64 {
-	filePath := fmt.Sprintf("%s/%s/%s", rootPath, slicePath, cpuMaxBurstFile)
+	filePath := fmt.Sprintf("%s/%s", slicePath, cpuMaxBurstFile)
 	return ReadInt64FromFile(filePath)
 }
 

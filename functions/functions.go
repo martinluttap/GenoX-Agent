@@ -138,7 +138,8 @@ func SineWave(x float64) string {
 }
 
 func NumThreads(containerDir string) string {
-	path := fmt.Sprintf("%s/tasks", containerDir)
+	// path := fmt.Sprintf("%s/tasks", containerDir)
+	path := fmt.Sprintf("%s/cgroup.threads", containerDir)
 	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if openErr != nil {
 		log.Fatalf("Error when opening: %s:\n", openErr)

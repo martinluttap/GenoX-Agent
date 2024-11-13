@@ -64,8 +64,8 @@ func watchActiveContainers(root string, intervalMs int64, activeDirsCh chan<- []
 			})
 			if err == nil {
 				// dirs[0] == root. We skip it
-				activeDirsCh <- dirs[1:]
-				fmt.Println("At ", time.Now().String(), " sent ", dirs[1:])
+				activeDirsCh <- dirs
+				fmt.Println("At ", time.Now().String(), " sent ", dirs)
 			} else {
 				panic("Error when polling active containers!")
 			}
@@ -109,7 +109,6 @@ func blockUntilContainerStarts() {
 			if info.IsDir() &&
 				strings.Contains(info.Name(), "docker-") {
 				dirs = append(dirs, path)
-				fmt.Println("Found container at ", path)
 			}
 			return nil
 		})
@@ -274,8 +273,8 @@ func main() {
 	go watchActiveContainers(dockerRootPath, containerWatchIntervalMs, activeContainersCh, stopCh, &wg)
 	go controller.TickWriter(activeContainersCh, flagPolicy, tickIntervalMs, stopCh, &wg)
 	// go metrics.MetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
-	go metrics.MonitorCpuUsage(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
-	go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
+	// go metrics.MonitorCpuUsage(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
+	// go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
 	// go metrics.PollCpuStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 	go metrics.PollCpuStatsV2(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 	// go metrics.PollIOStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)

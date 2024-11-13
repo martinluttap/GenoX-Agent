@@ -60,7 +60,8 @@ func TickWriter(activeContainersCh <-chan []string, policy string, intervalMilli
 					ss := strings.Split(containerDir, "/")
 					cid := ss[len(ss)-1]
 					fmt.Println("Adjusting quota for ", cid)
-					adjustQuota(containerDir, elapsedTime, funcName)
+					// adjustQuota(containerDir, elapsedTime, funcName)
+					adjustQuotaV2(containerDir, elapsedTime, funcName)
 				}
 				// for _, containerDir := range controlVariableContainers {
 				// 	ss := strings.Split(containerDir, "/")
@@ -110,6 +111,68 @@ func ResetQuota(containerDir string) {
 	s := bufio.NewScanner(infile)
 	for s.Scan() {
 		infile.WriteString("-1")
+	}
+}
+
+func adjustQuotaV2(containerDir string, elapsedTime float64, functionName string) {
+
+	path := fmt.Sprintf(`%s/cpu.max`, containerDir)
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		// path/to/whatever does not exist
+		return
+	}
+	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if openErr != nil {
+		log.Fatalf("While opening: %s:\n", openErr)
+	}
+	defer infile.Close()
+
+	// buckets := functions.GenerateBuckets()
+	s := bufio.NewScanner(infile)
+	var newPeriod string
+	allowedFunctions := map[string]bool{"constant": true, "continuousIncrease": true, "continuousDecrease": true, "numThreads": true, "sineWave": true, "randomStep": true, "cappedNumThreads": true}
+	for s.Scan() {
+		line := s.Text()
+		fields := strings.Fields(line)
+		quotaUsStr, _ := fields[0], fields[1]
+
+		// f(x): constant
+		if functionName == "constant" {
+			allocatedCores := int64(10)
+			newPeriod = strconv.FormatInt(allocatedCores*10000, 10)
+			// newPeriod = strconv.FormatInt(allocatedCores*100000, 10)
+		} else if functionName == "continuousIncrease" {
+			// f(x): continuousIncrease
+			newPeriod = functions.ContinuousIncrease(elapsedTime)
+		} else if functionName == "continuousDecrese" {
+			// f(x): continousDecrease
+			fromCore := int64(16)
+			toCore := int64(1)
+			newPeriod = functions.ContinousDecrease(elapsedTime, fromCore, toCore)
+		} else if functionName == "numThreads" {
+			// f(x): by task
+			newPeriod = functions.NumThreads(containerDir)
+		} else if functionName == "sineWave" {
+			// f(x): sineWave
+			newPeriod = functions.SineWave(elapsedTime)
+		} else if functionName == "randomStep" {
+			// f(x): randomStep
+			// buckets :=
+			// newPeriod = functions.RandomStep(elapsedTime, buckets)
+			newPeriod = quotaUsStr
+		} else if functionName == "cappedNumThreads" {
+			newPeriod = functions.CappedNumThreads(containerDir, 96)
+		}
+		if val, ok := allowedFunctions[functionName]; !ok {
+			fmt.Println("Function ", val, " not allowed!")
+		} else {
+			fmt.Println("Adjusted for ", functionName)
+		}
+		if newPeriod == "" {
+			panic("Empty new period!!")
+		}
+		fmt.Printf("Old: %s, new: %s\n", quotaUsStr, newPeriod)
+		infile.WriteString(newPeriod)
 	}
 }
 

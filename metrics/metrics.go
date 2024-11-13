@@ -518,3 +518,45 @@ func MonitorCpuUsage(activeContainersCh <-chan []string, MonitorIntervalMs int, 
 		}
 	}
 }
+
+func PollCpuStatsV2(activeContainersCh <-chan []string, pollingIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
+
+	defer wg.Done()
+
+	outWriterDict := map[string]*csv.Writer{}
+	csvFds := []*os.File{}
+	// lastCpuMap := map[string]int64{}
+	// prevWall := time.Now()
+	// timeStart := time.Now()
+	// USER_HZ := 100 // getconf CLK_TCK 100
+	// fs, _ := procfs.NewFS("/proc")
+	// prevStat, _ := fs.Stat()
+	// prevSysCpuTotal := sumWorkingTime(prevStat.CPUTotal)
+
+	for {
+		select {
+		case containerDirs := <-activeContainersCh:
+			headers := []string{"timestampNs", "cid", "cidCpuPercent", "machineCpuPercent"}
+			metricName := "cpu"
+			newFds := PrepPollingCpuStats(containerDirs, metricName, headers, outWriterDict)
+			csvFds = append(csvFds, newFds...)
+
+			// ts := strconv.FormatInt((time.Since(timeStart) * time.Nanosecond).Nanoseconds(), 10)
+
+			fmt.Println("Container Dirs: ", containerDirs)
+			for _, containerDir := range containerDirs {
+				cgroupSlice := NewCGroupSlice(containerDir)
+				fmt.Println(cgroupSlice)
+			}
+
+			// fmt.Println(cgroupSlice.resourceStat.cpu)
+
+		case <-stopCh:
+			for idx, fd := range csvFds {
+				fmt.Printf("Closing fd for container %d: %p\n", idx, fd)
+			}
+			fmt.Println()
+			return
+		}
+	}
+}
