@@ -1,2 +1,0 @@
-2024-07-15 20:08:58	2.1s	nauseous_linnaeus	OK	dd11898320874f47ff7aaa51f2088573	5b6b5ec8-a2fb-4c21-ac25-d4a9b0387d76	nextflow bwa.nf
-2024-07-15 20:09:14	1.2s	silly_nobel	OK	dd11898320874f47ff7aaa51f2088573	e566d3fe-ab28-4d26-9e4e-f79c51984671	nextflow bwa.nf -c ../configs/bwa.config
