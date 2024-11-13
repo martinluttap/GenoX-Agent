@@ -1,0 +1,6 @@
+./schbench/*
+*.stat
+*.txt
+*.csv
+
+!./schbench/Makefile

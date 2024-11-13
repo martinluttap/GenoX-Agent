@@ -1,0 +1,6 @@
+__pycache__/
+join-command
+kube-config
+git-token
+.python-version
+.env

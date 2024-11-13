@@ -1,3 +1,15 @@
 [submodule "2024-exp-alibabassf"]
 	path = 2024-exp-alibabassf
 	url = git@github.com:martinluttap/2024-exp-alibabassf.git
+[submodule "2024-biosys-ec-alibabassf"]
+	path = 2024-biosys-ec-alibabassf
+	url = git@github.com:martinluttap/2024-biosys-ec-alibabassf.git
+[submodule "2024-biosys-ec-sinan"]
+	path = 2024-biosys-ec-sinan
+	url = git@github.com:martinluttap/2024-biosys-ec-sinan.git
+[submodule "2024-biosys-ec-nodens"]
+	path = 2024-biosys-ec-nodens
+	url = git@github.com:martinluttap/2024-biosys-ec-nodens.git
+[submodule "2024-biosys-ec-autothrottle"]
+	path = 2024-biosys-ec-autothrottle
+	url = git@github.com:martinluttap/2024-biosys-ec-autothrottle.git
