@@ -136,7 +136,3 @@ func GetProcWaitRes() {
 	0 0000000000000000 0 4818086806
 	*/
 }
-
-func PollBurstStats(activeContainersCh <-chan []string, pollingIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
-
-}
