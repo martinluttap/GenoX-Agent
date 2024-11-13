@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/martinluttap/containermod/controller"
-	"github.com/martinluttap/containermod/metrics"
-	"github.com/martinluttap/containermod/policy"
+	"github.com/martinluttap/2024-biosys-ec-elasticcontainer/controller"
+	"github.com/martinluttap/2024-biosys-ec-elasticcontainer/metrics"
+	"github.com/martinluttap/2024-biosys-ec-elasticcontainer/policy"
 )
 
 func makeHints() map[string]string {
