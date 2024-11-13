@@ -23,3 +23,6 @@ experiments/.nextflow.*
 experiments/**nextflow**
 
 *.csv
+*.env
+conf-*
+git-*
