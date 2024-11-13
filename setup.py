@@ -231,11 +231,11 @@ def install_pyenv(nonroot_pool: TGroup):
         'pip install git+ssh://git@github.com/xybu/python-resmon.git',
     ]
     
-# @check_installed('rclone')
+@check_installed('rclone')
 def install_rclone(nonroot_pool: TGroup):
     user = nonroot_pool[0].user
     commands = [
-        # 'sudo curl https://rclone.org/install.sh | sudo bash',
+        'sudo curl https://rclone.org/install.sh | sudo bash',
         'mkdir -p ~/.config/rclone/'
     ]
     for cmd in commands:
@@ -280,14 +280,14 @@ if __name__ == "__main__":
         'cc@129.114.109.74', # ectr-instance1
     )
     install_apt_deps(nonroot_pool)
-    # install_gh(nonroot_pool)
-    # install_docker(nonroot_pool)
-    # install_java(nonroot_pool)
-    # install_nextflow(nonroot_pool)
-    # install_golang(nonroot_pool)
-    # install_rclone(nonroot_pool)
-    # install_qemu(nonroot_pool)
+    install_gh(nonroot_pool)
+    install_docker(nonroot_pool)
+    install_java(nonroot_pool)
+    install_nextflow(nonroot_pool)
+    install_golang(nonroot_pool)
+    install_rclone(nonroot_pool)
 
     pull_docker_images(nonroot_pool)
+
     # Install pyresmon
     # Download dataset
