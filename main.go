@@ -217,15 +217,15 @@ func main() {
 	flag.StringVar(&flagPolicy, "policy", "none", "Policy to use")
 	flag.Parse()
 
-	if flagPolicy == "none" {
-		log.Fatal("Policy must be specified!")
-	}
+	// if flagPolicy == "none" {
+	// 	log.Fatal("Policy must be specified!")
+	// }
 
-	if flagPolicy == "bk" {
-		enableBurst()
-	} else {
-		disableBurst()
-	}
+	// if flagPolicy == "bk" {
+	// 	enableBurst()
+	// } else {
+	// 	disableBurst()
+	// }
 
 	/*
 		Our algorithm is a follows. For each execution, we received from the user a flag indicating whether burst disabled or enabled. Following that, we decide on the amount of burst we need to allocate for each contianer. This should happen using 'monitor' pattern, since we do not have any information about active containers at this point.
