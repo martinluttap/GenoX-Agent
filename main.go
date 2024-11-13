@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -55,9 +56,9 @@ func watchActiveContainers(root string, intervalMs int64, activeDirsCh chan<- []
 			var dirs []string
 			err := filepath.WalkDir(root, func(path string, info os.DirEntry, err error) error {
 				if info.IsDir() &&
-					info.Name() != "buildkit" &&
-					info.Name() != root {
+					strings.Contains(info.Name(), "docker-") {
 					dirs = append(dirs, path)
+					fmt.Println("Found container at ", path)
 				}
 				return nil
 			})
@@ -100,15 +101,15 @@ func blockUntilNextflowSignal(dir string) {
 }
 
 func blockUntilContainerStarts() {
-	dockerRootDir := `/sys/fs/cgroup/cpu/docker/`
+	dockerRootDir := `/sys/fs/cgroup/system.slice/`
 	var dirs []string
 	noContainerExists := (len(dirs) <= 1)
 	for noContainerExists {
 		filepath.WalkDir(dockerRootDir, func(path string, info os.DirEntry, err error) error {
 			if info.IsDir() &&
-				info.Name() != "buildkit" &&
-				info.Name() != "docker" {
+				strings.Contains(info.Name(), "docker-") {
 				dirs = append(dirs, path)
+				fmt.Println("Found container at ", path)
 			}
 			return nil
 		})
@@ -247,7 +248,7 @@ func main() {
 	activeContainersCh := make(chan []string)
 	var wg sync.WaitGroup
 
-	dockerRootPath := `/sys/fs/cgroup/cpu/docker/`
+	dockerRootPath := `/sys/fs/cgroup/system.slice/`
 	tickIntervalMs := 10
 	metricsIntervalMs := 1000
 	pollingIntervalMs := 10

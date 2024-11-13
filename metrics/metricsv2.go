@@ -31,8 +31,8 @@ func PollCpuStatsV2(activeContainersCh <-chan []string, pollingIntervalMs int, s
 
 			// ts := strconv.FormatInt((time.Since(timeStart) * time.Nanosecond).Nanoseconds(), 10)
 
-			cgroupSlice := metrics.NewCGroupSlice("/sys/fs/cgroup/system.slice/docker-4b86025e00fca7570fb6c064b9b38f27dd0c85ce58c984dae958e9dae5044e7d.scope")
-			fmt.Println(cgroupSlice.resourceStat.cpu)
+			// cgroupSlice := metrics.NewCGroupSlice("/sys/fs/cgroup/system.slice/docker-4b86025e00fca7570fb6c064b9b38f27dd0c85ce58c984dae958e9dae5044e7d.scope")
+			// fmt.Println(cgroupSlice.resourceStat.cpu)
 
 		case <-stopCh:
 			for idx, fd := range csvFds {
