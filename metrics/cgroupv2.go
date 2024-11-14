@@ -131,6 +131,31 @@ func NewCGroupSlice(slicePath string) *CGroupSlice {
 	}
 }
 
+func (c *CGroupSlice) WriteIOMax(deviceNumber string, rbps int, wbps int, riops int, wiops int) {
+	filePath := fmt.Sprintf("%s/%s", c.slicePath, ioMaxFile)
+	file, err := os.OpenFile(filePath, os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("While opening: %s:\n", err)
+	}
+	defer file.Close()
+
+	strRbps, strWbps, strRiops, strWiops := "max", "max", "max", "max"
+	if rbps > 0 {
+		strRbps = strconv.Itoa(rbps)
+	}
+	if wbps > 0 {
+		strWbps = strconv.Itoa(wbps)
+	}
+	if riops > 0 {
+		strRiops = strconv.Itoa(riops)
+	}
+	if wiops > 0 {
+		strWiops = strconv.Itoa(wiops)
+	}
+
+	file.WriteString(fmt.Sprintf("%s rbps=%s wbps=%s riops=%s wiops=%s", deviceNumber, strRbps, strWbps, strRiops, strWiops))
+}
+
 func (c *CGroupSlice) GetTimestamp() int64 {
 	return c.resourceStat.timestampUs
 }
