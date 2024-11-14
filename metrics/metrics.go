@@ -532,6 +532,7 @@ func PollCpuStatsV2(activeContainersCh <-chan []string, pollingIntervalMs int, s
 	// fs, _ := procfs.NewFS("/proc")
 	// prevStat, _ := fs.Stat()
 	// prevSysCpuTotal := sumWorkingTime(prevStat.CPUTotal)
+	sliceMap := map[string]*CGroupSlice{}
 
 	for {
 		select {
@@ -545,11 +546,15 @@ func PollCpuStatsV2(activeContainersCh <-chan []string, pollingIntervalMs int, s
 
 			fmt.Println("Container Dirs: ", containerDirs)
 			for _, containerDir := range containerDirs {
-				cgroupSlice := NewCGroupSlice(containerDir)
-				fmt.Println(cgroupSlice)
+				/* Update cgroup slice map based on active containers */
+				if val, ok := sliceMap[containerDir]; ok {
+					val.showDiff()
+				} else {
+					cgroupSlice := NewCGroupSlice(containerDir)
+					sliceMap[containerDir] = cgroupSlice
+					fmt.Printf("%v\n", cgroupSlice)
+				}
 			}
-
-			// fmt.Println(cgroupSlice.resourceStat.cpu)
 
 		case <-stopCh:
 			for idx, fd := range csvFds {

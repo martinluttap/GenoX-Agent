@@ -2,7 +2,10 @@ module github.com/martinluttap/2024-biosys-ec-elasticcontainer
 
 go 1.22.5
 
-require github.com/prometheus/procfs v0.15.1
+require (
+	github.com/prometheus/procfs v0.15.1
+	github.com/r3labs/diff v1.1.0
+)
 
 require (
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect

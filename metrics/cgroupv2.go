@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/r3labs/diff"
 )
 
 /*
@@ -52,10 +54,14 @@ type IOStat struct {
 }
 
 type IOPressure struct {
-	avg10  int64
-	avg60  int64
-	avg300 int64
-	total  int64
+	someAvgPerc10s  float64
+	someAvgPerc60s  float64
+	someAvgPerc300s float64
+	someTotalUs     int64
+	fullAvgPerc10s  float64
+	fullAvgPerc60s  float64
+	fullAvgPerc300s float64
+	fullTotalUs     int64
 }
 
 type CPU struct {
@@ -89,6 +95,7 @@ type ResourceStat struct {
 	// PIDs    *PIDs
 	// RDMA    *RDMA
 	// Misc    *Misc
+	ts int64
 }
 
 const (
@@ -111,24 +118,36 @@ const (
 )
 
 type CGroupSlice struct {
-	slicePath      string
-	resourceStat   *ResourceStat
-	lastStatUpdate int64
+	slicePath    string
+	resourceStat *ResourceStat `diff:"resourceStat"`
 }
 
 func NewCGroupSlice(slicePath string) *CGroupSlice {
 	rs := GetResourceStat(slicePath)
 	return &CGroupSlice{
-		slicePath:      slicePath,
-		resourceStat:   rs,
-		lastStatUpdate: time.Now().Unix(),
+		slicePath:    slicePath,
+		resourceStat: rs,
+	}
+}
+
+func (c *CGroupSlice) showDiff() {
+	currentStat := c.resourceStat
+	newStat := GetResourceStat(c.slicePath)
+	changelog, err := diff.Diff(currentStat, newStat)
+	if err != nil {
+		log.Fatalf("While diffing: %s\n", err)
+	} else {
+		fmt.Printf("Changelog: %+v\n", changelog)
 	}
 }
 
 func (c *CGroupSlice) updateResourceStat() {
 	c.resourceStat = GetResourceStat(c.slicePath)
-	c.lastStatUpdate = time.Now().Unix()
 }
+
+// func GetDeltaResourceStat(slicePath string) *ResourceStat {
+
+// }
 
 func GetResourceStat(slicePath string) *ResourceStat {
 	rs := &ResourceStat{
@@ -136,17 +155,108 @@ func GetResourceStat(slicePath string) *ResourceStat {
 		io:  &IO{},
 	}
 
-	fmt.Printf("Resource stat: %s\n", slicePath)
 	rs.cpu = GetCPUStat(slicePath)
-	fmt.Println("quota: ", rs.cpu.periodUs)
-	// rs.io = GetIOStat(slicePath)
+	rs.io = GetIOStat(slicePath)
 
 	// Read CPU stat
 
 	// Read IO stat
 
+	rs.ts = time.Now().UnixNano()
+
 	return rs
 }
+
+func GetIOStat(slicePath string) *IO {
+	io := &IO{}
+	// io.max = ParseIOMaxFile(slicePath)
+	io.pressure = ParseIOPressureFile(slicePath)
+	// io.prioClass = ParseIOPrioClassFile(slicePath)
+	io.stat = ParseIOStatFile(slicePath)
+	// io.weight = ParseIOWeightFile(slicePath)
+
+	fmt.Printf("io=%+v, io.stat=%+v, io.pressure=%+v\n", io, io.stat, io.pressure)
+
+	return io
+}
+
+func ParseIOStatFile(slicePath string) *IOStat {
+	filePath := fmt.Sprintf("%s/%s", slicePath, ioStatFile)
+	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
+	if openErr != nil {
+		log.Fatalf("While opening: %s:\n", openErr)
+	}
+	defer procsInfile.Close()
+
+	scanner := bufio.NewScanner(procsInfile)
+	ioStat := &IOStat{}
+	for scanner.Scan() {
+		line := scanner.Text()
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			log.Fatalf("Invalid line: %s\n", line)
+		}
+		rePattern := regexp.MustCompile(`(\d+):(\d+) rbytes=(\d+) wbytes=(\d+) rios=(\d+) wios=(\d+) dbytes=(\d+) dios=(\d+)`)
+		matches := rePattern.FindAllStringSubmatch(line, -1)
+		ioStat.major, _ = strconv.ParseInt(matches[0][1], 10, 64)
+		ioStat.minor, _ = strconv.ParseInt(matches[0][2], 10, 64)
+		ioStat.totalReadBytes, _ = strconv.ParseInt(matches[0][3], 10, 64)
+		ioStat.totalWriteBytes, _ = strconv.ParseInt(matches[0][4], 10, 64)
+		ioStat.totalReadIOs, _ = strconv.ParseInt(matches[0][5], 10, 64)
+		ioStat.totalWriteIOs, _ = strconv.ParseInt(matches[0][6], 10, 64)
+		ioStat.totalDiscardedBytes, _ = strconv.ParseInt(matches[0][7], 10, 64)
+		ioStat.totalDiscardedIOs, _ = strconv.ParseInt(matches[0][8], 10, 64)
+	}
+	fmt.Printf("ioStat=%+v\n", ioStat)
+	return ioStat
+}
+
+func ParseIOPressureFile(slicePath string) *IOPressure {
+	filePath := fmt.Sprintf("%s/%s", slicePath, ioPressureFile)
+	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
+	if openErr != nil {
+		log.Fatalf("While opening: %s:\n", openErr)
+	}
+	defer procsInfile.Close()
+
+	scanner := bufio.NewScanner(procsInfile)
+	ioPressure := &IOPressure{}
+	rePattern := regexp.MustCompile(`(\w+) avg10=([0-9]*[.]?[0-9]+) avg60=([0-9]*[.]?[0-9]+) avg300=([0-9]*[.]?[0-9]+) total=(\d+)`)
+	for scanner.Scan() {
+		line := scanner.Text()
+		matches := rePattern.FindAllStringSubmatch(line, -1)
+		if len(matches) > 1 {
+			panic("Pressure line matches more than one")
+		}
+		pressureType := matches[0][1]
+		vals := matches[0][2:]
+		fmt.Println("IOPressure ", filePath, matches[0])
+		if pressureType == "some" {
+			ioPressure.someAvgPerc10s, _ = strconv.ParseFloat(vals[0], 64)
+			ioPressure.someAvgPerc60s, _ = strconv.ParseFloat(vals[1], 64)
+			ioPressure.someAvgPerc300s, _ = strconv.ParseFloat(vals[2], 64)
+			ioPressure.someTotalUs, _ = strconv.ParseInt(vals[3], 10, 64)
+		} else if pressureType == "full" {
+			ioPressure.fullAvgPerc10s, _ = strconv.ParseFloat(vals[0], 64)
+			ioPressure.fullAvgPerc60s, _ = strconv.ParseFloat(vals[1], 64)
+			ioPressure.fullAvgPerc300s, _ = strconv.ParseFloat(vals[2], 64)
+			ioPressure.fullTotalUs, _ = strconv.ParseInt(vals[3], 10, 64)
+		} else {
+			log.Fatalf("Invalid line: %s\n", line)
+		}
+	}
+
+	return ioPressure
+}
+
+// func ParseIOMaxFile(slicePath string) int64 {
+// }
+
+// func ParseIOPressureFile(slicePath string) *IOPressure {
+
+// }
+
+// func ParseIOPrioClassFile(slicePath string) string {
 
 func GetCPUStat(slicePath string) *CPU {
 	cpu := &CPU{}
@@ -160,8 +270,7 @@ func GetCPUStat(slicePath string) *CPU {
 	cpu.weight = ParseCPUWeightFile(slicePath)
 	cpu.weightNice = ParseCPUWeightNiceFile(slicePath)
 
-	fmt.Printf("idle=%d, quotaUs=%d, periodUs=%d, burstUs=%d, uclampMin=%f, uclampMax=%f, weight=%d, weightNice=%d\n", cpu.idle, cpu.quotaUs, cpu.periodUs, cpu.burstUs, cpu.uclampMin, cpu.uclampMax, cpu.weight, cpu.weightNice)
-	fmt.Printf("stat=%+v\n", cpu.stat)
+	fmt.Printf("cpu=%+v, cpu.stat=%+v, cpu.pressure=%+v\n", cpu, cpu.stat, cpu.pressure)
 
 	return cpu
 }
@@ -176,21 +285,26 @@ func ParseCPUPressureFile(slicePath string) *CPUPressure {
 
 	scanner := bufio.NewScanner(procsInfile)
 	cpuPressure := &CPUPressure{}
-	rePattern := regexp.MustCompile(".*avg10=(([0-9]*[.])?[0-9]+) avg60=(([0-9]*[.])?[0-9]+) avg300=(([0-9]*[.])?[0-9]+) total=(\\d+)")
+	rePattern := regexp.MustCompile(`(\w+) avg10=([0-9]*[.]?[0-9]+) avg60=([0-9]*[.]?[0-9]+) avg300=([0-9]*[.]?[0-9]+) total=(\d+)`)
 	for scanner.Scan() {
 		line := scanner.Text()
-		fields := strings.Fields(line)
-		matches := rePattern.FindAllString(line, -1)
-		if fields[0] == "some" {
-			cpuPressure.someAvgPerc10s, _ = strconv.ParseFloat(matches[0], 64)
-			cpuPressure.someAvgPerc60s, _ = strconv.ParseFloat(matches[0], 64)
-			cpuPressure.someAvgPerc300s, _ = strconv.ParseFloat(matches[0], 64)
-			cpuPressure.someTotalUs, _ = strconv.ParseInt(matches[0], 10, 64)
-		} else if fields[0] == "full" {
-			cpuPressure.fullAvgPerc10s, _ = strconv.ParseFloat(matches[0], 64)
-			cpuPressure.fullAvgPerc60s, _ = strconv.ParseFloat(matches[0], 64)
-			cpuPressure.fullAvgPerc300s, _ = strconv.ParseFloat(matches[0], 64)
-			cpuPressure.fullTotalUs, _ = strconv.ParseInt(matches[0], 10, 64)
+		matches := rePattern.FindAllStringSubmatch(line, -1)
+		if len(matches) > 1 {
+			panic("Pressure line matches more than one")
+		}
+		pressureType := matches[0][1]
+		vals := matches[0][2:]
+		fmt.Println("CPUPressure ", filePath, matches[0])
+		if pressureType == "some" {
+			cpuPressure.someAvgPerc10s, _ = strconv.ParseFloat(vals[0], 64)
+			cpuPressure.someAvgPerc60s, _ = strconv.ParseFloat(vals[1], 64)
+			cpuPressure.someAvgPerc300s, _ = strconv.ParseFloat(vals[2], 64)
+			cpuPressure.someTotalUs, _ = strconv.ParseInt(vals[3], 10, 64)
+		} else if pressureType == "full" {
+			cpuPressure.fullAvgPerc10s, _ = strconv.ParseFloat(vals[0], 64)
+			cpuPressure.fullAvgPerc60s, _ = strconv.ParseFloat(vals[1], 64)
+			cpuPressure.fullAvgPerc300s, _ = strconv.ParseFloat(vals[2], 64)
+			cpuPressure.fullTotalUs, _ = strconv.ParseInt(vals[3], 10, 64)
 		} else {
 			log.Fatalf("Invalid line: %s\n", line)
 		}
