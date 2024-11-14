@@ -4,13 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/r3labs/diff"
 )
 
 /*
@@ -95,7 +94,7 @@ type ResourceStat struct {
 	// PIDs    *PIDs
 	// RDMA    *RDMA
 	// Misc    *Misc
-	ts int64
+	timestampUs int64
 }
 
 const (
@@ -119,7 +118,8 @@ const (
 
 type CGroupSlice struct {
 	slicePath    string
-	resourceStat *ResourceStat `diff:"resourceStat"`
+	resourceStat *ResourceStat
+	cpuUtil      float64
 }
 
 func NewCGroupSlice(slicePath string) *CGroupSlice {
@@ -127,18 +127,27 @@ func NewCGroupSlice(slicePath string) *CGroupSlice {
 	return &CGroupSlice{
 		slicePath:    slicePath,
 		resourceStat: rs,
+		cpuUtil:      -1,
 	}
 }
 
-func (c *CGroupSlice) showDiff() {
-	currentStat := c.resourceStat
-	newStat := GetResourceStat(c.slicePath)
-	changelog, err := diff.Diff(currentStat, newStat)
-	if err != nil {
-		log.Fatalf("While diffing: %s\n", err)
-	} else {
-		fmt.Printf("Changelog: %+v\n", changelog)
-	}
+func (c *CGroupSlice) GetTimestamp() int64 {
+	return c.resourceStat.timestampUs
+}
+
+func (c *CGroupSlice) GetCpuUtil(newStat *ResourceStat, oldStat *ResourceStat) float64 {
+	deltaCpuUsage := math.Abs(float64(newStat.cpu.stat.usageUs - oldStat.cpu.stat.usageUs))
+	deltaWallUs := math.Abs(float64(newStat.timestampUs - oldStat.timestampUs))
+
+	fmt.Printf("deltaCpuUsage=%f, deltaWallUs=%f\n", deltaCpuUsage, deltaWallUs)
+
+	return float64(deltaCpuUsage / deltaWallUs * 100)
+}
+
+func (c *CGroupSlice) UpdateResourceStat() {
+	oldStat := c.resourceStat
+	c.resourceStat = GetResourceStat(c.slicePath)
+	c.cpuUtil = c.GetCpuUtil(c.resourceStat, oldStat)
 }
 
 func (c *CGroupSlice) updateResourceStat() {
@@ -162,7 +171,7 @@ func GetResourceStat(slicePath string) *ResourceStat {
 
 	// Read IO stat
 
-	rs.ts = time.Now().UnixNano()
+	rs.timestampUs = time.Now().UnixMicro()
 
 	return rs
 }
@@ -174,8 +183,6 @@ func GetIOStat(slicePath string) *IO {
 	// io.prioClass = ParseIOPrioClassFile(slicePath)
 	io.stat = ParseIOStatFile(slicePath)
 	// io.weight = ParseIOWeightFile(slicePath)
-
-	fmt.Printf("io=%+v, io.stat=%+v, io.pressure=%+v\n", io, io.stat, io.pressure)
 
 	return io
 }
@@ -207,7 +214,6 @@ func ParseIOStatFile(slicePath string) *IOStat {
 		ioStat.totalDiscardedBytes, _ = strconv.ParseInt(matches[0][7], 10, 64)
 		ioStat.totalDiscardedIOs, _ = strconv.ParseInt(matches[0][8], 10, 64)
 	}
-	fmt.Printf("ioStat=%+v\n", ioStat)
 	return ioStat
 }
 
@@ -230,7 +236,6 @@ func ParseIOPressureFile(slicePath string) *IOPressure {
 		}
 		pressureType := matches[0][1]
 		vals := matches[0][2:]
-		fmt.Println("IOPressure ", filePath, matches[0])
 		if pressureType == "some" {
 			ioPressure.someAvgPerc10s, _ = strconv.ParseFloat(vals[0], 64)
 			ioPressure.someAvgPerc60s, _ = strconv.ParseFloat(vals[1], 64)
@@ -249,15 +254,6 @@ func ParseIOPressureFile(slicePath string) *IOPressure {
 	return ioPressure
 }
 
-// func ParseIOMaxFile(slicePath string) int64 {
-// }
-
-// func ParseIOPressureFile(slicePath string) *IOPressure {
-
-// }
-
-// func ParseIOPrioClassFile(slicePath string) string {
-
 func GetCPUStat(slicePath string) *CPU {
 	cpu := &CPU{}
 	cpu.idle = ParseCPUIdleFile(slicePath)
@@ -269,8 +265,6 @@ func GetCPUStat(slicePath string) *CPU {
 	cpu.uclampMax = ParseCPUUclampMaxFile(slicePath)
 	cpu.weight = ParseCPUWeightFile(slicePath)
 	cpu.weightNice = ParseCPUWeightNiceFile(slicePath)
-
-	fmt.Printf("cpu=%+v, cpu.stat=%+v, cpu.pressure=%+v\n", cpu, cpu.stat, cpu.pressure)
 
 	return cpu
 }
@@ -294,7 +288,6 @@ func ParseCPUPressureFile(slicePath string) *CPUPressure {
 		}
 		pressureType := matches[0][1]
 		vals := matches[0][2:]
-		fmt.Println("CPUPressure ", filePath, matches[0])
 		if pressureType == "some" {
 			cpuPressure.someAvgPerc10s, _ = strconv.ParseFloat(vals[0], 64)
 			cpuPressure.someAvgPerc60s, _ = strconv.ParseFloat(vals[1], 64)

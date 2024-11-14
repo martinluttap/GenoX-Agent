@@ -34,7 +34,7 @@ func prepPollingAllStats(containerDirs []string, outWriterDict map[string]*csv.W
 	return csvFds
 }
 
-func PrepPollingCpuStats(containerDirs []string, metricName string, headers []string, outWriterDict map[string]*csv.Writer) []*os.File {
+func PrepPollingStats(containerDirs []string, metricName string, headers []string, outWriterDict map[string]*csv.Writer) []*os.File {
 
 	csvFds := []*os.File{}
 	// Check existence of container in map.
@@ -42,8 +42,7 @@ func PrepPollingCpuStats(containerDirs []string, metricName string, headers []st
 	for _, containerDir := range containerDirs {
 		if _, exists := outWriterDict[containerDir]; !exists {
 			fmt.Println("Created new writer for ", containerDir)
-			ss := strings.Split(containerDir, "/")
-			cid := ss[len(ss)-1][:5]
+			cid := GetContainerCidV2(containerDir)[:5]
 			outFile, err := os.Create(fmt.Sprintf("%s-%s.csv", cid, metricName))
 			if err != nil {
 				panic(err)

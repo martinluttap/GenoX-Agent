@@ -418,7 +418,7 @@ func PollCpuStats(activeContainersCh <-chan []string, pollingIntervalMs int, sto
 		case containerDirs := <-activeContainersCh:
 			headers := []string{"timestampNs", "cid", "cidCpuPercent", "machineCpuPercent"}
 			metricName := "cpu"
-			newFds := PrepPollingCpuStats(containerDirs, metricName, headers, outWriterDict)
+			newFds := PrepPollingStats(containerDirs, metricName, headers, outWriterDict)
 			csvFds = append(csvFds, newFds...)
 
 			ts := strconv.FormatInt((time.Since(timeStart) * time.Nanosecond).Nanoseconds(), 10)
@@ -519,41 +519,107 @@ func MonitorCpuUsage(activeContainersCh <-chan []string, MonitorIntervalMs int, 
 	}
 }
 
-func PollCpuStatsV2(activeContainersCh <-chan []string, pollingIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
+func GetContainerCidV2(containerDir string) string {
+	ss := strings.Split(containerDir, "/")
+	scopeName := ss[len(ss)-1]
+	ss = strings.Split(strings.TrimSuffix(scopeName, ".scope"), "-")
+	cid := ss[len(ss)-1]
+
+	return cid
+}
+
+func constructPollStatsRowV2(slice *CGroupSlice) []string {
+	// "timestampUs", "cid", "cpuUtil", "rbytes", "wbytes", "rios", "wios", "dbytes", "dios", "ioPresSomeAvgPerc10s", "ioPresSomeAvgPerc60s", "ioPresSomeAvgPerc300s", "ioPresSomeTotalUs", "ioPresFullAvgPerc10s", "ioPresFullAvgPerc60s", "ioPresFullAvgPerc300s", "ioPresFullTotalUs", "cpuPresSomeAvgPerc10s", "cpuPresSomeAvgPerc60s", "cpuPresSomeAvgPerc300s", "cpuPresSomeTotalUs", "cpuPresFullAvgPerc10s", "cpuPresFullAvgPerc60s", "cpuPresFullAvgPerc300s", "cpuPresFullTotalUs"
+
+	timestampUs := strconv.Itoa(int(slice.GetTimestamp()))
+	cid := GetContainerCidV2(slice.slicePath)
+	cpuUtil := strconv.FormatFloat(slice.cpuUtil, 'f', 2, 64)
+	rbytes := strconv.FormatInt(slice.resourceStat.io.stat.totalReadBytes, 10)
+	wbytes := strconv.FormatInt(slice.resourceStat.io.stat.totalWriteBytes, 10)
+	rios := strconv.FormatInt(slice.resourceStat.io.stat.totalReadIOs, 10)
+	wios := strconv.FormatInt(slice.resourceStat.io.stat.totalWriteIOs, 10)
+	dbytes := strconv.FormatInt(slice.resourceStat.io.stat.totalDiscardedBytes, 10)
+	dios := strconv.FormatInt(slice.resourceStat.io.stat.totalDiscardedIOs, 10)
+	ioPresSomeAvgPerc10s := strconv.FormatFloat(slice.resourceStat.io.pressure.someAvgPerc10s, 'f', 2, 64)
+	ioPresSomeAvgPerc60s := strconv.FormatFloat(slice.resourceStat.io.pressure.someAvgPerc60s, 'f', 2, 64)
+	ioPresSomeAvgPerc300s := strconv.FormatFloat(slice.resourceStat.io.pressure.someAvgPerc300s, 'f', 2, 64)
+	ioPresSomeTotalUs := strconv.FormatInt(slice.resourceStat.io.pressure.someTotalUs, 10)
+	ioPresFullAvgPerc10s := strconv.FormatFloat(slice.resourceStat.io.pressure.fullAvgPerc10s, 'f', 2, 64)
+	ioPresFullAvgPerc60s := strconv.FormatFloat(slice.resourceStat.io.pressure.fullAvgPerc60s, 'f', 2, 64)
+	ioPresFullAvgPerc300s := strconv.FormatFloat(slice.resourceStat.io.pressure.fullAvgPerc300s, 'f', 2, 64)
+	ioPresFullTotalUs := strconv.FormatInt(slice.resourceStat.io.pressure.fullTotalUs, 10)
+	cpuPresSomeAvgPerc10s := strconv.FormatFloat(slice.resourceStat.cpu.pressure.someAvgPerc10s, 'f', 2, 64)
+	cpuPresSomeAvgPerc60s := strconv.FormatFloat(slice.resourceStat.cpu.pressure.someAvgPerc10s, 'f', 2, 64)
+	cpuPresSomeAvgPerc300s := strconv.FormatFloat(slice.resourceStat.cpu.pressure.someAvgPerc10s, 'f', 2, 64)
+	cpuPresSomeTotalUs := strconv.FormatFloat(slice.resourceStat.cpu.pressure.someAvgPerc10s, 'f', 2, 64)
+	cpuPresFullAvgPerc10s := strconv.FormatFloat(slice.resourceStat.cpu.pressure.fullAvgPerc10s, 'f', 2, 64)
+	cpuPresFullAvgPerc60s := strconv.FormatFloat(slice.resourceStat.cpu.pressure.fullAvgPerc60s, 'f', 2, 64)
+	cpuPresFullAvgPerc300s := strconv.FormatFloat(slice.resourceStat.cpu.pressure.fullAvgPerc300s, 'f', 2, 64)
+	cpuPresFullTotalUs := strconv.FormatInt(slice.resourceStat.cpu.pressure.fullTotalUs, 10)
+
+	return []string{
+		timestampUs,
+		cid,
+		cpuUtil,
+		rbytes,
+		wbytes,
+		rios,
+		wios,
+		dbytes,
+		dios,
+		ioPresSomeAvgPerc10s,
+		ioPresSomeAvgPerc60s,
+		ioPresSomeAvgPerc300s,
+		ioPresSomeTotalUs,
+		ioPresFullAvgPerc10s,
+		ioPresFullAvgPerc60s,
+		ioPresFullAvgPerc300s,
+		ioPresFullTotalUs,
+		cpuPresSomeAvgPerc10s,
+		cpuPresSomeAvgPerc60s,
+		cpuPresSomeAvgPerc300s,
+		cpuPresSomeTotalUs,
+		cpuPresFullAvgPerc10s,
+		cpuPresFullAvgPerc60s,
+		cpuPresFullAvgPerc300s,
+		cpuPresFullTotalUs,
+	}
+
+}
+
+func PollAllStatsV2(activeContainersCh <-chan []string, pollingIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
 	outWriterDict := map[string]*csv.Writer{}
 	csvFds := []*os.File{}
-	// lastCpuMap := map[string]int64{}
-	// prevWall := time.Now()
-	// timeStart := time.Now()
-	// USER_HZ := 100 // getconf CLK_TCK 100
-	// fs, _ := procfs.NewFS("/proc")
-	// prevStat, _ := fs.Stat()
-	// prevSysCpuTotal := sumWorkingTime(prevStat.CPUTotal)
 	sliceMap := map[string]*CGroupSlice{}
 
 	for {
 		select {
 		case containerDirs := <-activeContainersCh:
-			headers := []string{"timestampNs", "cid", "cidCpuPercent", "machineCpuPercent"}
-			metricName := "cpu"
-			newFds := PrepPollingCpuStats(containerDirs, metricName, headers, outWriterDict)
+			headers := []string{"timestampUs", "cid", "cpuUtil", "rbytes", "wbytes", "rios", "wios", "dbytes", "dios", "ioPresSomeAvgPerc10s", "ioPresSomeAvgPerc60s", "ioPresSomeAvgPerc300s", "ioPresSomeTotalUs", "ioPresFullAvgPerc10s", "ioPresFullAvgPerc60s", "ioPresFullAvgPerc300s", "ioPresFullTotalUs", "cpuPresSomeAvgPerc10s", "cpuPresSomeAvgPerc60s", "cpuPresSomeAvgPerc300s", "cpuPresSomeTotalUs", "cpuPresFullAvgPerc10s", "cpuPresFullAvgPerc60s", "cpuPresFullAvgPerc300s", "cpuPresFullTotalUs"}
+			metricName := "all_v2"
+			newFds := PrepPollingStats(containerDirs, metricName, headers, outWriterDict)
 			csvFds = append(csvFds, newFds...)
 
-			// ts := strconv.FormatInt((time.Since(timeStart) * time.Nanosecond).Nanoseconds(), 10)
-
-			fmt.Println("Container Dirs: ", containerDirs)
-			for _, containerDir := range containerDirs {
+			for containerDir, writer := range outWriterDict {
 				/* Update cgroup slice map based on active containers */
-				if val, ok := sliceMap[containerDir]; ok {
-					val.showDiff()
-				} else {
+				if _, ok := sliceMap[containerDir]; !ok {
 					cgroupSlice := NewCGroupSlice(containerDir)
 					sliceMap[containerDir] = cgroupSlice
-					fmt.Printf("%v\n", cgroupSlice)
+				} else {
+					sliceMap[containerDir].UpdateResourceStat()
 				}
+				fmt.Printf("cgroupslice: +%v\n", sliceMap[containerDir].cpuUtil)
+				row := constructPollStatsRowV2(sliceMap[containerDir])
+				// row := []string{
+				// 	ts, cid, ctrCpuUsage, machineUsage,
+				// }
+				// fmt.Printf("[%s] %s: %s (CTR), %s (MACHINE)\n", time.Now().Format(time.RFC3339Nano), cid, ctrCpuUsage, machineUsage)
+				writer.Write(row)
+				writer.Flush()
+				fmt.Println(writer.Error())
 			}
 
 		case <-stopCh:

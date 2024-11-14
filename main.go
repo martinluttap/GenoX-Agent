@@ -181,7 +181,7 @@ func mockActiveContainers(activeCh chan []string) {
 		activeCh <- paths
 		headers := []string{"timestampNs", "cid", "cidCpuPercent", "machineCpuPercent"}
 		metricName := "cpu"
-		metrics.PrepPollingCpuStats(paths, metricName, headers, outWriterDict)
+		metrics.PrepPollingStats(paths, metricName, headers, outWriterDict)
 	}
 }
 
@@ -276,7 +276,7 @@ func main() {
 	// go metrics.MonitorCpuUsage(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 	// go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
 	// go metrics.PollCpuStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
-	go metrics.PollCpuStatsV2(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
+	go metrics.PollAllStatsV2(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 	// go metrics.PollIOStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 	// go metrics.GetProcSched(activeContainersCh, burstMetricsIntervalMs, stopCh, &wg)
 
