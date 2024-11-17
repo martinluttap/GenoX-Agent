@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/martinluttap/2024-biosys-ec-elasticcontainer/functions"
-	"github.com/martinluttap/2024-biosys-ec-elasticcontainer/metrics"
 )
 
 func TickWriter(activeContainersCh <-chan []string, policy string, intervalMillisecond int, stopCh chan int, wg *sync.WaitGroup) {
@@ -63,8 +62,10 @@ func TickWriter(activeContainersCh <-chan []string, policy string, intervalMilli
 					fmt.Println("Adjusting quota for ", cid)
 					// adjustQuota(containerDir, elapsedTime, funcName)
 					adjustQuotaV2(containerDir, elapsedTime, funcName)
-					cgs := metrics.NewCGroupSlice(containerDir)
-					cgs.WriteIOMax("8:0", 100000000, 0, 0, 0)
+					// cgs := metrics.NewCGroupSlice(containerDir)
+					// maxRbps := 50 * 1e6
+					// maxWbps := 50 * 1e6
+					// cgs.SetIOMax("8:0", int(maxRbps), int(maxWbps), 0, 0)
 				}
 				// for _, containerDir := range controlVariableContainers {
 				// 	ss := strings.Split(containerDir, "/")

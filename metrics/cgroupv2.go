@@ -84,12 +84,41 @@ type IO struct {
 	weight    int64 // The weights are in the range [1, 10000] and specifies the relative amount IO time the cgroup can use in relation to its siblings.
 }
 
+type MemoryPressure struct {
+	someAvgPerc10s  float64
+	someAvgPerc60s  float64
+	someAvgPerc300s float64
+	someTotalUs     int64
+	fullAvgPerc10s  float64
+	fullAvgPerc60s  float64
+	fullAvgPerc300s float64
+	fullTotalUs     int64
+}
+
+type Memory struct {
+	// current     int64
+	// events      *MemoryEvents
+	// eventsLocal *MemoryEvents
+	// high        int64
+	// low         int64
+	// max         int64
+	// min         int64
+	// numaStat	*MemoryNumaStat
+	// oomGroup    int64
+	pressure *MemoryPressure
+	// stat        *MemoryStat
+	// swapCurrent int64
+	// swapEvents  *MemorySwapEvents
+	// swapHigh    int64
+	// swapMax     int64
+}
+
 type ResourceStat struct {
 	// cpuset cpu io memory hugetlb pids rdma misc
 	cpu *CPU
 	// CPUSet  *CPUSet
-	io *IO
-	// Memory  *Memory
+	io     *IO
+	memory *Memory
 	// HugeTLB *HugeTLB
 	// PIDs    *PIDs
 	// RDMA    *RDMA
@@ -114,6 +143,8 @@ const (
 	ioPrioClassFile = "io.prio_class"
 	ioStatFile      = "io.stat"
 	ioWeightFile    = "io.weight"
+
+	memoryPressureFile = "memory.pressure"
 )
 
 type CGroupSlice struct {
@@ -131,7 +162,7 @@ func NewCGroupSlice(slicePath string) *CGroupSlice {
 	}
 }
 
-func (c *CGroupSlice) WriteIOMax(deviceNumber string, rbps int, wbps int, riops int, wiops int) {
+func (c *CGroupSlice) SetIOMax(deviceNumber string, rbps int, wbps int, riops int, wiops int) {
 	filePath := fmt.Sprintf("%s/%s", c.slicePath, ioMaxFile)
 	file, err := os.OpenFile(filePath, os.O_WRONLY, 0644)
 	if err != nil {
@@ -185,12 +216,14 @@ func (c *CGroupSlice) updateResourceStat() {
 
 func GetResourceStat(slicePath string) *ResourceStat {
 	rs := &ResourceStat{
-		cpu: &CPU{},
-		io:  &IO{},
+		cpu:    &CPU{},
+		io:     &IO{},
+		memory: &Memory{},
 	}
 
 	rs.cpu = GetCPUStat(slicePath)
 	rs.io = GetIOStat(slicePath)
+	rs.memory = GetMemoryStat(slicePath)
 
 	// Read CPU stat
 
@@ -210,6 +243,13 @@ func GetIOStat(slicePath string) *IO {
 	// io.weight = ParseIOWeightFile(slicePath)
 
 	return io
+}
+
+func GetMemoryStat(slicePath string) *Memory {
+	memory := &Memory{}
+	memory.pressure = ParseMemoryPressureFile(slicePath)
+
+	return memory
 }
 
 func ParseIOStatFile(slicePath string) *IOStat {
@@ -240,6 +280,43 @@ func ParseIOStatFile(slicePath string) *IOStat {
 		ioStat.totalDiscardedIOs, _ = strconv.ParseInt(matches[0][8], 10, 64)
 	}
 	return ioStat
+}
+
+func ParseMemoryPressureFile(slicePath string) *MemoryPressure {
+	filePath := fmt.Sprintf("%s/%s", slicePath, memoryPressureFile)
+	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
+	if openErr != nil {
+		log.Fatalf("While opening: %s:\n", openErr)
+	}
+	defer procsInfile.Close()
+
+	scanner := bufio.NewScanner(procsInfile)
+	memoryPressure := &MemoryPressure{}
+	rePattern := regexp.MustCompile(`(\w+) avg10=([0-9]*[.]?[0-9]+) avg60=([0-9]*[.]?[0-9]+) avg300=([0-9]*[.]?[0-9]+) total=(\d+)`)
+	for scanner.Scan() {
+		line := scanner.Text()
+		matches := rePattern.FindAllStringSubmatch(line, -1)
+		if len(matches) > 1 {
+			panic("Pressure line matches more than one")
+		}
+		pressureType := matches[0][1]
+		vals := matches[0][2:]
+		if pressureType == "some" {
+			memoryPressure.someAvgPerc10s, _ = strconv.ParseFloat(vals[0], 64)
+			memoryPressure.someAvgPerc60s, _ = strconv.ParseFloat(vals[1], 64)
+			memoryPressure.someAvgPerc300s, _ = strconv.ParseFloat(vals[2], 64)
+			memoryPressure.someTotalUs, _ = strconv.ParseInt(vals[3], 10, 64)
+		} else if pressureType == "full" {
+			memoryPressure.fullAvgPerc10s, _ = strconv.ParseFloat(vals[0], 64)
+			memoryPressure.fullAvgPerc60s, _ = strconv.ParseFloat(vals[1], 64)
+			memoryPressure.fullAvgPerc300s, _ = strconv.ParseFloat(vals[2], 64)
+			memoryPressure.fullTotalUs, _ = strconv.ParseInt(vals[3], 10, 64)
+		} else {
+			log.Fatalf("Invalid line: %s\n", line)
+		}
+	}
+
+	return memoryPressure
 }
 
 func ParseIOPressureFile(slicePath string) *IOPressure {
