@@ -274,9 +274,9 @@ func main() {
 	go controller.TickWriter(activeContainersCh, flagPolicy, tickIntervalMs, stopCh, &wg)
 	// go metrics.MetricsCollection(activeContainersCh, metricsIntervalMs, stopCh, &wg)
 	go metrics.MonitorCpuUsage(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
-	go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
-	// go metrics.PollCpuStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
-	go metrics.PollCpuStatsV2(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
+	// go metrics.PollAllStats(activeContainersCh, pollingIntervalMs, stopCh, &wg)
+	go metrics.PollCpuStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
+	// go metrics.PollCpuStatsV2(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 	// go metrics.PollIOStats(activeContainersCh, monitorCpuIntervalMs, stopCh, &wg)
 	// go metrics.GetProcSched(activeContainersCh, burstMetricsIntervalMs, stopCh, &wg)
 
