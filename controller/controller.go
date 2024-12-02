@@ -31,6 +31,7 @@ func TickWriter(activeContainersCh <-chan []string, policy string, intervalMilli
 				/* DO NOT FORGET TO MODIFY THE LINES BELOW !!!
 				- EC: all containers
 				- AT (Autothrottle): No containers (AT's agent will handle)
+				- SW (SHOWAR): No containers
 				...
 				*/
 				numTargets := 0
@@ -40,6 +41,9 @@ func TickWriter(activeContainersCh <-chan []string, policy string, intervalMilli
 					numTargets = len(containerDirs)
 					funcName = "numThreads"
 				} else if policy == "AT" {
+					numTargets = 0
+					funcName = "constant"
+				} else if policy == "SW" {
 					numTargets = 0
 					funcName = "constant"
 				} else if policy == "BK" {
