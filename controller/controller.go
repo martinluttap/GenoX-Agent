@@ -55,6 +55,12 @@ func TickWriter(activeContainersCh <-chan []string, policy string, intervalMilli
 				} else if policy == "EC_CAPPED" {
 					numTargets = len(containerDirs)
 					funcName = "cappedNumThreads"
+				} else if policy == "NOLIMIT" {
+					numTargets = len(containerDirs)
+					funcName = "noLimit"
+				} else if policy == "STATIC" {
+					numTargets = len(containerDirs)
+					funcName = "staticN"
 				} else {
 					panic("Policy not recognized!")
 				}
@@ -161,7 +167,11 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 			// newPeriod = functions.RandomStep(elapsedTime, buckets)
 			newPeriod = oldPeriod
 		} else if functionName == "cappedNumThreads" {
-			newPeriod = functions.CappedNumThreads(containerDir, 96)
+			newPeriod = functions.CappedNumThreads(containerDir, 48)
+		} else if functionName == "noLimit" {
+			newPeriod = functions.NoLimit(containerDir)
+		} else if functionName == "staticN" {
+			newPeriod = functions.StaticN(96)
 		}
 		if val, ok := allowedFunctions[functionName]; !ok {
 			fmt.Println("Function ", val, " not allowed!")

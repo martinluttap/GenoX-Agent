@@ -137,6 +137,10 @@ func SineWave(x float64) string {
 	return strconv.FormatInt(int64(y*float64(QUOTA_ONE_CORE)), 10)
 }
 
+func NoLimit(containerDir string) string {
+	return "-1"
+}
+
 func NumThreads(containerDir string) string {
 	path := fmt.Sprintf("%s/tasks", containerDir)
 	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
@@ -176,6 +180,11 @@ func CappedNumThreads(containerDir string, cap int) string {
 
 	QUOTA_ONE_CORE := 100000
 	return strconv.FormatInt(decision*int64(QUOTA_ONE_CORE), 10)
+}
+
+func StaticN(n int64) string {
+	QUOTA_ONE_CORE := 100000
+	return strconv.FormatInt(n*int64(QUOTA_ONE_CORE), 10)
 }
 
 /*********************************************************/
