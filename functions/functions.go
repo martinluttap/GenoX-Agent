@@ -137,6 +137,15 @@ func SineWave(x float64) string {
 	return strconv.FormatInt(int64(y*float64(QUOTA_ONE_CORE)), 10)
 }
 
+func NoLimit(containerDir string) string {
+	return "-1"
+}
+
+func StaticN(n int64) string {
+	QUOTA_ONE_CORE := 100000
+	return strconv.FormatInt(n*int64(QUOTA_ONE_CORE), 10)
+}
+
 func NumThreads(containerDir string) string {
 	// path := fmt.Sprintf("%s/tasks", containerDir)
 	path := fmt.Sprintf("%s/cgroup.threads", containerDir)
