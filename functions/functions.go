@@ -3,7 +3,6 @@ package functions
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"math"
 	"math/rand/v2"
 	"os"
@@ -145,7 +144,8 @@ func NumThreads(containerDir string) string {
 	path := fmt.Sprintf("%s/tasks", containerDir)
 	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if openErr != nil {
-		log.Fatalf("Error when opening: %s:\n", openErr)
+		fmt.Printf("Error when opening: %s, returning ...\n", openErr)
+		return "100000"
 	}
 	defer infile.Close()
 
@@ -164,7 +164,8 @@ func CappedNumThreads(containerDir string, cap int) string {
 	path := fmt.Sprintf("%s/tasks", containerDir)
 	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if openErr != nil {
-		log.Fatalf("Error when opening: %s:\n", openErr)
+		fmt.Printf("Error when opening: %s, returning ...\n", openErr)
+		return "100000"
 	}
 	defer infile.Close()
 

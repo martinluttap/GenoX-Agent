@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -96,7 +95,8 @@ func AdjustPeriod(containerDir string, modFunction func(x string) string) {
 		4. Write new period
 	*/
 	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
+		fmt.Printf("While opening: %s:, returning ... \n", openErr)
+		return
 	}
 	defer infile.Close()
 
@@ -113,7 +113,8 @@ func ResetQuota(containerDir string) {
 	path := fmt.Sprintf(`%s/cpu.cfs_quota_us`, containerDir)
 	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
+		fmt.Printf("While opening: %s:, returning ... \n", openErr)
+		return
 	}
 	defer infile.Close()
 
@@ -132,7 +133,8 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 	}
 	infile, openErr := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
+		fmt.Printf("While opening: %s:, returning ... \n", openErr)
+		return
 	}
 	defer infile.Close()
 
