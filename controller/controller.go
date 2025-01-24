@@ -175,7 +175,7 @@ func adjustQuotaV2(containerDir string, elapsedTime float64, functionName string
 		} else if functionName == "noLimit" {
 			newPeriod = functions.NoLimit(containerDir)
 		} else if functionName == "staticN" {
-			newPeriod = functions.StaticN(1)
+			newPeriod = functions.StaticN(64)
 		}
 		if val, ok := allowedFunctions[functionName]; !ok {
 			fmt.Println("Function ", val, " not allowed!")

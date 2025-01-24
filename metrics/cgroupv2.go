@@ -95,6 +95,10 @@ type MemoryPressure struct {
 	fullTotalUs     int64
 }
 
+type CGroup struct {
+	threads int64
+}
+
 type Memory struct {
 	// current     int64
 	// events      *MemoryEvents
@@ -119,6 +123,7 @@ type ResourceStat struct {
 	// CPUSet  *CPUSet
 	io     *IO
 	memory *Memory
+	cgroup *CGroup
 	// HugeTLB *HugeTLB
 	// PIDs    *PIDs
 	// RDMA    *RDMA
@@ -127,7 +132,10 @@ type ResourceStat struct {
 }
 
 const (
-	rootPath          = "/sys/fs/cgroup"
+	rootPath = "/sys/fs/cgroup"
+
+	cgroupThreadsFile = "cgroup.threads"
+
 	cpuIdleFile       = "cpu.idle"
 	cpuMaxFile        = "cpu.max"
 	cpuMaxBurstFile   = "cpu.max.burst"
@@ -151,6 +159,7 @@ type CGroupSlice struct {
 	slicePath    string
 	resourceStat *ResourceStat
 	cpuUtil      float64
+	nThreads     int64
 }
 
 func NewCGroupSlice(slicePath string) *CGroupSlice {
@@ -203,16 +212,9 @@ func (c *CGroupSlice) GetCpuUtil(newStat *ResourceStat, oldStat *ResourceStat) f
 func (c *CGroupSlice) UpdateResourceStat() {
 	oldStat := c.resourceStat
 	c.resourceStat = GetResourceStat(c.slicePath)
+	c.nThreads = GetNThreads(c.slicePath)
 	c.cpuUtil = c.GetCpuUtil(c.resourceStat, oldStat)
 }
-
-func (c *CGroupSlice) updateResourceStat() {
-	c.resourceStat = GetResourceStat(c.slicePath)
-}
-
-// func GetDeltaResourceStat(slicePath string) *ResourceStat {
-
-// }
 
 func GetResourceStat(slicePath string) *ResourceStat {
 	rs := &ResourceStat{
@@ -232,6 +234,11 @@ func GetResourceStat(slicePath string) *ResourceStat {
 	rs.timestampUs = time.Now().UnixMicro()
 
 	return rs
+}
+
+func GetNThreads(slicePath string) int64 {
+	nThreads := ParseNThreads(slicePath)
+	return nThreads
 }
 
 func GetIOStat(slicePath string) *IO {
@@ -477,6 +484,22 @@ func ParseCPUUclampMaxFile(slicePath string) float64 {
 func ParseBurstUs(slicePath string) int64 {
 	filePath := fmt.Sprintf("%s/%s", slicePath, cpuMaxBurstFile)
 	return ReadInt64FromFile(filePath)
+}
+
+func ParseNThreads(slicePath string) int64 {
+	filePath := fmt.Sprintf("%s/%s", slicePath, cgroupThreadsFile)
+	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
+	if openErr != nil {
+		log.Fatalf("While opening: %s:\n", openErr)
+	}
+	defer procsInfile.Close()
+
+	nThreads := 0
+	scanner := bufio.NewScanner(procsInfile)
+	for scanner.Scan() {
+		nThreads += 1
+	}
+	return int64(nThreads)
 }
 
 func ParseCPUMaxFile(slicePath string) (int64, int64) {

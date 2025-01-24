@@ -534,6 +534,7 @@ func constructPollStatsRowV2(slice *CGroupSlice) []string {
 	timestampUs := strconv.Itoa(int(slice.GetTimestamp()))
 	cid := GetContainerCidV2(slice.slicePath)
 	cpuUtil := strconv.FormatFloat(slice.cpuUtil, 'f', 2, 64)
+	nThreads := strconv.FormatInt(slice.nThreads, 10)
 	rbytes := strconv.FormatInt(slice.resourceStat.io.stat.totalReadBytes, 10)
 	wbytes := strconv.FormatInt(slice.resourceStat.io.stat.totalWriteBytes, 10)
 	rios := strconv.FormatInt(slice.resourceStat.io.stat.totalReadIOs, 10)
@@ -568,6 +569,7 @@ func constructPollStatsRowV2(slice *CGroupSlice) []string {
 	return []string{
 		timestampUs,
 		cid,
+		nThreads,
 		cpuUtil,
 		rbytes,
 		wbytes,
@@ -614,7 +616,7 @@ func PollAllStatsV2(activeContainersCh <-chan []string, pollingIntervalMs int, s
 	for {
 		select {
 		case containerDirs := <-activeContainersCh:
-			headers := []string{"timestampUs", "cid", "cpuUtil", "rbytes", "wbytes", "rios", "wios", "dbytes", "dios", "ioPresSomeAvgPerc10s", "ioPresSomeAvgPerc60s", "ioPresSomeAvgPerc300s", "ioPresSomeTotalUs", "ioPresFullAvgPerc10s", "ioPresFullAvgPerc60s", "ioPresFullAvgPerc300s", "ioPresFullTotalUs", "cpuPresSomeAvgPerc10s", "cpuPresSomeAvgPerc60s", "cpuPresSomeAvgPerc300s", "cpuPresSomeTotalUs", "cpuPresFullAvgPerc10s", "cpuPresFullAvgPerc60s", "cpuPresFullAvgPerc300s", "cpuPresFullTotalUs", "memoryPresSomeAvgPerc10s", "memoryPresSomeAvgPerc60s", "memoryPresSomeAvgPerc300s", "memoryPresSomeTotalUs", "memoryPresFullAvgPerc10s", "memoryPresFullAvgPerc60s", "memoryPresFullAvgPerc300s", "memoryPresFullTotalUs"}
+			headers := []string{"timestampUs", "cid", "nThreads", "cpuUtil", "rbytes", "wbytes", "rios", "wios", "dbytes", "dios", "ioPresSomeAvgPerc10s", "ioPresSomeAvgPerc60s", "ioPresSomeAvgPerc300s", "ioPresSomeTotalUs", "ioPresFullAvgPerc10s", "ioPresFullAvgPerc60s", "ioPresFullAvgPerc300s", "ioPresFullTotalUs", "cpuPresSomeAvgPerc10s", "cpuPresSomeAvgPerc60s", "cpuPresSomeAvgPerc300s", "cpuPresSomeTotalUs", "cpuPresFullAvgPerc10s", "cpuPresFullAvgPerc60s", "cpuPresFullAvgPerc300s", "cpuPresFullTotalUs", "memoryPresSomeAvgPerc10s", "memoryPresSomeAvgPerc60s", "memoryPresSomeAvgPerc300s", "memoryPresSomeTotalUs", "memoryPresFullAvgPerc10s", "memoryPresFullAvgPerc60s", "memoryPresFullAvgPerc300s", "memoryPresFullTotalUs"}
 			metricName := "all_v2"
 			newFds := PrepPollingStats(containerDirs, metricName, headers, outWriterDict)
 			csvFds = append(csvFds, newFds...)
