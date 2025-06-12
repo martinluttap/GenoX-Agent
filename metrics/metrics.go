@@ -649,3 +649,91 @@ func PollAllStatsV2(activeContainersCh <-chan []string, pollingIntervalMs int, s
 		}
 	}
 }
+
+// PollCpuStatsFromCgroupFiles polls CPU usage for containers by reading cgroup files directly (cgroupv2 version).
+func PollCpuStatsFromCgroupFiles(activeContainersCh <-chan []string, pollingIntervalMs int, stopCh chan int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	outWriterDict := map[string]*csv.Writer{}
+	csvFds := []*os.File{}
+	lastCpuMap := map[string]int64{}
+	prevWall := time.Now()
+	timeStart := time.Now()
+	// numCPUs := runtime.NumCPU()
+
+	for {
+		select {
+		case containerDirs := <-activeContainersCh:
+			headers := []string{"timestampNs", "cid", "cidCpuPercent"}
+			metricName := "cpu"
+			// Assume PrepPollingCpuStats prepares CSV writers for each container
+			newFds := PrepPollingStats(containerDirs, metricName, headers, outWriterDict)
+			csvFds = append(csvFds, newFds...)
+
+			ts := strconv.FormatInt((time.Since(timeStart) * time.Nanosecond).Nanoseconds(), 10)
+			deltaWall := time.Since(prevWall).Nanoseconds()
+
+			for _, containerDir := range containerDirs {
+				cpuStatPath := fmt.Sprintf("%s/cpu.stat", containerDir)
+				f, err := os.Open(cpuStatPath)
+				if err != nil {
+					fmt.Printf("Failed to open %s: %v\n", cpuStatPath, err)
+					continue
+				}
+				scanner := bufio.NewScanner(f)
+				var usageUsec int64 = -1
+				for scanner.Scan() {
+					line := scanner.Text()
+					if strings.HasPrefix(line, "usage_usec") {
+						fields := strings.Fields(line)
+						if len(fields) == 2 {
+							usageUsec, err = strconv.ParseInt(fields[1], 10, 64)
+							if err != nil {
+								fmt.Printf("Failed to parse usage_usec: %v\n", err)
+								usageUsec = -1
+							}
+						}
+						break
+					}
+				}
+				f.Close()
+				if usageUsec == -1 {
+					fmt.Printf("usage_usec not found in %s\n", cpuStatPath)
+					continue
+				}
+				cpuUsage := usageUsec * 1000 // convert usec to nsec
+
+				prevCpuUsage := lastCpuMap[containerDir]
+				deltaCpu := cpuUsage - prevCpuUsage
+
+				// Calculate CPU usage as a percentage of total CPUs
+				// cpuPercent := float64(deltaCpu) / float64(deltaWall) / float64(numCPUs) * 100
+
+				cpuPercent := float64(deltaCpu) / float64(deltaWall) * 100
+
+				ss := strings.Split(containerDir, "/")
+				cid := ss[len(ss)-1]
+				row := []string{
+					ts, cid, fmt.Sprintf("%.2f", cpuPercent),
+				}
+				writer := outWriterDict[containerDir]
+				if writer != nil {
+					writer.Write(row)
+					writer.Flush()
+				}
+				fmt.Printf("[%s] %s: %.2f%% CPU\n", time.Now().Format(time.RFC3339Nano), cid, cpuPercent)
+
+				// Update lastCpuMap for next interval
+				lastCpuMap[containerDir] = cpuUsage
+			}
+			prevWall = time.Now()
+
+		case <-stopCh:
+			for idx, fd := range csvFds {
+				fmt.Printf("Closing fd for container %d: %p\n", idx, fd)
+			}
+			fmt.Println()
+			return
+		}
+	}
+}
