@@ -100,7 +100,7 @@ type CGroup struct {
 }
 
 type Memory struct {
-	// current     int64
+	current int64
 	// events      *MemoryEvents
 	// eventsLocal *MemoryEvents
 	// high        int64
@@ -153,6 +153,7 @@ const (
 	ioWeightFile    = "io.weight"
 
 	memoryPressureFile = "memory.pressure"
+	memoryCurrentFile  = "memory.current"
 )
 
 type CGroupSlice struct {
@@ -255,6 +256,7 @@ func GetIOStat(slicePath string) *IO {
 func GetMemoryStat(slicePath string) *Memory {
 	memory := &Memory{}
 	memory.pressure = ParseMemoryPressureFile(slicePath)
+	memory.current = ReadInt64FromFile(fmt.Sprintf("%s/%s", slicePath, "memory.current"))
 
 	return memory
 }
