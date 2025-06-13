@@ -49,27 +49,22 @@ def get_pod_map(namespace, components):
 
 
 def stat_path(pod_map, name, stat):
-    # qos, uid = pod_map[name]
-    # family, _, name = stat.partition('.')
-    # slices = f'kubepods.slice/kubepods-{qos}.slice/kubepods-{qos}-pod{uid.replace("-", "_")}.slice'
-    # return pathlib.Path(f'/sys/fs/cgroup/{family}/{slices}/{family}.{name}')
     group = pod_map[name]
-    return pathlib.Path(f'/sys/fs/cgroup/cpu/{group}/{stat}')
+    return pathlib.Path(f'/sys/fs/cgroup/system.slice/{group}/{stat}')  # cgroup v2 unified path
 
 
 def set_cpu_limit(pod_map, name, limit, period=0.1):
     period_us = round(period * 1e6)
     assert 1000 <= period_us <= 1000000
+    cpu_max_path = stat_path(pod_map, name, 'cpu.max')
     if limit is None:
-        quota_us = -1
+        cpu_max_path.write_text(f'max {period_us}')
+        print(f'{datetime.datetime.now()} Written cpu.max=max {period_us} to name={name},(qos,uid)={pod_map[name]}')
     else:
         quota_us = round(limit * period_us)
         assert quota_us >= 1000
-
-    stat_path(pod_map, name, 'cpu.cfs_period_us').write_text(str(period_us))
-    stat_path(pod_map, name, 'cpu.cfs_quota_us').write_text(str(quota_us))
-    print(f'{datetime.datetime.now()} Written period={period_us},quota={quota_us} to name={name},(qos,uid)={pod_map[name]}')
-
+        cpu_max_path.write_text(f'{quota_us} {period_us}')
+        print(f'{datetime.datetime.now()} Written cpu.max={quota_us} {period_us} to name={name},(qos,uid)={pod_map[name]}')
     return 
 
 class ConstScaler:
@@ -274,9 +269,8 @@ def run(control, namespace, components, scalers):
 
     files = {}
     for name in components:
-        files[name, 'cpuacct.usage'] = stat_path(pod_map, name, 'cpuacct.usage').open()
         files[name, 'cpu.stat'] = stat_path(pod_map, name, 'cpu.stat').open()
-        files[name, 'cpu.cfs_quota_us'] = stat_path(pod_map, name, 'cpu.cfs_quota_us').open()
+        files[name, 'cpu.max'] = stat_path(pod_map, name, 'cpu.max').open()
 
     monotonic_base = time.time() - time.perf_counter()
 
@@ -298,14 +292,32 @@ def run(control, namespace, components, scalers):
         stats = collections.defaultdict(dict)
         for name in components:
             try:
-                files[name, 'cpuacct.usage'].seek(0)
-                stats[name]['cpu_usage'] = files[name, 'cpuacct.usage'].read()
                 files[name, 'cpu.stat'].seek(0)
+                usage_usec = None
+                nr_periods = None
+                nr_throttled = None
+                throttled_usec = None
                 for line in files[name, 'cpu.stat'].read().splitlines():
                     k, v = line.split()
-                    stats[name][f'cpu_stat.{k}'] = v
-                files[name, 'cpu.cfs_quota_us'].seek(0)
-                stats[name]['cpu_cfs_quota_us'] = files[name, 'cpu.cfs_quota_us'].read()
+                    if k == 'usage_usec':
+                        usage_usec = int(v)
+                    elif k == 'nr_periods':
+                        nr_periods = int(v)
+                    elif k == 'nr_throttled':
+                        nr_throttled = int(v)
+                    elif k == 'throttled_usec':
+                        throttled_usec = int(v)
+                stats[name]['cpu_usage'] = usage_usec / 1e6 if usage_usec is not None else 0  # seconds
+                stats[name]['cpu_stat.nr_periods'] = nr_periods if nr_periods is not None else 0
+                stats[name]['cpu_stat.nr_throttled'] = nr_throttled if nr_throttled is not None else 0
+                stats[name]['cpu_stat.throttled_time'] = throttled_usec / 1e6 if throttled_usec is not None else 0  # seconds
+                files[name, 'cpu.max'].seek(0)
+                cpu_max = files[name, 'cpu.max'].read().strip().split()
+                if cpu_max[0] == 'max':
+                    stats[name]['cpu_cfs_quota_us'] = -1
+                else:
+                    stats[name]['cpu_cfs_quota_us'] = int(cpu_max[0])
+                stats[name]['cpu_cfs_period_us'] = int(cpu_max[1])
             except Exception as e:
                 print(f'At t={t} {name} has exception {e}, skipping ...')
 
@@ -316,12 +328,8 @@ def run(control, namespace, components, scalers):
 
         for name in components:
             try:
-                stats[name]['cpu_usage'] = int(stats[name]['cpu_usage']) / 1e9
-                stats[name]['cpu_stat.nr_periods'] = int(stats[name]['cpu_stat.nr_periods'])
-                stats[name]['cpu_stat.nr_throttled'] = int(stats[name]['cpu_stat.nr_throttled'])
-                stats[name]['cpu_stat.throttled_time'] = int(stats[name]['cpu_stat.throttled_time']) / 1e9
-                stats[name]['cpu_stat.throttled_time'] = int(stats[name]['cpu_stat.throttled_time']) / 1e9
-                stats[name]['cpu_cfs_quota_us'] = int(stats[name]['cpu_cfs_quota_us'])
+                # Already parsed and converted above for cgroup v2
+                pass
             except Exception as e:
                 print(f'At t={t} {name} error {e}')
 

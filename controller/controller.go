@@ -42,6 +42,9 @@ func TickWriter(activeContainersCh <-chan []string, policy string, intervalMilli
 				} else if policy == "AT" {
 					numTargets = 0
 					funcName = "constant"
+				} else if policy == "SW" {
+					numTargets = 0
+					funcName = "constant"
 				} else if policy == "BK" {
 					numTargets = len(containerDirs)
 					funcName = "constant"

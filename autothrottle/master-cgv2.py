@@ -306,11 +306,12 @@ def nextflow():
         ctrs: List[str] = []
         for root, dirs, files in os.walk(f"{root_dir}"):
             path = root.split(os.sep)
-            print((len(path) - 1) * '---', os.path.basename(root))
+            # print((len(path) - 1) * '---', os.path.basename(root))
             for d in dirs:
                 if d.startswith('docker-') and d.endswith('.scope'):
                     ctrs.append(d)
 
+        print(f"Found {len(ctrs)} running containers: {[c.lstrip('docker-')[:5] for c in ctrs]}")
         return ctrs
 
     running_ctrs: List[str] = []
