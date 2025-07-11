@@ -45,6 +45,9 @@ func TickWriter(activeContainersCh <-chan []string, policy string, intervalMilli
 				} else if policy == "SW" {
 					numTargets = 0
 					funcName = "constant"
+				} else if policy == "AP" {
+					numTargets = 0
+					funcName = "constant"
 				} else if policy == "BK" {
 					numTargets = len(containerDirs)
 					funcName = "constant"
@@ -173,7 +176,7 @@ func adjustQuota(containerDir string, elapsedTime float64, functionName string) 
 		} else if functionName == "noLimit" {
 			newPeriod = functions.NoLimit(containerDir)
 		} else if functionName == "staticN" {
-			newPeriod = functions.StaticN(16)
+			newPeriod = functions.StaticN(0)
 		}
 		if val, ok := allowedFunctions[functionName]; !ok {
 			fmt.Println("Function ", val, " not allowed!")
