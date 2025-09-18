@@ -508,7 +508,8 @@ func ParseCPUMaxFile(slicePath string) (int64, int64) {
 	filePath := fmt.Sprintf("%s/%s", slicePath, cpuMaxFile)
 	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
 	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
+		log.Printf("Warning: could not open %s: %v", filePath, openErr)
+		return -1, -1
 	}
 	defer procsInfile.Close()
 
@@ -516,6 +517,10 @@ func ParseCPUMaxFile(slicePath string) (int64, int64) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			log.Printf("Warning: unexpected format in %s: %s", filePath, line)
+			return -1, -1
+		}
 		quotaUsStr, periodUsStr := fields[0], fields[1]
 		periodUs, _ := strconv.ParseInt(periodUsStr, 10, 64)
 		if quotaUsStr == "max" {
