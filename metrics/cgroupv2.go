@@ -551,7 +551,8 @@ func ParseCPUMaxBurstFile(slicePath string) int64 {
 func ReadFloat64FromFile(filePath string) float64 {
 	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
 	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
+		log.Printf("Warning: could not open %s: %v", filePath, openErr)
+		return -1
 	}
 	defer procsInfile.Close()
 
@@ -561,7 +562,8 @@ func ReadFloat64FromFile(filePath string) float64 {
 		if err == nil {
 			return val
 		} else {
-			log.Fatalf("While parsing: %s:\n", err)
+			log.Printf("Warning: could not parse float from %s: %v", filePath, err)
+			return -1
 		}
 	}
 	return -1
@@ -570,7 +572,8 @@ func ReadFloat64FromFile(filePath string) float64 {
 func ReadInt64FromFile(filePath string) int64 {
 	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
 	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
+		log.Printf("Warning: could not open %s: %v", filePath, openErr)
+		return -1
 	}
 	defer procsInfile.Close()
 
@@ -580,7 +583,8 @@ func ReadInt64FromFile(filePath string) int64 {
 		if err == nil {
 			return val
 		} else {
-			log.Fatalf("While parsing: %s:\n", err)
+			log.Printf("Warning: could not parse int from %s: %v", filePath, err)
+			return -1
 		}
 	}
 	return -1
