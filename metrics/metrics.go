@@ -531,47 +531,113 @@ func GetContainerCidV2(containerDir string) string {
 func constructPollStatsRowV2(slice *CGroupSlice) []string {
 	// "timestampUs", "cid", "cpuUtil", "rbytes", "wbytes", "rios", "wios", "dbytes", "dios", "ioPresSomeAvgPerc10s", "ioPresSomeAvgPerc60s", "ioPresSomeAvgPerc300s", "ioPresSomeTotalUs", "ioPresFullAvgPerc10s", "ioPresFullAvgPerc60s", "ioPresFullAvgPerc300s", "ioPresFullTotalUs", "cpuPresSomeAvgPerc10s", "cpuPresSomeAvgPerc60s", "cpuPresSomeAvgPerc300s", "cpuPresSomeTotalUs", "cpuPresFullAvgPerc10s", "cpuPresFullAvgPerc60s", "cpuPresFullAvgPerc300s", "cpuPresFullTotalUs",
 
-	timestampUs := strconv.Itoa(int(slice.GetTimestamp()))
-	cid := GetContainerCidV2(slice.slicePath)
-	cpuUtil := strconv.FormatFloat(slice.cpuUtil, 'f', 2, 64)
-	nThreads := strconv.FormatInt(slice.nThreads, 10)
-	quotaUs := strconv.FormatInt(slice.resourceStat.cpu.quotaUs, 10)
-	periodUs := strconv.FormatInt(slice.resourceStat.cpu.periodUs, 10)
-	burstUs := strconv.FormatInt(slice.resourceStat.cpu.burstUs, 10)
-	nrPeriods := strconv.FormatInt(slice.resourceStat.cpu.stat.nrPeriods, 10)
-	nrThrottled := strconv.FormatInt(slice.resourceStat.cpu.stat.nrThrottled, 10)
-	throttledUsec := strconv.FormatInt(slice.resourceStat.cpu.stat.throttledUsec, 10)
-	rbytes := strconv.FormatInt(slice.resourceStat.io.stat.totalReadBytes, 10)
-	wbytes := strconv.FormatInt(slice.resourceStat.io.stat.totalWriteBytes, 10)
-	rios := strconv.FormatInt(slice.resourceStat.io.stat.totalReadIOs, 10)
-	wios := strconv.FormatInt(slice.resourceStat.io.stat.totalWriteIOs, 10)
-	dbytes := strconv.FormatInt(slice.resourceStat.io.stat.totalDiscardedBytes, 10)
-	dios := strconv.FormatInt(slice.resourceStat.io.stat.totalDiscardedIOs, 10)
-	memoryCurrent := strconv.FormatInt(slice.resourceStat.memory.current, 10)
-	ioPresSomeAvgPerc10s := strconv.FormatFloat(slice.resourceStat.io.pressure.someAvgPerc10s, 'f', 2, 64)
-	ioPresSomeAvgPerc60s := strconv.FormatFloat(slice.resourceStat.io.pressure.someAvgPerc60s, 'f', 2, 64)
-	ioPresSomeAvgPerc300s := strconv.FormatFloat(slice.resourceStat.io.pressure.someAvgPerc300s, 'f', 2, 64)
-	ioPresSomeTotalUs := strconv.FormatInt(slice.resourceStat.io.pressure.someTotalUs, 10)
-	ioPresFullAvgPerc10s := strconv.FormatFloat(slice.resourceStat.io.pressure.fullAvgPerc10s, 'f', 2, 64)
-	ioPresFullAvgPerc60s := strconv.FormatFloat(slice.resourceStat.io.pressure.fullAvgPerc60s, 'f', 2, 64)
-	ioPresFullAvgPerc300s := strconv.FormatFloat(slice.resourceStat.io.pressure.fullAvgPerc300s, 'f', 2, 64)
-	ioPresFullTotalUs := strconv.FormatInt(slice.resourceStat.io.pressure.fullTotalUs, 10)
-	cpuPresSomeAvgPerc10s := strconv.FormatFloat(slice.resourceStat.cpu.pressure.someAvgPerc10s, 'f', 2, 64)
-	cpuPresSomeAvgPerc60s := strconv.FormatFloat(slice.resourceStat.cpu.pressure.someAvgPerc10s, 'f', 2, 64)
-	cpuPresSomeAvgPerc300s := strconv.FormatFloat(slice.resourceStat.cpu.pressure.someAvgPerc10s, 'f', 2, 64)
-	cpuPresSomeTotalUs := strconv.FormatFloat(slice.resourceStat.cpu.pressure.someAvgPerc10s, 'f', 2, 64)
-	cpuPresFullAvgPerc10s := strconv.FormatFloat(slice.resourceStat.cpu.pressure.fullAvgPerc10s, 'f', 2, 64)
-	cpuPresFullAvgPerc60s := strconv.FormatFloat(slice.resourceStat.cpu.pressure.fullAvgPerc60s, 'f', 2, 64)
-	cpuPresFullAvgPerc300s := strconv.FormatFloat(slice.resourceStat.cpu.pressure.fullAvgPerc300s, 'f', 2, 64)
-	cpuPresFullTotalUs := strconv.FormatInt(slice.resourceStat.cpu.pressure.fullTotalUs, 10)
-	memoryPresSomeAvgPerc10s := strconv.FormatFloat(slice.resourceStat.memory.pressure.someAvgPerc10s, 'f', 2, 64)
-	memoryPresSomeAvgPerc60s := strconv.FormatFloat(slice.resourceStat.memory.pressure.someAvgPerc10s, 'f', 2, 64)
-	memoryPresSomeAvgPerc300s := strconv.FormatFloat(slice.resourceStat.memory.pressure.someAvgPerc10s, 'f', 2, 64)
-	memoryPresSomeTotalUs := strconv.FormatFloat(slice.resourceStat.memory.pressure.someAvgPerc10s, 'f', 2, 64)
-	memoryPresFullAvgPerc10s := strconv.FormatFloat(slice.resourceStat.memory.pressure.fullAvgPerc10s, 'f', 2, 64)
-	memoryPresFullAvgPerc60s := strconv.FormatFloat(slice.resourceStat.memory.pressure.fullAvgPerc60s, 'f', 2, 64)
-	memoryPresFullAvgPerc300s := strconv.FormatFloat(slice.resourceStat.memory.pressure.fullAvgPerc300s, 'f', 2, 64)
-	memoryPresFullTotalUs := strconv.FormatInt(slice.resourceStat.memory.pressure.fullTotalUs, 10)
+       timestampUs := strconv.Itoa(int(slice.GetTimestamp()))
+       cid := GetContainerCidV2(slice.slicePath)
+       cpuUtil := strconv.FormatFloat(slice.cpuUtil, 'f', 2, 64)
+       nThreads := strconv.FormatInt(slice.nThreads, 10)
+       var quotaUs, periodUs, burstUs, nrPeriods, nrThrottled, throttledUsec string
+       var rbytes, wbytes, rios, wios, dbytes, dios string
+       var memoryCurrent string
+       var ioPresSomeAvgPerc10s, ioPresSomeAvgPerc60s, ioPresSomeAvgPerc300s, ioPresSomeTotalUs string
+       var ioPresFullAvgPerc10s, ioPresFullAvgPerc60s, ioPresFullAvgPerc300s, ioPresFullTotalUs string
+       var cpuPresSomeAvgPerc10s, cpuPresSomeAvgPerc60s, cpuPresSomeAvgPerc300s, cpuPresSomeTotalUs string
+       var cpuPresFullAvgPerc10s, cpuPresFullAvgPerc60s, cpuPresFullAvgPerc300s, cpuPresFullTotalUs string
+       var memoryPresSomeAvgPerc10s, memoryPresSomeAvgPerc60s, memoryPresSomeAvgPerc300s, memoryPresSomeTotalUs string
+       var memoryPresFullAvgPerc10s, memoryPresFullAvgPerc60s, memoryPresFullAvgPerc300s, memoryPresFullTotalUs string
+
+       rs := slice.resourceStat
+       if rs != nil {
+	       if rs.cpu != nil {
+		       quotaUs = strconv.FormatInt(rs.cpu.quotaUs, 10)
+		       periodUs = strconv.FormatInt(rs.cpu.periodUs, 10)
+		       burstUs = strconv.FormatInt(rs.cpu.burstUs, 10)
+		       if rs.cpu.stat != nil {
+			       nrPeriods = strconv.FormatInt(rs.cpu.stat.nrPeriods, 10)
+			       nrThrottled = strconv.FormatInt(rs.cpu.stat.nrThrottled, 10)
+			       throttledUsec = strconv.FormatInt(rs.cpu.stat.throttledUsec, 10)
+		       } else {
+			       nrPeriods, nrThrottled, throttledUsec = "-1", "-1", "-1"
+		       }
+		       if rs.cpu.pressure != nil {
+			       cpuPresSomeAvgPerc10s = strconv.FormatFloat(rs.cpu.pressure.someAvgPerc10s, 'f', 2, 64)
+			       cpuPresSomeAvgPerc60s = strconv.FormatFloat(rs.cpu.pressure.someAvgPerc60s, 'f', 2, 64)
+			       cpuPresSomeAvgPerc300s = strconv.FormatFloat(rs.cpu.pressure.someAvgPerc300s, 'f', 2, 64)
+							   cpuPresSomeTotalUs = strconv.FormatInt(rs.cpu.pressure.someTotalUs, 10)
+			       cpuPresFullAvgPerc10s = strconv.FormatFloat(rs.cpu.pressure.fullAvgPerc10s, 'f', 2, 64)
+			       cpuPresFullAvgPerc60s = strconv.FormatFloat(rs.cpu.pressure.fullAvgPerc60s, 'f', 2, 64)
+			       cpuPresFullAvgPerc300s = strconv.FormatFloat(rs.cpu.pressure.fullAvgPerc300s, 'f', 2, 64)
+			       cpuPresFullTotalUs = strconv.FormatInt(rs.cpu.pressure.fullTotalUs, 10)
+		       } else {
+			       cpuPresSomeAvgPerc10s, cpuPresSomeAvgPerc60s, cpuPresSomeAvgPerc300s, cpuPresSomeTotalUs = "-1", "-1", "-1", "-1"
+			       cpuPresFullAvgPerc10s, cpuPresFullAvgPerc60s, cpuPresFullAvgPerc300s, cpuPresFullTotalUs = "-1", "-1", "-1", "-1"
+		       }
+	       } else {
+		       quotaUs, periodUs, burstUs = "-1", "-1", "-1"
+		       nrPeriods, nrThrottled, throttledUsec = "-1", "-1", "-1"
+		       cpuPresSomeAvgPerc10s, cpuPresSomeAvgPerc60s, cpuPresSomeAvgPerc300s, cpuPresSomeTotalUs = "-1", "-1", "-1", "-1"
+		       cpuPresFullAvgPerc10s, cpuPresFullAvgPerc60s, cpuPresFullAvgPerc300s, cpuPresFullTotalUs = "-1", "-1", "-1", "-1"
+	       }
+	       if rs.io != nil {
+		       if rs.io.stat != nil {
+			       rbytes = strconv.FormatInt(rs.io.stat.totalReadBytes, 10)
+			       wbytes = strconv.FormatInt(rs.io.stat.totalWriteBytes, 10)
+			       rios = strconv.FormatInt(rs.io.stat.totalReadIOs, 10)
+			       wios = strconv.FormatInt(rs.io.stat.totalWriteIOs, 10)
+			       dbytes = strconv.FormatInt(rs.io.stat.totalDiscardedBytes, 10)
+			       dios = strconv.FormatInt(rs.io.stat.totalDiscardedIOs, 10)
+		       } else {
+			       rbytes, wbytes, rios, wios, dbytes, dios = "-1", "-1", "-1", "-1", "-1", "-1"
+		       }
+		       if rs.io.pressure != nil {
+			       ioPresSomeAvgPerc10s = strconv.FormatFloat(rs.io.pressure.someAvgPerc10s, 'f', 2, 64)
+			       ioPresSomeAvgPerc60s = strconv.FormatFloat(rs.io.pressure.someAvgPerc60s, 'f', 2, 64)
+			       ioPresSomeAvgPerc300s = strconv.FormatFloat(rs.io.pressure.someAvgPerc300s, 'f', 2, 64)
+			       ioPresSomeTotalUs = strconv.FormatInt(rs.io.pressure.someTotalUs, 10)
+			       ioPresFullAvgPerc10s = strconv.FormatFloat(rs.io.pressure.fullAvgPerc10s, 'f', 2, 64)
+			       ioPresFullAvgPerc60s = strconv.FormatFloat(rs.io.pressure.fullAvgPerc60s, 'f', 2, 64)
+			       ioPresFullAvgPerc300s = strconv.FormatFloat(rs.io.pressure.fullAvgPerc300s, 'f', 2, 64)
+			       ioPresFullTotalUs = strconv.FormatInt(rs.io.pressure.fullTotalUs, 10)
+		       } else {
+			       ioPresSomeAvgPerc10s, ioPresSomeAvgPerc60s, ioPresSomeAvgPerc300s, ioPresSomeTotalUs = "-1", "-1", "-1", "-1"
+			       ioPresFullAvgPerc10s, ioPresFullAvgPerc60s, ioPresFullAvgPerc300s, ioPresFullTotalUs = "-1", "-1", "-1", "-1"
+		       }
+	       } else {
+		       rbytes, wbytes, rios, wios, dbytes, dios = "-1", "-1", "-1", "-1", "-1", "-1"
+		       ioPresSomeAvgPerc10s, ioPresSomeAvgPerc60s, ioPresSomeAvgPerc300s, ioPresSomeTotalUs = "-1", "-1", "-1", "-1"
+		       ioPresFullAvgPerc10s, ioPresFullAvgPerc60s, ioPresFullAvgPerc300s, ioPresFullTotalUs = "-1", "-1", "-1", "-1"
+	       }
+	       if rs.memory != nil {
+		       memoryCurrent = strconv.FormatInt(rs.memory.current, 10)
+		       if rs.memory.pressure != nil {
+			       memoryPresSomeAvgPerc10s = strconv.FormatFloat(rs.memory.pressure.someAvgPerc10s, 'f', 2, 64)
+			       memoryPresSomeAvgPerc60s = strconv.FormatFloat(rs.memory.pressure.someAvgPerc60s, 'f', 2, 64)
+			       memoryPresSomeAvgPerc300s = strconv.FormatFloat(rs.memory.pressure.someAvgPerc300s, 'f', 2, 64)
+							   memoryPresSomeTotalUs = strconv.FormatInt(rs.memory.pressure.someTotalUs, 10)
+			       memoryPresFullAvgPerc10s = strconv.FormatFloat(rs.memory.pressure.fullAvgPerc10s, 'f', 2, 64)
+			       memoryPresFullAvgPerc60s = strconv.FormatFloat(rs.memory.pressure.fullAvgPerc60s, 'f', 2, 64)
+			       memoryPresFullAvgPerc300s = strconv.FormatFloat(rs.memory.pressure.fullAvgPerc300s, 'f', 2, 64)
+			       memoryPresFullTotalUs = strconv.FormatInt(rs.memory.pressure.fullTotalUs, 10)
+		       } else {
+			       memoryPresSomeAvgPerc10s, memoryPresSomeAvgPerc60s, memoryPresSomeAvgPerc300s, memoryPresSomeTotalUs = "-1", "-1", "-1", "-1"
+			       memoryPresFullAvgPerc10s, memoryPresFullAvgPerc60s, memoryPresFullAvgPerc300s, memoryPresFullTotalUs = "-1", "-1", "-1", "-1"
+		       }
+	       } else {
+		       memoryCurrent = "-1"
+		       memoryPresSomeAvgPerc10s, memoryPresSomeAvgPerc60s, memoryPresSomeAvgPerc300s, memoryPresSomeTotalUs = "-1", "-1", "-1", "-1"
+		       memoryPresFullAvgPerc10s, memoryPresFullAvgPerc60s, memoryPresFullAvgPerc300s, memoryPresFullTotalUs = "-1", "-1", "-1", "-1"
+	       }
+       } else {
+	       quotaUs, periodUs, burstUs = "-1", "-1", "-1"
+	       nrPeriods, nrThrottled, throttledUsec = "-1", "-1", "-1"
+	       rbytes, wbytes, rios, wios, dbytes, dios = "-1", "-1", "-1", "-1", "-1", "-1"
+	       memoryCurrent = "-1"
+	       ioPresSomeAvgPerc10s, ioPresSomeAvgPerc60s, ioPresSomeAvgPerc300s, ioPresSomeTotalUs = "-1", "-1", "-1", "-1"
+	       ioPresFullAvgPerc10s, ioPresFullAvgPerc60s, ioPresFullAvgPerc300s, ioPresFullTotalUs = "-1", "-1", "-1", "-1"
+	       cpuPresSomeAvgPerc10s, cpuPresSomeAvgPerc60s, cpuPresSomeAvgPerc300s, cpuPresSomeTotalUs = "-1", "-1", "-1", "-1"
+	       cpuPresFullAvgPerc10s, cpuPresFullAvgPerc60s, cpuPresFullAvgPerc300s, cpuPresFullTotalUs = "-1", "-1", "-1", "-1"
+	       memoryPresSomeAvgPerc10s, memoryPresSomeAvgPerc60s, memoryPresSomeAvgPerc300s, memoryPresSomeTotalUs = "-1", "-1", "-1", "-1"
+	       memoryPresFullAvgPerc10s, memoryPresFullAvgPerc60s, memoryPresFullAvgPerc300s, memoryPresFullTotalUs = "-1", "-1", "-1", "-1"
+       }
 
 	return []string{
 		timestampUs,
