@@ -328,7 +328,8 @@ func ParseMemoryPressureFile(slicePath string) *MemoryPressure {
 			memoryPressure.fullAvgPerc300s, _ = strconv.ParseFloat(vals[2], 64)
 			memoryPressure.fullTotalUs, _ = strconv.ParseInt(vals[3], 10, 64)
 		} else {
-			log.Fatalf("Invalid line: %s\n", line)
+			   log.Printf("Warning: invalid line in %s: %s", filePath, line)
+			   continue
 		}
 	}
 
@@ -338,9 +339,10 @@ func ParseMemoryPressureFile(slicePath string) *MemoryPressure {
 func ParseIOPressureFile(slicePath string) *IOPressure {
 	filePath := fmt.Sprintf("%s/%s", slicePath, ioPressureFile)
 	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
-	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
-	}
+       if openErr != nil {
+	       log.Printf("Warning: could not open %s: %v", filePath, openErr)
+	       return nil
+       }
 	defer procsInfile.Close()
 
 	scanner := bufio.NewScanner(procsInfile)
@@ -365,7 +367,8 @@ func ParseIOPressureFile(slicePath string) *IOPressure {
 			ioPressure.fullAvgPerc300s, _ = strconv.ParseFloat(vals[2], 64)
 			ioPressure.fullTotalUs, _ = strconv.ParseInt(vals[3], 10, 64)
 		} else {
-			log.Fatalf("Invalid line: %s\n", line)
+			   log.Printf("Warning: invalid line in %s: %s", filePath, line)
+			   continue
 		}
 	}
 
@@ -478,27 +481,30 @@ func ParseCPUUclampMinFile(slicePath string) float64 {
 
 func ParseCPUUclampMaxFile(slicePath string) float64 {
 	filePath := fmt.Sprintf("%s/%s", slicePath, cpuUclampMaxFile)
-	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
-	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
-	}
-	defer procsInfile.Close()
+       procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
+       if openErr != nil {
+	       log.Printf("Warning: could not open %s: %v", filePath, openErr)
+	       return -1
+       }
+       defer procsInfile.Close()
 
-	scanner := bufio.NewScanner(procsInfile)
-	ret := float64(-1)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "max" {
-			ret = 0
-		} else {
-			val, err := strconv.ParseFloat(line, 64)
-			if err != nil {
-				log.Fatalf("While parsing: %s:\n", err)
-			}
-			ret = val
-		}
-	}
-	return ret
+       scanner := bufio.NewScanner(procsInfile)
+       ret := float64(-1)
+       for scanner.Scan() {
+	       line := scanner.Text()
+	       if line == "max" {
+		       ret = 0
+	       } else {
+		       val, err := strconv.ParseFloat(line, 64)
+		       if err != nil {
+			       log.Printf("Warning: could not parse float from %s: %v", filePath, err)
+			       ret = -1
+			       continue
+		       }
+		       ret = val
+	       }
+       }
+       return ret
 }
 
 func ParseBurstUs(slicePath string) int64 {
@@ -509,9 +515,10 @@ func ParseBurstUs(slicePath string) int64 {
 func ParseNThreads(slicePath string) int64 {
 	filePath := fmt.Sprintf("%s/%s", slicePath, cgroupThreadsFile)
 	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
-	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
-	}
+       if openErr != nil {
+	       log.Printf("Warning: could not open %s: %v", filePath, openErr)
+	       return -1
+       }
 	defer procsInfile.Close()
 
 	nThreads := 0
