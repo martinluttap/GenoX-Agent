@@ -54,16 +54,18 @@ func watchActiveContainers(root string, intervalMs int64, activeDirsCh chan<- []
 		select {
 		case <-tickCh.C:
 			var dirs []string
-			err := filepath.WalkDir(root, func(path string, info os.DirEntry, err error) error {
-				if info.IsDir() &&
-					strings.Contains(info.Name(), "docker-") {
+			kubePodsRoot := "/sys/fs/cgroup/kubepods.slice/"
+			err := filepath.WalkDir(kubePodsRoot, func(path string, info os.DirEntry, err error) error {
+				if info == nil {
+					return nil
+				}
+				if info.IsDir() && (strings.HasPrefix(info.Name(), "cri-containerd-") || strings.HasPrefix(info.Name(), "docker-")) && strings.HasSuffix(info.Name(), ".scope") {
 					dirs = append(dirs, path)
 					fmt.Println("Found container at ", path)
 				}
 				return nil
 			})
 			if err == nil {
-				// dirs[0] == root. We skip it
 				activeDirsCh <- dirs
 				fmt.Println("At ", time.Now().String(), " sent ", dirs)
 			} else {
@@ -101,19 +103,25 @@ func blockUntilNextflowSignal(dir string) {
 }
 
 func blockUntilContainerStarts() {
-	dockerRootDir := `/sys/fs/cgroup/system.slice/`
+	kubePodsRoot := "/sys/fs/cgroup/kubepods.slice/"
 	var dirs []string
-	noContainerExists := (len(dirs) <= 1)
+	noContainerExists := true
 	for noContainerExists {
-		filepath.WalkDir(dockerRootDir, func(path string, info os.DirEntry, err error) error {
-			if info.IsDir() &&
-				strings.Contains(info.Name(), "docker-") {
+		dirs = []string{}
+		filepath.WalkDir(kubePodsRoot, func(path string, info os.DirEntry, err error) error {
+			if info == nil {
+				return nil
+			}
+			if info.IsDir() && (strings.HasPrefix(info.Name(), "cri-containerd-") || strings.HasPrefix(info.Name(), "docker-")) && strings.HasSuffix(info.Name(), ".scope") {
 				dirs = append(dirs, path)
 			}
 			return nil
 		})
-		noContainerExists = (len(dirs) <= 1)
-		// dirs[0] == dockerRootDir. We skip it
+		noContainerExists = (len(dirs) == 0)
+		if noContainerExists {
+			fmt.Println("Waiting for containers to start ...")
+			time.Sleep(1000 * time.Millisecond)
+		}
 	}
 }
 
