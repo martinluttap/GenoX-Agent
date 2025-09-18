@@ -59,7 +59,7 @@ func watchActiveContainers(root string, intervalMs int64, activeDirsCh chan<- []
 				if info == nil {
 					return nil
 				}
-				if info.IsDir() && (strings.HasPrefix(info.Name(), "cri-containerd-") || strings.HasPrefix(info.Name(), "docker-")) && strings.HasSuffix(info.Name(), ".scope") {
+				if info.IsDir() && strings.Contains(info.Name(), "docker-") {
 					dirs = append(dirs, path)
 					fmt.Println("Found container at ", path)
 				}
@@ -112,7 +112,7 @@ func blockUntilContainerStarts() {
 			if info == nil {
 				return nil
 			}
-			if info.IsDir() && (strings.HasPrefix(info.Name(), "cri-containerd-") || strings.HasPrefix(info.Name(), "docker-")) && strings.HasSuffix(info.Name(), ".scope") {
+			if info.IsDir() && (strings.HasPrefix(info.Name(), "docker-")) {
 				dirs = append(dirs, path)
 			}
 			return nil

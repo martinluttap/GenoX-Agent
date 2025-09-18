@@ -397,7 +397,8 @@ func ParseCPUPressureFile(slicePath string) *CPUPressure {
 	filePath := fmt.Sprintf("%s/%s", slicePath, cpuPressureFile)
 	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
 	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
+		log.Printf("Warning: could not open %s: %v", filePath, openErr)
+		return &CPUPressure{} // return empty struct if missing
 	}
 	defer procsInfile.Close()
 
