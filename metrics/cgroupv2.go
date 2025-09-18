@@ -174,10 +174,11 @@ func NewCGroupSlice(slicePath string) *CGroupSlice {
 
 func (c *CGroupSlice) SetIOMax(deviceNumber string, rbps int, wbps int, riops int, wiops int) {
 	filePath := fmt.Sprintf("%s/%s", c.slicePath, ioMaxFile)
-	file, err := os.OpenFile(filePath, os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("While opening: %s:\n", err)
-	}
+       file, err := os.OpenFile(filePath, os.O_WRONLY, 0644)
+       if err != nil {
+	       log.Printf("Warning: could not open %s: %v", filePath, err)
+	       return
+       }
 	defer file.Close()
 
 	strRbps, strWbps, strRiops, strWiops := "max", "max", "max", "max"
@@ -247,7 +248,10 @@ func GetIOStat(slicePath string) *IO {
 	// io.max = ParseIOMaxFile(slicePath)
 	io.pressure = ParseIOPressureFile(slicePath)
 	// io.prioClass = ParseIOPrioClassFile(slicePath)
-	io.stat = ParseIOStatFile(slicePath)
+       io.stat = ParseIOStatFile(slicePath)
+       if io.stat == nil {
+	       io.stat = &IOStat{} // set to empty struct if missing
+       }
 	// io.weight = ParseIOWeightFile(slicePath)
 
 	return io
@@ -263,10 +267,11 @@ func GetMemoryStat(slicePath string) *Memory {
 
 func ParseIOStatFile(slicePath string) *IOStat {
 	filePath := fmt.Sprintf("%s/%s", slicePath, ioStatFile)
-	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
-	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
-	}
+       procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
+       if openErr != nil {
+	       log.Printf("Warning: could not open %s: %v", filePath, openErr)
+	       return nil
+       }
 	defer procsInfile.Close()
 
 	scanner := bufio.NewScanner(procsInfile)
@@ -274,9 +279,10 @@ func ParseIOStatFile(slicePath string) *IOStat {
 	for scanner.Scan() {
 		line := scanner.Text()
 		fields := strings.Fields(line)
-		if len(fields) < 2 {
-			log.Fatalf("Invalid line: %s\n", line)
-		}
+	       if len(fields) < 2 {
+		       log.Printf("Warning: invalid line in %s: %s", filePath, line)
+		       continue
+	       }
 		rePattern := regexp.MustCompile(`(\d+):(\d+) rbytes=(\d+) wbytes=(\d+) rios=(\d+) wios=(\d+) dbytes=(\d+) dios=(\d+)`)
 		matches := rePattern.FindAllStringSubmatch(line, -1)
 		ioStat.major, _ = strconv.ParseInt(matches[0][1], 10, 64)
@@ -293,10 +299,11 @@ func ParseIOStatFile(slicePath string) *IOStat {
 
 func ParseMemoryPressureFile(slicePath string) *MemoryPressure {
 	filePath := fmt.Sprintf("%s/%s", slicePath, memoryPressureFile)
-	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
-	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
-	}
+       procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
+       if openErr != nil {
+	       log.Printf("Warning: could not open %s: %v", filePath, openErr)
+	       return nil
+       }
 	defer procsInfile.Close()
 
 	scanner := bufio.NewScanner(procsInfile)
@@ -370,8 +377,14 @@ func GetCPUStat(slicePath string) *CPU {
 	cpu.idle = ParseCPUIdleFile(slicePath)
 	cpu.quotaUs, cpu.periodUs = ParseCPUMaxFile(slicePath)
 	cpu.burstUs = ParseCPUMaxBurstFile(slicePath)
-	cpu.pressure = ParseCPUPressureFile(slicePath)
-	cpu.stat = ParseCPUStatFile(slicePath)
+       cpu.pressure = ParseCPUPressureFile(slicePath)
+       if cpu.pressure == nil {
+	       cpu.pressure = &CPUPressure{} // set to empty struct if missing
+       }
+       cpu.stat = ParseCPUStatFile(slicePath)
+       if cpu.stat == nil {
+	       cpu.stat = &CPUStat{} // set to empty struct if missing
+       }
 	cpu.uclampMin = ParseCPUUclampMinFile(slicePath)
 	cpu.uclampMax = ParseCPUUclampMaxFile(slicePath)
 	cpu.weight = ParseCPUWeightFile(slicePath)
@@ -394,24 +407,26 @@ func ParseCPUPressureFile(slicePath string) *CPUPressure {
 	for scanner.Scan() {
 		line := scanner.Text()
 		matches := rePattern.FindAllStringSubmatch(line, -1)
-		if len(matches) > 1 {
-			panic("Pressure line matches more than one")
-		}
-		pressureType := matches[0][1]
-		vals := matches[0][2:]
-		if pressureType == "some" {
-			cpuPressure.someAvgPerc10s, _ = strconv.ParseFloat(vals[0], 64)
-			cpuPressure.someAvgPerc60s, _ = strconv.ParseFloat(vals[1], 64)
-			cpuPressure.someAvgPerc300s, _ = strconv.ParseFloat(vals[2], 64)
-			cpuPressure.someTotalUs, _ = strconv.ParseInt(vals[3], 10, 64)
-		} else if pressureType == "full" {
-			cpuPressure.fullAvgPerc10s, _ = strconv.ParseFloat(vals[0], 64)
-			cpuPressure.fullAvgPerc60s, _ = strconv.ParseFloat(vals[1], 64)
-			cpuPressure.fullAvgPerc300s, _ = strconv.ParseFloat(vals[2], 64)
-			cpuPressure.fullTotalUs, _ = strconv.ParseInt(vals[3], 10, 64)
-		} else {
-			log.Fatalf("Invalid line: %s\n", line)
-		}
+	       if len(matches) != 1 {
+		       log.Printf("Warning: invalid pressure line in %s: %s", filePath, line)
+		       continue
+	       }
+	       pressureType := matches[0][1]
+	       vals := matches[0][2:]
+	       if pressureType == "some" {
+		       cpuPressure.someAvgPerc10s, _ = strconv.ParseFloat(vals[0], 64)
+		       cpuPressure.someAvgPerc60s, _ = strconv.ParseFloat(vals[1], 64)
+		       cpuPressure.someAvgPerc300s, _ = strconv.ParseFloat(vals[2], 64)
+		       cpuPressure.someTotalUs, _ = strconv.ParseInt(vals[3], 10, 64)
+	       } else if pressureType == "full" {
+		       cpuPressure.fullAvgPerc10s, _ = strconv.ParseFloat(vals[0], 64)
+		       cpuPressure.fullAvgPerc60s, _ = strconv.ParseFloat(vals[1], 64)
+		       cpuPressure.fullAvgPerc300s, _ = strconv.ParseFloat(vals[2], 64)
+		       cpuPressure.fullTotalUs, _ = strconv.ParseInt(vals[3], 10, 64)
+	       } else {
+		       log.Printf("Warning: unknown pressure type in %s: %s", filePath, line)
+		       continue
+	       }
 	}
 
 	return cpuPressure
@@ -419,10 +434,11 @@ func ParseCPUPressureFile(slicePath string) *CPUPressure {
 
 func ParseCPUStatFile(slicePath string) *CPUStat {
 	filePath := fmt.Sprintf("%s/%s", slicePath, cpuStatFile)
-	procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
-	if openErr != nil {
-		log.Fatalf("While opening: %s:\n", openErr)
-	}
+       procsInfile, openErr := os.OpenFile(filePath, os.O_RDONLY, 0644)
+       if openErr != nil {
+	       log.Printf("Warning: could not open %s: %v", filePath, openErr)
+	       return nil
+       }
 	defer procsInfile.Close()
 
 	scanner := bufio.NewScanner(procsInfile)
@@ -430,9 +446,10 @@ func ParseCPUStatFile(slicePath string) *CPUStat {
 	for scanner.Scan() {
 		line := scanner.Text()
 		fields := strings.Fields(line)
-		if len(fields) < 2 {
-			log.Fatalf("Invalid line: %s\n", line)
-		}
+	       if len(fields) < 2 {
+		       log.Printf("Warning: invalid line in %s: %s", filePath, line)
+		       continue
+	       }
 		key, val := fields[0], fields[1]
 		valInt, _ := strconv.ParseInt(val, 10, 64)
 		switch key {
