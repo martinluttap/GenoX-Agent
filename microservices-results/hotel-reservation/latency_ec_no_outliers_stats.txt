@@ -1,0 +1,8 @@
+Outlier Removal Statistics
+==============================
+Method: IQR method (multiplier=1.5)
+Bounds: [-6.22, 27.73] ms
+Original data points: 59,741
+Outliers removed: 815 (1.4%)
+Cleaned data points: 58,926
+Outliers range: 27.7 - 341.4 ms
