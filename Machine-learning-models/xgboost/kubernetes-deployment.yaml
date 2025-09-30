@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xgboost-benchmark
+  labels:
+    app: xgboost-benchmark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: xgboost-benchmark
+  template:
+    metadata:
+      labels:
+        app: xgboost-benchmark
+    spec:
+      containers:
+      - name: xgboost-benchmark
+        image: sushruth13/xgboost-benchmark:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2000m"
+          limits:
+            memory: "30Gi"
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: PYTHONDONTWRITEBYTECODE
+          value: "1"
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "ps aux | grep -v grep | grep python"
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "test -f /app/training_throughput.csv || test -f /app/inference_throughput.csv"
+          initialDelaySeconds: 120
+          periodSeconds: 60
+          timeoutSeconds: 10
+          failureThreshold: 5
+      restartPolicy: Always

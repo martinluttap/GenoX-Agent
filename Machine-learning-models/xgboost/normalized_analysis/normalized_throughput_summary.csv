@@ -1,0 +1,6 @@
+Configuration,Inference Normalized,Inference Improvement (%),Training Normalized,Training Improvement (%)
+Default (Baseline),1.000,+0.0%,1.000,+0.0%
+Elastic Container,0.633,-36.7%,0.637,-36.3%
+Software,0.560,-44.0%,0.661,-33.9%
+Autopilot,0.233,-76.7%,0.653,-34.7%
+Autothrottle,0.637,-36.3%,0.547,-45.3%

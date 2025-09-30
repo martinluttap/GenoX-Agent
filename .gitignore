@@ -27,3 +27,5 @@ tmp/*
 *.env
 conf-*
 git-*
+*.csv.gz
+*.zip

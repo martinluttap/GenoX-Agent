@@ -1,0 +1,41 @@
+# Ignore unnecessary files during Docker build
+*.log
+*.out
+nohup.out
+*.csv
+HIGGS.csv*
+benchmark_model.json
+inference_benchmark.log
+xgboost_performance.log
+training_throughput.csv
+inference_throughput.csv
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env
+.venv
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Other scripts (only include main script)
+inference_benchmark.py
+realtime_monitor.py
+run_benchmark.sh
