@@ -2,7 +2,7 @@
 # export-csv.sh
 
 NAMESPACE=${1:-default}
-POD_LABEL=${2:-"app=resnet-benchmark"}  # Adjust based on your pod labels
+POD_LABEL=${2:-"app=ssd-benchmark"}  # Adjust based on your pod labels
 OUTPUT_DIR="./exported-csv"
 
 mkdir -p $OUTPUT_DIR
@@ -18,8 +18,8 @@ for POD in $PODS; do
     mkdir -p $POD_DIR
     
     # Copy CSV files (ignore errors if files don't exist)
-    kubectl cp $NAMESPACE/$POD:resnet_inference_throughput.csv $POD_DIR/resnet_inference_throughput.csv 2>/dev/null || echo "No resnet_inference_throughput.csv in $POD"
-    kubectl cp $NAMESPACE/$POD:resnet_training_throughput.csv $POD_DIR/resnet_training_throughput.csv 2>/dev/null || echo "No resnet_training_throughput.csv in $POD"
+    kubectl cp $NAMESPACE/$POD:ssd_inference_throughput.csv $POD_DIR/ssd_inference_throughput.csv 2>/dev/null || echo "No ssd_inference_throughput.csv in $POD"
+    kubectl cp $NAMESPACE/$POD:ssd_training_throughput.csv $POD_DIR/ssd_training_throughput.csv 2>/dev/null || echo "No ssd_training_throughput.csv in $POD"
 
     echo "Files exported to: $POD_DIR"
 done
