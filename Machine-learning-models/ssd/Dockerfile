@@ -1,24 +1,15 @@
-FROM python:3.9-slim
-
-# Install system dependencies in a single layer for better caching
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Use PyTorch official image with pre-installed dependencies
+# This includes torch, torchvision, numpy, and many ML libraries
+FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
 
 # Set working directory
 WORKDIR /app
 
-# Copy ONLY requirements first for better caching
-# This layer will be cached unless requirements.txt changes
-COPY requirements.txt .
+# Copy minimal requirements file (torch/torchvision already in base image)
+COPY requirements-minimal.txt .
 
-# Upgrade pip first (separate layer for caching)
-RUN pip install --no-cache-dir --upgrade pip
-
-# Install Python dependencies (cached layer unless requirements.txt changes)
-RUN pip install --no-cache-dir -r requirements.txt \
+# Install only additional dependencies not in PyTorch base image
+RUN pip install --no-cache-dir -r requirements-minimal.txt \
     && rm -rf /root/.cache/pip
 
 # Copy the application code (this layer changes frequently)

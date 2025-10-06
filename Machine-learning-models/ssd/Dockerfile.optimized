@@ -1,0 +1,47 @@
+# Multi-stage Dockerfile for flexible deployment
+# Supports both CPU-only and GPU environments
+
+# Option 1: CPU-only PyTorch base image (smaller, faster for CPU workloads)
+FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-devel as pytorch-gpu
+FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime as pytorch-gpu-runtime
+FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime as pytorch-latest
+
+# Default to CPU-optimized image for this benchmark
+FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+
+# Install system utilities if needed
+RUN apt-get update && apt-get install -y \
+    htop \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install minimal additional dependencies
+COPY requirements-minimal.txt requirements.txt ./
+
+# Install additional dependencies not in base image
+RUN pip install --no-cache-dir -r requirements-minimal.txt \
+    && rm -rf /root/.cache/pip
+
+# Copy the application code
+COPY ssd-infernce.py .
+
+# Create output directories
+RUN mkdir -p /app/data /app/logs /app/output
+
+# Set environment variables for maximum performance
+ENV PYTHONUNBUFFERED=1
+# Threading configuration (will be auto-detected by the app)
+ENV OMP_NUM_THREADS=0
+ENV MKL_NUM_THREADS=0
+ENV PYTORCH_NUM_THREADS=0
+ENV NUMEXPR_NUM_THREADS=0
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python3 -c "import torch; import torchvision; print('OK')" || exit 1
+
+# Run the application
+CMD ["python3", "ssd-infernce.py"]

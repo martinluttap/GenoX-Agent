@@ -1,0 +1,14 @@
+# Additional dependencies for SSD benchmark
+# torch and torchvision are pre-installed in the PyTorch base image
+
+# Image processing
+Pillow>=8.3.0
+
+# System monitoring
+psutil>=5.8.0
+
+# HTTP requests
+requests>=2.26.0
+
+# Data manipulation (numpy is already in base image but adding for compatibility)
+numpy>=1.21.0

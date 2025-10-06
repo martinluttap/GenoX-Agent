@@ -16,33 +16,50 @@ spec:
     spec:
       containers:
       - name: ssd-benchmark
-        image: sushruth13/ssd-benchmark:ssd-benchmark  # Replace with your actual image
+        image: sushruth13/ssd-benchmark:latest  # Replace with your actual image
         imagePullPolicy: IfNotPresent
-        command: ["python"]
-        args: ["ssd-infernce.py"]  # Options: both, train, inference
+        command: ["/bin/bash"]
+        args:
+        - -c
+        - |
+          echo "Starting endless SSD benchmark..."
+          while true; do
+            echo "=== SSD Benchmark Starting at $(date) ==="
+            python3 ssd-infernce.py
+            echo "=== SSD Benchmark Finished at $(date) - Restarting in 5 seconds ==="
+            sleep 5
+          done
         resources:
           requests:
             memory: "2Gi"
             cpu: "2000m"  # Increased to use more CPU cores
-          limits:
-            memory: "4Gi"
-            cpu: "4000m"  # Allow up to 4 CPU cores
         env:
         - name: PYTHONUNBUFFERED
           value: "1"
-        # Use all available CPU threads for optimal performance
+        # Use ALL available CPU threads for PyTorch computation
         - name: OMP_NUM_THREADS
-          value: "0"  # 0 = use all available threads
+          value: "0"  # 0 = use all available threads for OpenMP
         - name: MKL_NUM_THREADS
-          value: "0"  # 0 = use all available threads
+          value: "0"  # 0 = use all available threads for Intel MKL
         - name: PYTORCH_NUM_THREADS
-          value: "0"  # PyTorch threading
+          value: "0"  # 0 = use all available threads for PyTorch
         - name: NUMEXPR_NUM_THREADS
-          value: "0"  # NumExpr threading
+          value: "0"  # 0 = use all available threads for NumExpr
+        # Disable ONLY DataLoader multiprocessing to avoid shared memory issues
+        - name: DISABLE_DATALOADER_WORKERS
+          value: "1"  # Disable DataLoader workers but keep PyTorch threading
         volumeMounts:
         - name: output-volume
           mountPath: /app/output
+        - name: shared-memory
+          mountPath: /dev/shm
+        securityContext:
+          runAsNonRoot: false
       volumes:
       - name: output-volume
         emptyDir: {}
+      - name: shared-memory
+        emptyDir:
+          medium: Memory
+          sizeLimit: 1Gi
       restartPolicy: Always

@@ -7,7 +7,8 @@ TAG=${1:-latest}
 IMAGE_NAME="ssd-benchmark"
 REGISTRY="sushruth13"  # Replace with your actual registry
 
-echo "Building SSD Docker image..."
+echo "Building SSD Docker image with PyTorch base image..."
+echo "Using PyTorch base image with pre-installed ML dependencies for faster builds..."
 docker build -t $IMAGE_NAME:$TAG .
 
 if [ $? -eq 0 ]; then

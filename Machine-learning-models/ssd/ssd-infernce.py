@@ -10,8 +10,7 @@ import numpy as np
 import logging
 import os
 import csv
-from datetime import datetime
-import signal
+from datetime import datetime   
 import sys
 from PIL import Image
 import json
@@ -22,9 +21,26 @@ import threading
 import queue
 from collections import deque
 import psutil
-
+import signal
 # CPU optimizations - use all available cores
 import multiprocessing
+
+def log_training_throughput(timestamp, epoch, batch_idx, batch_time, batch_throughput,
+                             batch_size, loss, device, lr, memory_usage):
+    """Log training throughput to CSV and console"""
+    logger.info(f"Epoch {epoch}, Batch {batch_idx}: {batch_throughput:.2f} examples/sec")
+    with open(training_csv, 'a', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([timestamp, epoch, batch_idx, batch_time, batch_throughput,
+                         batch_size, loss, device, lr, memory_usage])
+
+            # Log every batch completion for debugging
+        if batch_idx % 1 == 0:  # Log every batch
+            logger.info(f"Logged batch {batch_idx}: {batch_throughput:.2f} examples/sec")
+
+        if batch_idx % 5 == 0:  # Report more frequently for better feedback signal
+            logger.info(f"Reported batch {batch_idx}: {batch_throughput:.2f} examples/sec")
+
 
 # Respect environment variables if set, otherwise use all cores
 def get_optimal_thread_count():
@@ -63,9 +79,6 @@ def signal_handler(sig, frame):
     logging.info("Received shutdown signal. Stopping gracefully...")
     running = False
 
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
-
 # ------------------------
 # Logging setup
 # ------------------------
@@ -84,6 +97,10 @@ console_handler = logging.StreamHandler()
 console_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 logger.addHandler(console_handler)
 
+# Set up signal handlers after logger is configured
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
 # ------------------------
 # CSV files for logging
 # ------------------------
@@ -91,33 +108,35 @@ training_csv = "ssd_training_throughput.csv"
 inference_csv = "ssd_inference_throughput.csv"
 
 def initialize_csv_files():
-    """Initialize CSV files with headers if they don't exist"""
-    if not os.path.exists(training_csv):
-        with open(training_csv, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(['timestamp', 'epoch', 'batch_idx', 'training_time_sec', 
-                           'training_throughput_examples_per_sec', 'batch_size', 'loss', 
-                           'device', 'lr', 'memory_usage_mb'])
+    """Initialize CSV files with headers - always recreate with headers for fresh start"""
+    logger.info("Initializing CSV files with headers...")
+    
+    # Always create training CSV with fresh headers
+    with open(training_csv, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['timestamp', 'epoch', 'batch_idx', 'train_time', 'throughput', 
+                       'batch_size', 'loss', 'device', 'lr', 'memory_usage'])
+    logger.info(f"Created {training_csv} with headers")
 
-    if not os.path.exists(inference_csv):
-        with open(inference_csv, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(['timestamp', 'iteration', 'inference_time_sec', 
-                           'inference_throughput_examples_per_sec', 'num_examples', 
-                           'avg_confidence', 'batch_size', 'device', 'memory_usage_mb'])
+    # Always create inference CSV with fresh headers
+    with open(inference_csv, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['timestamp', 'iteration', 'inf_time', 'throughput', 'num_examples', 
+                       'avg_confidence', 'batch_size', 'device', 'memory_usage'])
+    logger.info(f"Created {inference_csv} with headers")
 
 def log_training_throughput(timestamp, epoch, batch_idx, train_time, throughput, 
                           batch_size, loss, device, lr, memory_usage):
-    """Log training throughput to CSV"""
-    with open(training_csv, 'w', newline='') as f:
+    """Log training throughput to CSV (append mode, headers created by initialize_csv_files)"""
+    with open(training_csv, 'a', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([timestamp, epoch, batch_idx, train_time, throughput, 
                         batch_size, loss, device, lr, memory_usage])
 
 def log_inference_throughput(timestamp, iteration, inf_time, throughput, num_examples, 
                            avg_confidence, batch_size, device, memory_usage):
-    """Log inference throughput to CSV"""
-    with open(inference_csv, 'w', newline='') as f:
+    """Log inference throughput to CSV (append mode, headers created by initialize_csv_files)"""
+    with open(inference_csv, 'a', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([timestamp, iteration, inf_time, throughput, num_examples, 
                         avg_confidence, batch_size, device, memory_usage])
@@ -227,9 +246,11 @@ class SSDModel:
         batch_times = []
         
         logger.info(f"Starting training epoch {epoch}")
+        logger.info(f"Dataloader has {len(dataloader)} batches")
         
         for batch_idx, (images, targets) in enumerate(dataloader):
             if not running:
+                logger.info(f"Training interrupted at batch {batch_idx}")
                 break
                 
             batch_start_time = time.time()
@@ -292,10 +313,15 @@ class SSDModel:
         
         iteration_start_time = time.time()
         
+        logger.info(f"Inference iteration {iteration}: Processing {len(dataloader)} batches")
+        
         with torch.no_grad():
             for batch_idx, (images, targets) in enumerate(dataloader):
                 if not running:
                     break
+                
+                # Time each batch for detailed throughput logging
+                batch_start = time.time()
                 
                 # Move images to device
                 images = [img.to(self.device) for img in images]
@@ -303,12 +329,36 @@ class SSDModel:
                 # Run inference
                 outputs = self.model(images)
                 
-                # Calculate average confidence scores
+                batch_end = time.time()
+                batch_time = batch_end - batch_start
+                batch_throughput = len(images) / batch_time if batch_time > 0 else 0
+                
+                # Log EVERY batch throughput calculation
+                batch_timestamp = datetime.now().isoformat()
+                batch_memory = get_memory_usage()
+                
+                # Calculate batch confidence
+                batch_confidence = 0.0
+                batch_conf_count = 0
                 for output in outputs:
                     if 'scores' in output and len(output['scores']) > 0:
-                        total_confidence += output['scores'].mean().item()
-                        confidence_count += 1
+                        batch_confidence += output['scores'].mean().item()
+                        batch_conf_count += 1
                 
+                avg_batch_confidence = batch_confidence / batch_conf_count if batch_conf_count > 0 else 0
+                
+                # Log this specific batch throughput 
+                log_inference_throughput(
+                    batch_timestamp, f"{iteration}.{batch_idx}", batch_time, batch_throughput, 
+                    len(images), avg_batch_confidence, len(images), str(self.device), batch_memory
+                )
+                
+                # Log every inference batch for debugging
+                logger.info(f"Inference batch {batch_idx}: {batch_throughput:.2f} examples/sec")
+                
+                # Accumulate for iteration totals
+                total_confidence += batch_confidence
+                confidence_count += batch_conf_count
                 total_samples += len(images)
                 
                 # Break early for smaller test sets
@@ -319,15 +369,8 @@ class SSDModel:
         throughput = total_samples / inference_time if inference_time > 0 else 0
         avg_confidence = total_confidence / confidence_count if confidence_count > 0 else 0
         
-        # Log inference metrics
-        timestamp = datetime.now().isoformat()
-        memory_usage = get_memory_usage()
-        batch_size = dataloader.batch_size
-        
-        log_inference_throughput(
-            timestamp, iteration, inference_time, throughput, total_samples,
-            avg_confidence, batch_size, str(self.device), memory_usage
-        )
+        # Don't log overall iteration metrics to avoid duplicate/overwriting individual batch data
+        # Individual batch throughput is already logged above
         
         logger.info(f"Inference iteration {iteration}: Throughput = {throughput:.2f} examples/sec, "
                    f"Avg Confidence = {avg_confidence:.3f}")
@@ -344,9 +387,10 @@ def setup_datasets(batch_size=None, num_samples=1000):
     # Auto-determine optimal batch size based on available cores if not specified
     if batch_size is None:
         #num_cores = multiprocessing.cpu_count()
-        # Scale batch size with number of cores, but cap it for memory reasons
-        batch_size = min(max(num_cores * 2, 8), 32)
+        # Use smaller batch sizes to ensure more throughput measurements
+        batch_size = min(max(num_cores, 4), 16)  # Reduced max from 32 to 16
         logger.info(f"Auto-selected batch size: {batch_size} (based on {num_cores} CPU cores)")
+        logger.info(f"This will create approximately {num_samples // batch_size} batches for training")
     
     # Use smaller image size for faster processing on CPU but still effective
     transform = transforms.Compose([
@@ -372,10 +416,22 @@ def setup_datasets(batch_size=None, num_samples=1000):
     def collate_fn(batch):
         return tuple(zip(*batch))
     
-    # Enable multiprocessing with optimal number of workers
-    num_workers = min(num_cores, 8)  # Cap at 8 to avoid too many processes
+    # DataLoader worker configuration (separate from PyTorch threading)
+    in_container = os.path.exists('/.dockerenv') or os.environ.get('KUBERNETES_SERVICE_HOST') is not None
+    disable_workers = os.environ.get('DISABLE_DATALOADER_WORKERS', '0') == '1'
     
-    # Create data loaders with multiprocessing enabled
+    if disable_workers or in_container:
+        # Disable ONLY DataLoader workers to avoid shared memory issues
+        # PyTorch computation will still use all CPU threads
+        num_workers = 0
+        logger.info("DataLoader workers disabled (avoiding shared memory issues)")
+        logger.info(f"PyTorch will still use all {num_cores} CPU threads for computation")
+    else:
+        # Enable DataLoader multiprocessing for local runs
+        num_workers = min(num_cores, 4)
+        logger.info(f"Local environment - using {num_workers} DataLoader workers + {num_cores} PyTorch threads")
+    
+    # Create data loaders with container-aware configuration
     train_loader = DataLoader(
         train_dataset, 
         batch_size=batch_size, 
@@ -383,8 +439,8 @@ def setup_datasets(batch_size=None, num_samples=1000):
         num_workers=num_workers,
         collate_fn=collate_fn,
         pin_memory=False,  # CPU only, no need for pinned memory
-        prefetch_factor=2,  # Prefetch batches for better performance
-        persistent_workers=True if num_workers > 0 else False
+        prefetch_factor=2 if num_workers > 0 else None,  # Only use prefetch with workers
+        persistent_workers=False  # Disable persistent workers to avoid memory issues
     )
     
     test_loader = DataLoader(
@@ -394,8 +450,8 @@ def setup_datasets(batch_size=None, num_samples=1000):
         num_workers=num_workers,
         collate_fn=collate_fn,
         pin_memory=False,
-        prefetch_factor=2,
-        persistent_workers=True if num_workers > 0 else False
+        prefetch_factor=2 if num_workers > 0 else None,
+        persistent_workers=False
     )
     
     logger.info(f"Datasets created - Train: {len(train_dataset)}, Test: {len(test_dataset)}")
@@ -619,10 +675,11 @@ def main():
     num_cores = multiprocessing.cpu_count()
     logger.info(f"\n💻 System Information:")
     logger.info(f"  CPU cores: {num_cores}")
-    logger.info(f"  PyTorch threads: {torch.get_num_threads()}")
+    logger.info(f"  PyTorch threads: {torch.get_num_threads()} (using ALL cores for computation)")
     logger.info(f"  OMP threads: {os.environ.get('OMP_NUM_THREADS', 'default')}")
     logger.info(f"  MKL threads: {os.environ.get('MKL_NUM_THREADS', 'default')}")
     logger.info(f"  Device: {'CUDA' if torch.cuda.is_available() else 'CPU'}")
+    logger.info(f"  DataLoader workers: {'Disabled (avoiding shared memory issues)' if os.environ.get('DISABLE_DATALOADER_WORKERS') == '1' else 'Enabled'}")
     
     # Initialize CSV files
     initialize_csv_files()
