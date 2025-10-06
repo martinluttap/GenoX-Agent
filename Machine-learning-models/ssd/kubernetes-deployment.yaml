@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ssd-benchmark
+  labels:
+    app: ssd-benchmark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ssd-benchmark
+  template:
+    metadata:
+      labels:
+        app: ssd-benchmark
+    spec:
+      containers:
+      - name: ssd-benchmark
+        image: sushruth13/ssd-benchmark:ssd-benchmark  # Replace with your actual image
+        imagePullPolicy: IfNotPresent
+        command: ["python"]
+        args: ["ssd-infernce.py"]  # Options: both, train, inference
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "2000m"  # Increased to use more CPU cores
+          limits:
+            memory: "4Gi"
+            cpu: "4000m"  # Allow up to 4 CPU cores
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        # Use all available CPU threads for optimal performance
+        - name: OMP_NUM_THREADS
+          value: "0"  # 0 = use all available threads
+        - name: MKL_NUM_THREADS
+          value: "0"  # 0 = use all available threads
+        - name: PYTORCH_NUM_THREADS
+          value: "0"  # PyTorch threading
+        - name: NUMEXPR_NUM_THREADS
+          value: "0"  # NumExpr threading
+        volumeMounts:
+        - name: output-volume
+          mountPath: /app/output
+      volumes:
+      - name: output-volume
+        emptyDir: {}
+      restartPolicy: Always

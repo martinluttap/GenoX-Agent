@@ -1,0 +1,78 @@
+# Build and deployment files (keep these out of container)
+*.yaml
+*.sh
+
+# Runtime generated files
+*.log
+*.csv
+*.pth
+*.pkl
+
+# Python cache and temp files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git files
+.git/
+.gitignore
+
+# Documentation (except README if needed)
+*.md
+!README.md
+
+# Output directories
+exported-csv/
+output/
+logs/
+data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+test_*.py
+*_test.py
+quick_test.py
+
+# Jupyter notebooks
+*.ipynb
+
+# Temporary files
+*.tmp
+*.temp
+
+# Image files
+*.png
+*.jpg
+*.jpeg
+*.gif
