@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resnet-benchmark
+  labels:
+    app: resnet-benchmark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: resnet-benchmark
+  template:
+    metadata:
+      labels:
+        app: resnet-benchmark
+    spec:
+      containers:
+      - name: resnet-inference
+        image: sushruth13/resnet-benchmark:latest
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        volumeMounts:
+        - name: benchmark-data
+          mountPath: /app/data
+        - name: benchmark-logs
+          mountPath: /app/logs
+        - name: shm-volume
+          mountPath: /dev/shm
+      volumes:
+      - name: benchmark-data
+        emptyDir: {}
+      - name: benchmark-logs
+        emptyDir: {}
+      - name: shm-volume
+        emptyDir:
+          medium: Memory
+          sizeLimit: 1Gi
+      restartPolicy: Always
