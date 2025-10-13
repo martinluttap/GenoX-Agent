@@ -1,0 +1,16 @@
+# Core dependencies
+torch>=1.9.0
+torchaudio>=0.9.0
+numpy>=1.19.0
+
+# Audio processing
+librosa>=0.8.0
+soundfile>=0.10.0
+
+# Data handling
+pyyaml>=5.4.0
+tqdm>=4.60.0
+
+# Optional but recommended
+matplotlib>=3.3.0
+scipy>=1.6.0

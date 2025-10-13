@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tft-model-benchmark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tft-model-benchmark
+  template:
+    metadata:
+      labels:
+        app: tft-model-benchmark
+    spec:
+      containers:
+        - name: tft-model-benchmark
+          image: sushruth13/tft-model-benchmark:latest
+          imagePullPolicy: Always

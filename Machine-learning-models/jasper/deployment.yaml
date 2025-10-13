@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jasper-benchmark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jasper-benchmark
+  template:
+    metadata:
+      labels:
+        app: jasper-benchmark
+    spec:
+      containers:
+      - name: jasper
+        image: sushruth13/jasper:latest 
+        command: ["python3", "jasper_complete.py", "--mode", "throughput_test"]
+        resources:
+          requests:
+            cpu: "2"
+            memory: "2Gi"

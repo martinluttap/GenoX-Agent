@@ -29,3 +29,5 @@ conf-*
 git-*
 *.csv.gz
 *.zip
+Machines-learning-models/*.flac
+Machines-learning-models/*.wav

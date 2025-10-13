@@ -1,0 +1,33 @@
+{
+  "dataset_name": "electricity",
+  "total_samples": 51894720,
+  "train_samples": 36336590,
+  "val_samples": 7778880,
+  "test_samples": 7779250,
+  "num_entities": 370,
+  "date_range": {
+    "start": "2011-01-01T00:15:00",
+    "end": "2015-01-01T00:00:00"
+  },
+  "train_date_range": {
+    "start": "2011-01-01T00:15:00",
+    "end": "2013-10-19T23:45:00"
+  },
+  "val_date_range": {
+    "start": "2013-10-20T00:00:00",
+    "end": "2014-05-26T23:45:00"
+  },
+  "test_date_range": {
+    "start": "2014-05-27T00:00:00",
+    "end": "2015-01-01T00:00:00"
+  },
+  "columns": [
+    "date",
+    "id",
+    "power_usage",
+    "hour",
+    "day_of_week",
+    "days_from_start"
+  ],
+  "target_column": "power_usage"
+}
