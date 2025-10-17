@@ -1,0 +1,4 @@
+duration_sec=300
+total_operations=979341
+throughput_ops_sec=3264.47
+avg_latency_ms=3.06

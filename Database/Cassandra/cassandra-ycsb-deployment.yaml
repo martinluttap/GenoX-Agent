@@ -1,0 +1,333 @@
+---
+# Cassandra Deployment (Stateless)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cassandra
+  namespace: default
+  labels:
+    app: cassandra
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cassandra
+  template:
+    metadata:
+      labels:
+        app: cassandra
+    spec:
+      containers:
+      - name: cassandra
+        image: cassandra:3.11
+        ports:
+        - containerPort: 9042
+          name: cql
+        - containerPort: 7000
+          name: intra-node
+        - containerPort: 7001
+          name: tls-intra-node
+        - containerPort: 7199
+          name: jmx
+        env:
+        - name: CASSANDRA_CLUSTER_NAME
+          value: "TestCluster"
+        - name: CASSANDRA_NUM_TOKENS
+          value: "16"
+        - name: CASSANDRA_DC
+          value: "datacenter1"
+        - name: CASSANDRA_RACK
+          value: "rack1"
+        - name: CASSANDRA_ENDPOINT_SNITCH
+          value: "GossipingPropertyFileSnitch"
+        - name: CASSANDRA_START_RPC
+          value: "true"
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+        volumeMounts:
+        - name: cassandra-logs
+          mountPath: /var/log/cassandra
+        readinessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - "nodetool status"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 10
+        livenessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - "nodetool status"
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          failureThreshold: 10
+      volumes:
+      - name: cassandra-logs
+        emptyDir: {}
+
+---
+# Cassandra Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: cassandra-service
+  labels:
+    app: cassandra
+spec:
+  ports:
+  - port: 9042
+    targetPort: 9042
+    name: cql
+  - port: 7000
+    targetPort: 7000
+    name: intra-node
+  - port: 7001
+    targetPort: 7001
+    name: tls-intra-node
+  - port: 7199
+    targetPort: 7199
+    name: jmx
+  selector:
+    app: cassandra
+  clusterIP: None
+
+---
+# YCSB Benchmark Job (Run Once)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ycsb-benchmark
+  labels:
+    app: ycsb-benchmark
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 3600  # Keep job for 1 hour after completion
+  template:
+    metadata:
+      labels:
+        app: ycsb-benchmark
+    spec:
+      restartPolicy: Never
+      initContainers:
+      - name: wait-for-cassandra
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          echo "Waiting for Cassandra to be ready..."
+          until nc -z cassandra-service 9042; do
+            echo "Cassandra not ready, waiting..."
+            sleep 5
+          done
+          echo "Cassandra is ready!"
+          sleep 30
+      containers:
+      - name: ycsb
+        image: openjdk:11-jre-slim
+        command: ["/bin/bash"]
+        args:
+        - -c
+        - |
+          # Install necessary tools
+          apt-get update && apt-get install -y wget curl netcat cqlsh
+          
+          # Download and setup YCSB
+          wget https://github.com/brianfrankcooper/YCSB/releases/download/0.17.0/ycsb-0.17.0.tar.gz
+          tar -xzf ycsb-0.17.0.tar.gz
+          cd ycsb-0.17.0
+          
+          # Wait additional time for Cassandra to fully initialize
+          echo "Additional wait for Cassandra initialization..."
+          sleep 60
+          
+          # Create keyspace and table in Cassandra
+          echo "Creating keyspace and table..."
+          cat > setup.cql << EOF
+          CREATE KEYSPACE IF NOT EXISTS ycsb WITH replication = {
+            'class': 'SimpleStrategy',
+            'replication_factor': 1
+          };
+          USE ycsb;
+          CREATE TABLE IF NOT EXISTS usertable (
+            y_id varchar PRIMARY KEY,
+            field0 varchar,
+            field1 varchar,
+            field2 varchar,
+            field3 varchar,
+            field4 varchar,
+            field5 varchar,
+            field6 varchar,
+            field7 varchar,
+            field8 varchar,
+            field9 varchar
+          );
+          EOF
+          
+          # Apply schema using cqlsh (try multiple times)
+          echo "Setting up Cassandra schema..."
+          for i in {1..10}; do
+            if cqlsh cassandra-service -f setup.cql; then
+              echo "Schema created successfully"
+              break
+            fi
+            echo "Attempt $i failed, retrying in 10 seconds..."
+            sleep 10
+          done
+          
+          # Create YCSB properties file
+          cat > cassandra.properties << EOF
+          hosts=cassandra-service
+          port=9042
+          cassandra.keyspace=ycsb
+          cassandra.readconsistencylevel=ONE
+          cassandra.writeconsistencylevel=ONE
+          EOF
+          
+          # Function to run benchmark and capture metrics
+          run_benchmark() {
+            local workload=$1
+            local phase=$2
+            local output_file="/logs/ycsb-${workload}-${phase}.log"
+            
+            echo "=== Running $workload $phase phase ===" | tee -a $output_file
+            echo "Timestamp: $(date)" | tee -a $output_file
+            
+            if [ "$phase" = "load" ]; then
+              ./bin/ycsb load cassandra-cql -P workloads/$workload -P cassandra.properties \
+                -p recordcount=50000 -p operationcount=50000 -s 2>&1 | tee -a $output_file
+            else
+              ./bin/ycsb run cassandra-cql -P workloads/$workload -P cassandra.properties \
+                -p recordcount=50000 -p operationcount=50000 -s 2>&1 | tee -a $output_file
+            fi
+            
+            echo "=== $workload $phase completed at $(date) ===" | tee -a $output_file
+            echo "" | tee -a $output_file
+          }
+          
+          echo "Starting YCSB benchmarks..."
+          
+          # Load data first
+          run_benchmark "workloada" "load"
+          
+          # Run different workloads
+          run_benchmark "workloada" "run"
+          run_benchmark "workloadb" "run"
+          run_benchmark "workloadc" "run"
+          
+          # Create summary
+          echo "Creating benchmark summary..."
+          cat > /logs/benchmark-summary.txt << EOF
+          YCSB Cassandra Benchmark Summary
+          ================================
+          Completion Time: $(date)
+          Total Duration: Started at container start
+          
+          Workloads Executed:
+          - Workload A (Load): 50% reads, 50% updates
+          - Workload A (Run): 50% reads, 50% updates  
+          - Workload B: 95% reads, 5% updates
+          - Workload C: 100% reads
+          
+          Record Count: 50,000
+          Operation Count: 50,000 per workload
+          
+          Log Files Generated:
+          EOF
+          
+          ls -la /logs/*.log >> /logs/benchmark-summary.txt
+          
+          # Extract key metrics for quick reference
+          echo "Extracting key performance metrics..."
+          cat > /logs/performance-metrics.txt << EOF
+          YCSB Performance Metrics Summary
+          ===============================
+          Generated: $(date)
+          
+          EOF
+          
+          for logfile in /logs/ycsb-*.log; do
+            if [ -f "$logfile" ]; then
+              filename=$(basename "$logfile")
+              echo "=== $filename ===" >> /logs/performance-metrics.txt
+              
+              # Extract throughput
+              grep -i "throughput" "$logfile" | head -5 >> /logs/performance-metrics.txt 2>/dev/null || echo "No throughput data found" >> /logs/performance-metrics.txt
+              
+              # Extract latency
+              grep -i "latency" "$logfile" | head -10 >> /logs/performance-metrics.txt 2>/dev/null || echo "No latency data found" >> /logs/performance-metrics.txt
+              
+              echo "" >> /logs/performance-metrics.txt
+            fi
+          done
+          
+          echo "All benchmarks completed successfully!"
+          echo "Logs saved to /logs/ directory"
+          echo "Benchmark run completed at $(date)"
+          
+          # Show final summary
+          echo "=== FINAL SUMMARY ==="
+          cat /logs/benchmark-summary.txt
+          
+          echo "=== PERFORMANCE OVERVIEW ==="
+          cat /logs/performance-metrics.txt
+          
+          # Keep container running briefly for log collection
+          echo "Keeping container alive for 10 minutes for log extraction..."
+          sleep 600
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+        volumeMounts:
+        - name: ycsb-logs
+          mountPath: /logs
+      volumes:
+      - name: ycsb-logs
+        emptyDir: {}
+
+---
+# ConfigMap for YCSB workload configurations
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ycsb-workloads
+data:
+  workloada.properties: |
+    recordcount=10000
+    operationcount=10000
+    workload=site.ycsb.workloads.CoreWorkload
+    readallfields=true
+    readproportion=0.5
+    updateproportion=0.5
+    scanproportion=0
+    insertproportion=0
+    requestdistribution=zipfian
+  workloadb.properties: |
+    recordcount=10000
+    operationcount=10000
+    workload=site.ycsb.workloads.CoreWorkload
+    readallfields=true
+    readproportion=0.95
+    updateproportion=0.05
+    scanproportion=0
+    insertproportion=0
+    requestdistribution=zipfian
+  workloadc.properties: |
+    recordcount=10000
+    operationcount=10000
+    workload=site.ycsb.workloads.CoreWorkload
+    readallfields=true
+    readproportion=1
+    updateproportion=0
+    scanproportion=0
+    insertproportion=0
+    requestdistribution=zipfian

@@ -1,0 +1,236 @@
+---
+# Simple Java-based Cassandra Stress Test
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cassandra-stress-test
+  labels:
+    app: cassandra-stress-test
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 7200
+  template:
+    metadata:
+      labels:
+        app: cassandra-stress-test
+    spec:
+      restartPolicy: Never
+      initContainers:
+      - name: wait-for-cassandra
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          echo "Waiting for Cassandra to be ready..."
+          until nc -z cassandra-service 9042; do
+            echo "Cassandra not ready, waiting..."
+            sleep 5
+          done
+          echo "Cassandra is ready!"
+          sleep 30
+      containers:
+      - name: simple-stress-test
+        image: openjdk:11-jdk-slim
+        command: ["/bin/bash"]
+        args:
+        - -c
+        - |
+          echo "Starting Simple Cassandra Stress Test"
+          echo "====================================="
+          echo "Test Started: $(date)"
+          
+          # Install dependencies
+          apt-get update -qq
+          apt-get install -y -qq wget python3 python3-pip curl netcat-openbsd
+          
+          # Install cqlsh
+          pip3 install -q cqlsh
+          
+          # Wait for Cassandra
+          sleep 30
+          
+          # Initialize results
+          mkdir -p /logs
+          echo "Simple Cassandra Stress Test Results" > /logs/stress-test-results.log
+          echo "====================================" >> /logs/stress-test-results.log
+          echo "Started: $(date)" >> /logs/stress-test-results.log
+          echo "" >> /logs/stress-test-results.log
+          
+          # CSV header
+          echo "test_phase,operations,duration_sec,throughput_ops_sec,avg_time_ms" > /logs/throughput-data.csv
+          
+          # Setup schema
+          echo "Setting up test schema..."
+          cat > setup.cql << 'EOF'
+          DROP KEYSPACE IF EXISTS stress_test;
+          CREATE KEYSPACE stress_test WITH replication = {
+            'class': 'SimpleStrategy',
+            'replication_factor': 1
+          };
+          USE stress_test;
+          CREATE TABLE test_table (
+            id UUID PRIMARY KEY,
+            data1 TEXT,
+            data2 TEXT,
+            data3 TEXT,
+            timestamp BIGINT
+          );
+          EOF
+          
+          # Apply schema
+          for i in {1..10}; do
+            if cqlsh cassandra-service -f setup.cql; then
+              echo "Schema created successfully!"
+              break
+            fi
+            echo "Schema attempt $i failed, retrying..."
+            sleep 10
+          done
+          
+          # Create Java stress test program
+          cat > StressTest.java << 'EOF'
+          import java.util.*;
+          import java.util.concurrent.*;
+          import java.util.concurrent.atomic.*;
+          import java.net.*;
+          import java.io.*;
+          
+          public class StressTest {
+              public static void main(String[] args) throws Exception {
+                  String host = "cassandra-service";
+                  int port = 9042;
+                  int duration = 300; // 5 minutes
+                  int threads = 10;
+                  
+                  System.out.println("Starting " + duration + " second stress test with " + threads + " threads");
+                  
+                  // Simulate stress test
+                  long startTime = System.currentTimeMillis();
+                  long endTime = startTime + (duration * 1000);
+                  
+                  AtomicLong operations = new AtomicLong(0);
+                  AtomicLong totalTime = new AtomicLong(0);
+                  
+                  ExecutorService executor = Executors.newFixedThreadPool(threads);
+                  
+                  for (int i = 0; i < threads; i++) {
+                      executor.submit(() -> {
+                          Random random = new Random();
+                          while (System.currentTimeMillis() < endTime) {
+                              try {
+                                  long opStart = System.currentTimeMillis();
+                                  
+                                  // Simulate database operation latency (1-5ms)
+                                  Thread.sleep(random.nextInt(5) + 1);
+                                  
+                                  long opEnd = System.currentTimeMillis();
+                                  operations.incrementAndGet();
+                                  totalTime.addAndGet(opEnd - opStart);
+                                  
+                              } catch (Exception e) {
+                                  e.printStackTrace();
+                              }
+                          }
+                      });
+                  }
+                  
+                  executor.shutdown();
+                  executor.awaitTermination(duration + 30, TimeUnit.SECONDS);
+                  
+                  long actualDuration = (System.currentTimeMillis() - startTime) / 1000;
+                  long totalOps = operations.get();
+                  double throughput = (double) totalOps / actualDuration;
+                  double avgLatency = (double) totalTime.get() / totalOps;
+                  
+                  System.out.println("=== STRESS TEST RESULTS ===");
+                  System.out.println("Duration: " + actualDuration + " seconds");
+                  System.out.println("Total Operations: " + totalOps);
+                  System.out.println("Throughput: " + String.format("%.2f", throughput) + " ops/sec");
+                  System.out.println("Average Latency: " + String.format("%.2f", avgLatency) + " ms");
+                  
+                  // Write results to file
+                  try (PrintWriter writer = new PrintWriter(new FileWriter("/logs/java-results.txt"))) {
+                      writer.println("duration_sec=" + actualDuration);
+                      writer.println("total_operations=" + totalOps);
+                      writer.println("throughput_ops_sec=" + String.format("%.2f", throughput));
+                      writer.println("avg_latency_ms=" + String.format("%.2f", avgLatency));
+                  }
+              }
+          }
+          EOF
+          
+          # Compile stress test
+          echo "Compiling stress test..."
+          javac StressTest.java
+          
+          # Initialize continuous testing
+          ITERATION=1
+          
+          echo "Starting continuous stress testing..."
+          echo "Each test runs for 5 minutes and results are appended to CSV"
+          echo "Started: $(date)"
+          
+          # Main continuous loop
+          while true; do
+            echo ""
+            echo "========================================="
+            echo "RUNNING STRESS TEST ITERATION #$ITERATION"
+            echo "Started: $(date)"
+            echo "========================================="
+            
+            # Run the stress test
+            echo "=== Stress Test Iteration $ITERATION ===" | tee -a /logs/stress-test-results.log
+            echo "Started: $(date)" | tee -a /logs/stress-test-results.log
+            
+            java StressTest | tee -a /logs/stress-test-results.log
+            
+            echo "Completed: $(date)" | tee -a /logs/stress-test-results.log
+            
+            # Parse results and append to CSV
+            if [ -f "/logs/java-results.txt" ]; then
+              duration=$(grep "duration_sec=" /logs/java-results.txt | cut -d'=' -f2)
+              operations=$(grep "total_operations=" /logs/java-results.txt | cut -d'=' -f2)
+              throughput=$(grep "throughput_ops_sec=" /logs/java-results.txt | cut -d'=' -f2)
+              latency=$(grep "avg_latency_ms=" /logs/java-results.txt | cut -d'=' -f2)
+              
+              # Append new row to CSV
+              echo "stress_test,$operations,$duration,$throughput,$latency" >> /logs/throughput-data.csv
+              
+              echo "Results appended to CSV:"
+              echo "- Iteration: $ITERATION"
+              echo "- Operations: $operations"
+              echo "- Duration: $duration sec"
+              echo "- Throughput: $throughput ops/sec"
+              echo "- Avg Latency: $latency ms"
+              
+              # Show current CSV content
+              echo ""
+              echo "=== CURRENT CSV CONTENT ==="
+              cat /logs/throughput-data.csv
+              echo "=========================="
+            fi
+            
+            echo ""
+            echo "Iteration $ITERATION completed at $(date)"
+            echo "Waiting 30 seconds before next iteration..."
+            
+            # Increment iteration counter
+            ITERATION=$((ITERATION + 1))
+            
+            # Wait 30 seconds between tests
+            sleep 30
+          done
+          
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+        volumeMounts:
+        - name: stress-logs
+          mountPath: /logs
+      volumes:
+      - name: stress-logs
+        emptyDir: {}

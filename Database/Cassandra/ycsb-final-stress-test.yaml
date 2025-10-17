@@ -1,0 +1,265 @@
+---
+# YCSB Stress Test Job (Fixed Python Issue)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ycsb-final-test
+  labels:
+    app: ycsb-final-test
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 7200  # Keep for 2 hours
+  template:
+    metadata:
+      labels:
+        app: ycsb-final-test
+    spec:
+      restartPolicy: Never
+      initContainers:
+      - name: wait-for-cassandra
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          echo "Waiting for Cassandra to be ready..."
+          until nc -z cassandra-service 9042; do
+            echo "Cassandra not ready, waiting..."
+            sleep 5
+          done
+          echo "Cassandra is ready!"
+          sleep 20
+      containers:
+      - name: ycsb
+        image: ubuntu:20.04
+        command: ["/bin/bash"]
+        args:
+        - -c
+        - |
+          # Install dependencies
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y -qq wget curl openjdk-11-jdk python3 python3-pip netcat
+          
+          # Fix Python symlink for YCSB
+          ln -s /usr/bin/python3 /usr/bin/python
+          
+          # Install cqlsh
+          pip3 install -q cqlsh
+          
+          # Set environment
+          export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+          export PATH=$JAVA_HOME/bin:$PATH
+          
+          # Download YCSB
+          echo "Downloading YCSB..."
+          wget -q https://github.com/brianfrankcooper/YCSB/releases/download/0.17.0/ycsb-0.17.0.tar.gz
+          tar -xzf ycsb-0.17.0.tar.gz
+          cd ycsb-0.17.0
+          
+          # Wait for Cassandra
+          echo "Waiting for Cassandra to be fully ready..."
+          sleep 45
+          
+          # Setup schema with proper error handling
+          echo "Setting up Cassandra schema..."
+          cat > setup.cql << 'EOF'
+          DROP KEYSPACE IF EXISTS ycsb;
+          CREATE KEYSPACE ycsb WITH replication = {
+            'class': 'SimpleStrategy',
+            'replication_factor': 1
+          };
+          USE ycsb;
+          CREATE TABLE usertable (
+            y_id varchar PRIMARY KEY,
+            field0 varchar,
+            field1 varchar,
+            field2 varchar,
+            field3 varchar,
+            field4 varchar,
+            field5 varchar,
+            field6 varchar,
+            field7 varchar,
+            field8 varchar,
+            field9 varchar
+          );
+          EOF
+          
+          # Setup schema with retries
+          schema_created=false
+          for i in {1..20}; do
+            echo "Schema setup attempt $i..."
+            if cqlsh cassandra-service -f setup.cql; then
+              echo "Schema created successfully!"
+              schema_created=true
+              break
+            fi
+            echo "Attempt $i failed, retrying in 15 seconds..."
+            sleep 15
+          done
+          
+          if [ "$schema_created" = false ]; then
+            echo "Failed to create schema after 20 attempts"
+            exit 1
+          fi
+          
+          # Create YCSB properties
+          cat > cassandra.properties << 'EOF'
+          hosts=cassandra-service
+          port=9042
+          cassandra.keyspace=ycsb
+          cassandra.readconsistencylevel=ONE
+          cassandra.writeconsistencylevel=ONE
+          cassandra.connecttimeoutmillis=60000
+          cassandra.readtimeoutmillis=60000
+          EOF
+          
+          # Create optimized workloads for quick stress testing
+          cat > workloads/workload_quick_mixed << 'EOF'
+          recordcount=10000
+          operationcount=10000
+          workload=site.ycsb.workloads.CoreWorkload
+          readallfields=true
+          readproportion=0.5
+          updateproportion=0.5
+          scanproportion=0
+          insertproportion=0
+          requestdistribution=zipfian
+          threadcount=10
+          EOF
+          
+          cat > workloads/workload_quick_read << 'EOF'
+          recordcount=10000
+          operationcount=10000
+          workload=site.ycsb.workloads.CoreWorkload
+          readallfields=true
+          readproportion=0.95
+          updateproportion=0.05
+          scanproportion=0
+          insertproportion=0
+          requestdistribution=zipfian
+          threadcount=10
+          EOF
+          
+          cat > workloads/workload_quick_readonly << 'EOF'
+          recordcount=10000
+          operationcount=10000
+          workload=site.ycsb.workloads.CoreWorkload
+          readallfields=true
+          readproportion=1.0
+          updateproportion=0
+          scanproportion=0
+          insertproportion=0
+          requestdistribution=zipfian
+          threadcount=10
+          EOF
+          
+          # Initialize results
+          echo "YCSB Cassandra Throughput Results" > /logs/throughput-results.log
+          echo "=================================" >> /logs/throughput-results.log
+          echo "Test Started: $(date)" >> /logs/throughput-results.log
+          echo "Configuration: 10K records, 10K operations, 10 threads" >> /logs/throughput-results.log
+          echo "" >> /logs/throughput-results.log
+          
+          # CSV header
+          echo "workload,phase,throughput_ops_sec,avg_latency_us,p95_latency_us,p99_latency_us" > /logs/throughput-data.csv
+          
+          # Function to run YCSB and extract metrics
+          run_ycsb_test() {
+            local workload=$1
+            local phase=$2
+            local description=$3
+            local logfile="/logs/ycsb-${workload}-${phase}.log"
+            
+            echo "=== Running $description ($phase) ===" | tee -a /logs/throughput-results.log
+            echo "Started: $(date)" | tee -a /logs/throughput-results.log
+            
+            if [ "$phase" = "load" ]; then
+              timeout 300 ./bin/ycsb load cassandra-cql -P workloads/$workload -P cassandra.properties -s > $logfile 2>&1
+            else
+              timeout 300 ./bin/ycsb run cassandra-cql -P workloads/$workload -P cassandra.properties -s > $logfile 2>&1
+            fi
+            
+            local exit_code=$?
+            echo "Completed: $(date) (exit code: $exit_code)" | tee -a /logs/throughput-results.log
+            
+            # Extract metrics if successful
+            if [ $exit_code -eq 0 ] && [ -f "$logfile" ]; then
+              # Extract throughput
+              local throughput=$(grep "Throughput(ops/sec)" "$logfile" | tail -1 | awk '{print $3}' | tr -d ',')
+              local avg_lat=$(grep "AverageLatency(us)" "$logfile" | tail -1 | awk '{print $3}' | tr -d ',')
+              local p95_lat=$(grep "95thPercentileLatency(us)" "$logfile" | tail -1 | awk '{print $3}' | tr -d ',')
+              local p99_lat=$(grep "99thPercentileLatency(us)" "$logfile" | tail -1 | awk '{print $3}' | tr -d ',')
+              
+              echo "Throughput: $throughput ops/sec" | tee -a /logs/throughput-results.log
+              echo "Average Latency: $avg_lat μs" | tee -a /logs/throughput-results.log
+              echo "95th Percentile Latency: $p95_lat μs" | tee -a /logs/throughput-results.log
+              echo "99th Percentile Latency: $p99_lat μs" | tee -a /logs/throughput-results.log
+              
+              # Add to CSV
+              echo "$workload,$phase,$throughput,$avg_lat,$p95_lat,$p99_lat" >> /logs/throughput-data.csv
+              
+              # Extract operation-specific metrics if available
+              if grep -q "READ.*AverageLatency" "$logfile"; then
+                local read_lat=$(grep "READ.*AverageLatency" "$logfile" | awk '{print $4}' | tr -d ',')
+                local read_throughput=$(grep "READ.*Throughput" "$logfile" | awk '{print $4}' | tr -d ',')
+                echo "Read Latency: $read_lat μs" | tee -a /logs/throughput-results.log
+                echo "Read Throughput: $read_throughput ops/sec" | tee -a /logs/throughput-results.log
+              fi
+              
+              if grep -q "UPDATE.*AverageLatency" "$logfile"; then
+                local update_lat=$(grep "UPDATE.*AverageLatency" "$logfile" | awk '{print $4}' | tr -d ',')
+                local update_throughput=$(grep "UPDATE.*Throughput" "$logfile" | awk '{print $4}' | tr -d ',')
+                echo "Update Latency: $update_lat μs" | tee -a /logs/throughput-results.log
+                echo "Update Throughput: $update_throughput ops/sec" | tee -a /logs/throughput-results.log
+              fi
+              
+            else
+              echo "Test failed or timed out" | tee -a /logs/throughput-results.log
+              echo "$workload,$phase,FAILED,FAILED,FAILED,FAILED" >> /logs/throughput-data.csv
+            fi
+            
+            echo "" | tee -a /logs/throughput-results.log
+          }
+          
+          echo "Starting YCSB stress tests..."
+          
+          # Load test data
+          run_ycsb_test "workload_quick_mixed" "load" "Data Loading (Mixed Workload)"
+          
+          # Run throughput tests
+          run_ycsb_test "workload_quick_mixed" "run" "Mixed Read/Write (50/50)"
+          run_ycsb_test "workload_quick_read" "run" "Read Heavy (95/5)"
+          run_ycsb_test "workload_quick_readonly" "run" "Read Only (100/0)"
+          
+          echo "Test Completed: $(date)" >> /logs/throughput-results.log
+          
+          echo ""
+          echo "=== THROUGHPUT STRESS TEST COMPLETED ==="
+          echo "Results saved to:"
+          echo "- /logs/throughput-results.log (detailed results)"
+          echo "- /logs/throughput-data.csv (parseable CSV)"
+          echo ""
+          echo "=== FINAL RESULTS ==="
+          cat /logs/throughput-results.log
+          echo ""
+          echo "=== CSV DATA ==="
+          cat /logs/throughput-data.csv
+          
+          # Keep container alive for log extraction
+          echo ""
+          echo "Container will remain alive for 2 hours for log extraction..."
+          sleep 7200
+          
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+        volumeMounts:
+        - name: ycsb-logs
+          mountPath: /logs
+      volumes:
+      - name: ycsb-logs
+        emptyDir: {}
