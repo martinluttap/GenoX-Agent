@@ -1,0 +1,280 @@
+Java version:
+openjdk version "17.0.2" 2022-01-18
+OpenJDK Runtime Environment (build 17.0.2+8-86)
+OpenJDK 64-Bit Server VM (build 17.0.2+8-86, mixed mode, sharing)
+Installing Python3 and pip...
+update-alternatives: using /usr/bin/python3 to provide /usr/bin/python (python) in auto mode
+Python version:
+Python 3.9.2
+Installing PySpark...
+Starting continuous Spark Wikipedia analysis...
+
+=========================================
+ITERATION 1 - Mon Oct 20 19:38:08 UTC 2025
+=========================================
+Running Spark analysis (iteration 1)...
+[2025-10-20 19:38:08] Starting Wikipedia Network Dataset Processing
+WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:38:11 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:38:14] Spark Session initialized
+[2025-10-20 19:38:14] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:38:15] Dataset downloaded in 0.73 seconds
+[2025-10-20 19:38:15] Reading Wikipedia network dataset
+[2025-10-20 19:38:18] Dataset read in 3.50 seconds
+[2025-10-20 19:38:18] Counting total edges...
+[2025-10-20 19:38:20] Total edges: 103689 (computed in 1.78s)
+[2025-10-20 19:38:20] Counting unique nodes...
+[2025-10-20 19:38:23] Total unique nodes: 7115 (computed in 2.63s)
+[2025-10-20 19:38:23] Calculating out-degree distribution...
+[2025-10-20 19:38:35] Out-degree calculated for 6110 nodes in 12.58s
+[2025-10-20 19:38:35] Calculating in-degree distribution...
+[2025-10-20 19:38:41] In-degree calculated for 2381 nodes in 5.51s
+[2025-10-20 19:38:41] Finding top influencers...
+[2025-10-20 19:38:44] Top 10 influencers found in 2.80s
+[2025-10-20 19:38:44]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:38:44]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:38:44]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:38:44]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:38:44]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:38:44]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:38:44]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:38:44]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:38:44]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:38:44]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:38:44] Calculating degree statistics...
+[2025-10-20 19:38:48] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:38:48] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:38:48] Statistics computed in 3.92s
+[2025-10-20 19:38:48] Writing throughput metrics to CSV...
+[2025-10-20 19:38:48] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:38:48] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:38:48] Wikipedia network analysis completed successfully!
+[2025-10-20 19:38:48] Spark session stopped
+Iteration 1 completed. Results appended to files.
+Latest throughput entry:
+1,2025-10-20 19:38:48,overall_throughput,3547.8815199646087,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 2 - Mon Oct 20 19:38:48 UTC 2025
+=========================================
+Running Spark analysis (iteration 2)...
+[2025-10-20 19:38:48] Starting Wikipedia Network Dataset Processing
+[Stage 0:>                                                          (0 + 1) / 1]                                                                                [Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                                                          (0 + 1) / 1][Stage 9:>                                                          (0 + 2) / 2]                                                                                [Stage 21:>                                                      (0 + 90) / 200][Stage 21:>                                                      (0 + 91) / 200][Stage 21:>                                                      (0 + 94) / 200][Stage 21:>                                                      (0 + 95) / 200][Stage 21:>                                                      (3 + 95) / 200][Stage 21:==>                                                    (8 + 91) / 200][Stage 21:===>                                                  (13 + 93) / 200][Stage 21:====>                                                 (17 + 92) / 200][Stage 21:======>                                               (25 + 90) / 200][Stage 21:=======>                                              (26 + 92) / 200][Stage 21:=======>                                              (27 + 91) / 200][Stage 21:=======>                                              (28 + 91) / 200][Stage 21:=======>                                              (28 + 92) / 200][Stage 21:========>                                             (32 + 92) / 200][Stage 21:=========>                                            (35 + 99) / 200][Stage 21:==========>                                           (39 + 95) / 200][Stage 21:===========>                                          (41 + 93) / 200][Stage 21:===========>                                          (44 + 91) / 200][Stage 21:==============>                                       (52 + 94) / 200][Stage 21:================>                                     (61 + 91) / 200][Stage 21:==================>                                   (68 + 91) / 200][Stage 21:=====================>                                (81 + 92) / 200][Stage 21:========================>                             (90 + 91) / 200][Stage 21:=========================>                            (94 + 93) / 200][Stage 21:===========================>                         (104 + 92) / 200][Stage 21:=============================>                       (111 + 89) / 200][Stage 21:===================================>                 (134 + 66) / 200][Stage 23:>                                                      (0 + 90) / 200][Stage 23:>                                                      (0 + 92) / 200][Stage 23:>                                                      (0 + 93) / 200][Stage 23:>                                                      (1 + 92) / 200][Stage 23:==>                                                    (8 + 90) / 200][Stage 23:===>                                                  (12 + 92) / 200][Stage 23:=====>                                                (22 + 89) / 200][Stage 23:=========>                                            (37 + 91) / 200][Stage 23:=============>                                        (50 + 91) / 200][Stage 23:==================>                                   (69 + 90) / 200][Stage 23:=======================>                              (86 + 91) / 200][Stage 23:===========================>                         (105 + 91) / 200][Stage 23:=============================================>       (172 + 28) / 200]                                                                                [Stage 29:>                                                      (0 + 90) / 200][Stage 29:>                                                      (0 + 91) / 200][Stage 29:=>                                                     (6 + 91) / 200][Stage 29:===>                                                  (12 + 92) / 200][Stage 29:=====>                                                (20 + 90) / 200][Stage 29:==========>                                           (38 + 92) / 200][Stage 29:============>                                         (46 + 92) / 200][Stage 29:===================>                                  (71 + 90) / 200][Stage 29:=======================>                              (87 + 91) / 200][Stage 29:============================>                        (106 + 91) / 200][Stage 29:=========================================>           (157 + 43) / 200][Stage 31:>                                                      (1 + 90) / 200][Stage 31:=>                                                     (4 + 91) / 200][Stage 31:=====>                                                (19 + 90) / 200][Stage 31:========>                                             (33 + 91) / 200][Stage 31:===============>                                      (57 + 90) / 200][Stage 31:=====================>                                (78 + 90) / 200][Stage 31:==========================>                           (99 + 90) / 200][Stage 31:===============================================>     (181 + 19) / 200]                                                                                [Stage 36:>                                                      (0 + 90) / 200][Stage 36:>                                                      (2 + 91) / 200][Stage 36:=======>                                              (26 + 92) / 200][Stage 36:==============>                                       (55 + 91) / 200][Stage 36:======================>                               (84 + 90) / 200][Stage 36:=============================>                       (110 + 90) / 200]                                                                                [Stage 38:>                                                      (0 + 90) / 200][Stage 38:>                                                      (3 + 91) / 200][Stage 38:=====>                                                (20 + 90) / 200][Stage 38:=========>                                            (37 + 90) / 200][Stage 38:===============>                                      (58 + 92) / 200][Stage 38:====================>                                 (75 + 91) / 200][Stage 38:==================================>                  (131 + 69) / 200]                                                                                [Stage 43:========>                                             (31 + 93) / 200][Stage 43:=================>                                    (63 + 92) / 200][Stage 43:======================>                               (83 + 89) / 200][Stage 43:==============================>                      (116 + 84) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:38:50 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:38:54] Spark Session initialized
+[2025-10-20 19:38:54] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:38:55] Dataset downloaded in 0.76 seconds
+[2025-10-20 19:38:55] Reading Wikipedia network dataset
+[2025-10-20 19:38:58] Dataset read in 3.45 seconds
+[2025-10-20 19:38:58] Counting total edges...
+[2025-10-20 19:39:00] Total edges: 103689 (computed in 1.95s)
+[2025-10-20 19:39:00] Counting unique nodes...
+[2025-10-20 19:39:02] Total unique nodes: 7115 (computed in 2.23s)
+[2025-10-20 19:39:02] Calculating out-degree distribution...
+[2025-10-20 19:39:16] Out-degree calculated for 6110 nodes in 13.81s
+[2025-10-20 19:39:16] Calculating in-degree distribution...
+[2025-10-20 19:39:23] In-degree calculated for 2381 nodes in 6.60s
+[2025-10-20 19:39:23] Finding top influencers...
+[2025-10-20 19:39:26] Top 10 influencers found in 2.90s
+[2025-10-20 19:39:26]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:39:26]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:39:26]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:39:26]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:39:26]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:39:26]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:39:26]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:39:26]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:39:26]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:39:26]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:39:26] Calculating degree statistics...
+[2025-10-20 19:39:30] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:39:30] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:39:30] Statistics computed in 4.36s
+[2025-10-20 19:39:30] Writing throughput metrics to CSV...
+[2025-10-20 19:39:30] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:39:30] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:39:30] Wikipedia network analysis completed successfully!
+[2025-10-20 19:39:30] Spark session stopped
+Iteration 2 completed. Results appended to files.
+Latest throughput entry:
+2,2025-10-20 19:39:30,overall_throughput,3255.65759153337,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 3 - Mon Oct 20 19:39:30 UTC 2025
+=========================================
+Running Spark analysis (iteration 3)...
+[2025-10-20 19:39:31] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                                                          (0 + 1) / 1]                                                                                [Stage 21:>                                                      (0 + 96) / 200][Stage 21:>                                                      (1 + 97) / 200][Stage 21:>                                                      (2 + 97) / 200][Stage 21:=>                                                     (4 + 99) / 200][Stage 21:=>                                                     (7 + 98) / 200][Stage 21:==>                                                    (8 + 98) / 200][Stage 21:==>                                                    (9 + 99) / 200][Stage 21:==>                                                  (11 + 101) / 200][Stage 21:===>                                                 (14 + 101) / 200][Stage 21:====>                                                (17 + 100) / 200][Stage 21:=====>                                                (22 + 97) / 200][Stage 21:======>                                               (23 + 98) / 200][Stage 21:=======>                                              (26 + 98) / 200][Stage 21:=======>                                              (29 + 98) / 200][Stage 21:========>                                             (32 + 96) / 200][Stage 21:=========>                                            (35 + 97) / 200][Stage 21:============>                                         (47 + 99) / 200][Stage 21:================>                                     (61 + 98) / 200][Stage 21:=================>                                    (66 + 99) / 200][Stage 21:===================>                                 (72 + 105) / 200][Stage 21:===================>                                 (75 + 109) / 200][Stage 21:=====================>                               (81 + 108) / 200][Stage 21:======================>                              (84 + 108) / 200][Stage 21:========================>                            (92 + 105) / 200][Stage 21:===========================>                         (102 + 98) / 200][Stage 21:=========================================>           (156 + 44) / 200][Stage 23:>                                                      (0 + 96) / 200][Stage 23:>                                                      (1 + 96) / 200][Stage 23:>                                                      (1 + 97) / 200][Stage 23:>                                                      (1 + 98) / 200][Stage 23:>                                                     (1 + 100) / 200][Stage 23:=>                                                     (4 + 98) / 200][Stage 23:=>                                                     (6 + 97) / 200][Stage 23:=>                                                     (7 + 99) / 200][Stage 23:==>                                                    (9 + 99) / 200][Stage 23:===>                                                 (15 + 101) / 200][Stage 23:=====>                                               (20 + 100) / 200][Stage 23:======>                                              (24 + 101) / 200][Stage 23:=======>                                              (29 + 98) / 200][Stage 23:=========>                                           (36 + 100) / 200][Stage 23:============>                                        (49 + 100) / 200][Stage 23:===============>                                      (59 + 99) / 200][Stage 23:==================>                                   (69 + 98) / 200][Stage 23:=======================>                              (86 + 96) / 200][Stage 23:==========================>                          (101 + 95) / 200][Stage 23:========================================>            (153 + 47) / 200]                                                                                [Stage 29:>                                                      (0 + 96) / 200][Stage 29:>                                                      (1 + 97) / 200][Stage 29:>                                                      (2 + 96) / 200][Stage 29:=>                                                     (4 + 98) / 200][Stage 29:=====>                                                (19 + 96) / 200][Stage 29:=====>                                                (21 + 96) / 200][Stage 29:=======>                                              (29 + 97) / 200][Stage 29:==========>                                           (38 + 96) / 200][Stage 29:===============>                                      (59 + 96) / 200][Stage 29:==================>                                   (70 + 97) / 200][Stage 29:========================>                             (89 + 97) / 200][Stage 29:===========================>                         (104 + 96) / 200][Stage 29:==============================>                      (114 + 86) / 200][Stage 31:>                                                      (1 + 97) / 200][Stage 31:>                                                      (2 + 98) / 200][Stage 31:=>                                                     (5 + 98) / 200][Stage 31:=====>                                                (20 + 97) / 200][Stage 31:=========>                                            (35 + 96) / 200][Stage 31:===============>                                      (57 + 97) / 200][Stage 31:====================>                                 (77 + 98) / 200][Stage 31:=========================>                            (96 + 96) / 200][Stage 31:===============================================>     (180 + 20) / 200]                                                                                [Stage 36:>                                                      (0 + 96) / 200][Stage 36:>                                                      (2 + 96) / 200][Stage 36:=====>                                                (21 + 98) / 200][Stage 36:============>                                         (48 + 97) / 200][Stage 36:===================>                                  (73 + 96) / 200][Stage 36:=========================>                            (96 + 96) / 200][Stage 36:==================================================>  (190 + 10) / 200]                                                                                [Stage 38:>                                                      (0 + 96) / 200][Stage 38:==>                                                   (10 + 97) / 200][Stage 38:======>                                               (24 + 98) / 200][Stage 38:============>                                         (45 + 98) / 200][Stage 38:===============>                                      (59 + 97) / 200][Stage 38:=====================>                                (80 + 98) / 200][Stage 38:==============================>                      (114 + 86) / 200]                                                                                [Stage 43:===>                                                  (13 + 96) / 200][Stage 43:========>                                             (33 + 99) / 200][Stage 43:==============>                                       (54 + 97) / 200][Stage 43:========================>                             (89 + 97) / 200][Stage 43:=========================================>           (158 + 42) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:39:33 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:39:36] Spark Session initialized
+[2025-10-20 19:39:36] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:39:37] Dataset downloaded in 0.77 seconds
+[2025-10-20 19:39:37] Reading Wikipedia network dataset
+[2025-10-20 19:39:41] Dataset read in 3.54 seconds
+[2025-10-20 19:39:41] Counting total edges...
+[2025-10-20 19:39:43] Total edges: 103689 (computed in 1.81s)
+[2025-10-20 19:39:43] Counting unique nodes...
+[2025-10-20 19:39:45] Total unique nodes: 7115 (computed in 2.39s)
+[2025-10-20 19:39:45] Calculating out-degree distribution...
+[2025-10-20 19:40:01] Out-degree calculated for 6110 nodes in 16.40s
+[2025-10-20 19:40:01] Calculating in-degree distribution...
+[2025-10-20 19:40:08] In-degree calculated for 2381 nodes in 6.90s
+[2025-10-20 19:40:08] Finding top influencers...
+[2025-10-20 19:40:11] Top 10 influencers found in 2.81s
+[2025-10-20 19:40:11]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:40:11]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:40:11]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:40:11]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:40:11]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:40:11]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:40:11]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:40:11]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:40:11]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:40:11]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:40:11] Calculating degree statistics...
+[2025-10-20 19:40:15] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:40:15] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:40:15] Statistics computed in 3.84s
+[2025-10-20 19:40:15] Writing throughput metrics to CSV...
+[2025-10-20 19:40:15] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:40:15] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:40:15] Wikipedia network analysis completed successfully!
+[2025-10-20 19:40:15] Spark session stopped
+Iteration 3 completed. Results appended to files.
+Latest throughput entry:
+3,2025-10-20 19:40:15,overall_throughput,3036.7235461928735,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 4 - Mon Oct 20 19:40:15 UTC 2025
+=========================================
+Running Spark analysis (iteration 4)...
+[2025-10-20 19:40:16] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                  (0 + 1) / 1][Stage 6:>                  (0 + 1) / 1]                                                                                [Stage 21:>                                                      (0 + 91) / 200][Stage 21:>                                                      (1 + 91) / 200][Stage 21:>                                                      (1 + 93) / 200][Stage 21:>                                                      (2 + 94) / 200][Stage 21:=>                                                     (6 + 94) / 200][Stage 21:==>                                                   (10 + 92) / 200][Stage 21:==>                                                   (10 + 94) / 200][Stage 21:===>                                                  (13 + 97) / 200][Stage 21:===>                                                  (14 + 96) / 200][Stage 21:====>                                                 (15 + 96) / 200][Stage 21:====>                                                 (17 + 96) / 200][Stage 21:=====>                                                (19 + 94) / 200][Stage 21:=====>                                                (21 + 96) / 200][Stage 21:======>                                               (23 + 96) / 200][Stage 21:======>                                               (25 + 94) / 200][Stage 21:=======>                                              (26 + 94) / 200][Stage 21:=======>                                              (28 + 97) / 200][Stage 21:=======>                                             (29 + 104) / 200][Stage 21:=========>                                           (34 + 115) / 200][Stage 21:==========>                                          (38 + 117) / 200][Stage 21:===========>                                         (42 + 120) / 200][Stage 21:============>                                        (48 + 125) / 200][Stage 21:=============>                                       (51 + 128) / 200][Stage 21:================>                                    (61 + 134) / 200][Stage 21:================>                                    (64 + 134) / 200][Stage 21:=================>                                   (67 + 133) / 200][Stage 21:==================>                                  (70 + 130) / 200][Stage 21:==============================>                      (115 + 85) / 200][Stage 21:=====================================>               (140 + 60) / 200][Stage 23:>                                                      (0 + 91) / 200][Stage 23:>                                                      (0 + 92) / 200][Stage 23:>                                                      (0 + 97) / 200][Stage 23:=>                                                     (4 + 93) / 200][Stage 23:==>                                                    (9 + 98) / 200][Stage 23:===>                                                  (14 + 97) / 200][Stage 23:====>                                                 (16 + 96) / 200][Stage 23:========>                                            (32 + 103) / 200][Stage 23:============>                                        (46 + 100) / 200][Stage 23:==============>                                       (54 + 98) / 200][Stage 23:===============>                                      (58 + 97) / 200][Stage 23:=================>                                    (63 + 95) / 200][Stage 23:==================>                                   (69 + 93) / 200][Stage 23:=====================>                                (78 + 94) / 200][Stage 23:=======================>                              (87 + 96) / 200][Stage 23:==========================>                           (99 + 95) / 200][Stage 23:============================>                        (107 + 93) / 200][Stage 23:===============================>                     (120 + 80) / 200][Stage 23:====================================================> (196 + 4) / 200]                                                                                [Stage 29:>                                                      (0 + 91) / 200][Stage 29:>                                                      (2 + 91) / 200][Stage 29:>                                                      (2 + 92) / 200][Stage 29:==>                                                   (11 + 93) / 200][Stage 29:====>                                                 (16 + 91) / 200][Stage 29:====>                                                 (16 + 92) / 200][Stage 29:=====>                                                (21 + 93) / 200][Stage 29:=========>                                            (36 + 94) / 200][Stage 29:============>                                         (45 + 92) / 200][Stage 29:===============>                                      (57 + 91) / 200][Stage 29:==================>                                   (69 + 93) / 200][Stage 29:=========================>                            (95 + 92) / 200][Stage 29:===============================>                     (119 + 81) / 200][Stage 31:>                                                      (1 + 91) / 200][Stage 31:=>                                                     (4 + 92) / 200][Stage 31:==>                                                    (8 + 93) / 200][Stage 31:======>                                               (25 + 92) / 200][Stage 31:============>                                         (47 + 91) / 200][Stage 31:==================>                                   (70 + 92) / 200][Stage 31:=======================>                              (87 + 92) / 200][Stage 31:==============================>                      (115 + 85) / 200]                                                                                [Stage 36:>                                                      (0 + 91) / 200][Stage 36:>                                                      (2 + 92) / 200][Stage 36:=========>                                            (35 + 91) / 200][Stage 36:================>                                     (60 + 92) / 200][Stage 36:======================>                              (86 + 101) / 200][Stage 36:======================================>              (144 + 56) / 200]                                                                                [Stage 38:>                                                      (0 + 91) / 200][Stage 38:====>                                                 (16 + 91) / 200][Stage 38:==========>                                           (38 + 92) / 200][Stage 38:=================>                                    (65 + 91) / 200][Stage 38:=========================>                            (94 + 91) / 200][Stage 38:===============================>                     (118 + 82) / 200]                                                                                [Stage 43:==>                                                   (11 + 95) / 200][Stage 43:==========>                                           (40 + 92) / 200][Stage 43:=================>                                    (63 + 91) / 200][Stage 43:========================>                             (90 + 91) / 200][Stage 43:=================================>                   (126 + 74) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:40:18 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:40:22] Spark Session initialized
+[2025-10-20 19:40:22] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:40:22] Dataset downloaded in 0.62 seconds
+[2025-10-20 19:40:22] Reading Wikipedia network dataset
+[2025-10-20 19:40:26] Dataset read in 3.69 seconds
+[2025-10-20 19:40:26] Counting total edges...
+[2025-10-20 19:40:28] Total edges: 103689 (computed in 1.91s)
+[2025-10-20 19:40:28] Counting unique nodes...
+[2025-10-20 19:40:30] Total unique nodes: 7115 (computed in 2.57s)
+[2025-10-20 19:40:30] Calculating out-degree distribution...
+[2025-10-20 19:40:42] Out-degree calculated for 6110 nodes in 11.70s
+[2025-10-20 19:40:42] Calculating in-degree distribution...
+[2025-10-20 19:40:48] In-degree calculated for 2381 nodes in 5.81s
+[2025-10-20 19:40:48] Finding top influencers...
+[2025-10-20 19:40:50] Top 10 influencers found in 2.20s
+[2025-10-20 19:40:50]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:40:50]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:40:50]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:40:50]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:40:50]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:40:50]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:40:50]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:40:50]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:40:50]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:40:50]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:40:50] Calculating degree statistics...
+[2025-10-20 19:40:54] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:40:54] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:40:54] Statistics computed in 3.62s
+[2025-10-20 19:40:54] Writing throughput metrics to CSV...
+[2025-10-20 19:40:54] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:40:54] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:40:54] Wikipedia network analysis completed successfully!
+[2025-10-20 19:40:54] Spark session stopped
+Iteration 4 completed. Results appended to files.
+Latest throughput entry:
+4,2025-10-20 19:40:54,overall_throughput,3729.033898135922,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 5 - Mon Oct 20 19:40:54 UTC 2025
+=========================================
+Running Spark analysis (iteration 5)...
+[2025-10-20 19:40:54] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                  (0 + 1) / 1][Stage 6:>                  (0 + 1) / 1]                                                                                [Stage 21:>                                                      (0 + 96) / 200][Stage 21:>                                                      (0 + 97) / 200][Stage 21:>                                                      (1 + 99) / 200][Stage 21:>                                                      (3 + 98) / 200][Stage 21:=>                                                     (6 + 98) / 200][Stage 21:=>                                                    (7 + 100) / 200][Stage 21:==>                                                   (10 + 98) / 200][Stage 21:===>                                                  (13 + 99) / 200][Stage 21:===>                                                  (14 + 99) / 200][Stage 21:====>                                                 (18 + 99) / 200][Stage 21:=====>                                                (20 + 98) / 200][Stage 21:=====>                                               (22 + 104) / 200][Stage 21:======>                                              (25 + 101) / 200][Stage 21:=======>                                             (27 + 101) / 200][Stage 21:=========>                                           (37 + 100) / 200][Stage 21:============>                                         (45 + 98) / 200][Stage 21:==============>                                       (54 + 98) / 200][Stage 21:===============>                                      (58 + 97) / 200][Stage 21:===================>                                 (73 + 100) / 200][Stage 21:====================>                                (79 + 102) / 200][Stage 21:================================>                    (122 + 78) / 200][Stage 23:>                                                      (0 + 96) / 200][Stage 23:>                                                      (0 + 98) / 200][Stage 23:>                                                      (0 + 99) / 200][Stage 23:>                                                      (1 + 98) / 200][Stage 23:>                                                      (3 + 98) / 200][Stage 23:=>                                                     (5 + 98) / 200][Stage 23:==>                                                    (8 + 97) / 200][Stage 23:===>                                                  (12 + 98) / 200][Stage 23:=====>                                                (19 + 97) / 200][Stage 23:========>                                             (31 + 97) / 200][Stage 23:===========>                                          (44 + 97) / 200][Stage 23:==============>                                       (55 + 97) / 200][Stage 23:===================>                                  (73 + 97) / 200][Stage 23:========================>                             (92 + 96) / 200][Stage 23:===========================>                         (104 + 96) / 200]                                                                                [Stage 29:>                                                      (0 + 96) / 200][Stage 29:>                                                      (3 + 96) / 200][Stage 29:==>                                                    (8 + 97) / 200][Stage 29:====>                                                 (16 + 97) / 200][Stage 29:=======>                                              (26 + 95) / 200][Stage 29:========>                                             (33 + 96) / 200][Stage 29:===========>                                          (43 + 96) / 200][Stage 29:=================>                                    (63 + 96) / 200][Stage 29:=====================>                                (81 + 97) / 200][Stage 29:==========================>                          (101 + 96) / 200][Stage 29:========================================>            (154 + 46) / 200][Stage 31:>                                                      (3 + 97) / 200][Stage 31:======>                                               (23 + 96) / 200][Stage 31:============>                                         (46 + 96) / 200][Stage 31:================>                                     (61 + 96) / 200][Stage 31:=====================>                                (81 + 98) / 200][Stage 31:==========================>                          (101 + 96) / 200][Stage 31:=============================================>       (170 + 30) / 200]                                                                                [Stage 36:>                                                      (0 + 96) / 200][Stage 36:>                                                      (2 + 98) / 200][Stage 36:==========>                                           (38 + 97) / 200][Stage 36:====================>                                 (77 + 97) / 200][Stage 36:==========================>                          (101 + 96) / 200]                                                                                [Stage 38:>                                                      (0 + 96) / 200][Stage 38:=======>                                              (26 + 99) / 200][Stage 38:============>                                        (48 + 109) / 200][Stage 38:=======================>                              (88 + 97) / 200][Stage 38:========================================>            (152 + 48) / 200]                                                                                [Stage 43:===========>                                          (42 + 96) / 200][Stage 43:===================>                                  (71 + 97) / 200][Stage 43:==========================>                           (98 + 97) / 200][Stage 43:===========================================>         (163 + 37) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:40:57 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:41:01] Spark Session initialized
+[2025-10-20 19:41:01] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:41:01] Dataset downloaded in 0.77 seconds
+[2025-10-20 19:41:01] Reading Wikipedia network dataset
+[2025-10-20 19:41:05] Dataset read in 3.95 seconds
+[2025-10-20 19:41:05] Counting total edges...
+[2025-10-20 19:41:08] Total edges: 103689 (computed in 2.44s)
+[2025-10-20 19:41:08] Counting unique nodes...
+[2025-10-20 19:41:11] Total unique nodes: 7115 (computed in 3.16s)
+[2025-10-20 19:41:11] Calculating out-degree distribution...
+[2025-10-20 19:41:23] Out-degree calculated for 6110 nodes in 11.71s
+[2025-10-20 19:41:23] Calculating in-degree distribution...
+[2025-10-20 19:41:28] In-degree calculated for 2381 nodes in 5.83s
+[2025-10-20 19:41:28] Finding top influencers...
+[2025-10-20 19:41:31] Top 10 influencers found in 2.98s
+[2025-10-20 19:41:31]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:41:31]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:41:31]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:41:31]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:41:31]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:41:31]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:41:31]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:41:31]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:41:31]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:41:31]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:41:31] Calculating degree statistics...
+[2025-10-20 19:41:36] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:41:36] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:41:36] Statistics computed in 4.17s
+[2025-10-20 19:41:36] Writing throughput metrics to CSV...
+[2025-10-20 19:41:36] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:41:36] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:41:36] Wikipedia network analysis completed successfully!
+[2025-10-20 19:41:36] Spark session stopped
+Iteration 5 completed. Results appended to files.
+Latest throughput entry:
+5,2025-10-20 19:41:36,overall_throughput,3423.4228580528693,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 6 - Mon Oct 20 19:41:36 UTC 2025
+=========================================
+Running Spark analysis (iteration 6)...
+[2025-10-20 19:41:36] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1][Stage 2:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                  (0 + 1) / 1][Stage 6:>                  (0 + 1) / 1]                                                                                [Stage 21:>                                                      (0 + 96) / 200][Stage 21:=>                                                     (4 + 96) / 200][Stage 21:=>                                                     (5 + 96) / 200][Stage 21:==>                                                    (9 + 96) / 200][Stage 21:==>                                                   (11 + 98) / 200][Stage 21:====>                                                 (15 + 98) / 200][Stage 21:====>                                                 (16 + 97) / 200][Stage 21:====>                                                 (17 + 97) / 200][Stage 21:======>                                               (23 + 98) / 200][Stage 21:======>                                               (25 + 99) / 200][Stage 21:=======>                                             (30 + 100) / 200][Stage 21:========>                                             (32 + 98) / 200][Stage 21:=========>                                            (36 + 97) / 200][Stage 21:===========>                                          (43 + 98) / 200][Stage 21:=============>                                       (52 + 100) / 200][Stage 21:===============>                                     (58 + 105) / 200][Stage 21:================>                                    (64 + 104) / 200][Stage 21:===================>                                  (71 + 99) / 200][Stage 21:=====================>                                (81 + 98) / 200][Stage 21:==========================>                           (97 + 96) / 200][Stage 21:===============================>                     (119 + 81) / 200][Stage 23:>                                                      (0 + 96) / 200][Stage 23:>                                                      (0 + 99) / 200][Stage 23:>                                                      (1 + 98) / 200][Stage 23:>                                                      (3 + 97) / 200][Stage 23:==>                                                    (8 + 98) / 200][Stage 23:=====>                                                (20 + 96) / 200][Stage 23:========>                                             (31 + 97) / 200][Stage 23:=============>                                        (49 + 97) / 200][Stage 23:=================>                                    (63 + 97) / 200][Stage 23:=====================>                                (79 + 97) / 200][Stage 23:=========================>                            (94 + 97) / 200][Stage 23:===================================>                 (134 + 66) / 200]                                                                                [Stage 29:>                                                      (0 + 96) / 200][Stage 29:=>                                                     (4 + 97) / 200][Stage 29:==>                                                   (11 + 97) / 200][Stage 29:=======>                                              (27 + 97) / 200][Stage 29:=========>                                            (36 + 96) / 200][Stage 29:==============>                                       (55 + 97) / 200][Stage 29:==================>                                   (69 + 97) / 200][Stage 29:=====================>                                (80 + 97) / 200][Stage 29:==========================>                          (101 + 96) / 200][Stage 29:=================================>                   (127 + 73) / 200][Stage 31:>                                                     (3 + 101) / 200][Stage 31:===>                                                  (13 + 97) / 200][Stage 31:========>                                             (32 + 97) / 200][Stage 31:============>                                         (47 + 98) / 200][Stage 31:=================>                                    (66 + 96) / 200][Stage 31:========================>                             (92 + 96) / 200][Stage 31:========================================>            (152 + 48) / 200]                                                                                [Stage 36:>                                                      (0 + 96) / 200][Stage 36:>                                                      (0 + 97) / 200][Stage 36:>                                                      (2 + 98) / 200][Stage 36:==========>                                          (38 + 110) / 200][Stage 36:====================>                                 (75 + 99) / 200][Stage 36:=======================>                             (90 + 100) / 200][Stage 36:================================>                    (123 + 77) / 200]                                                                                [Stage 38:>                                                      (0 + 96) / 200][Stage 38:===>                                                  (14 + 96) / 200][Stage 38:=========>                                            (34 + 97) / 200][Stage 38:==============>                                       (55 + 97) / 200][Stage 38:=====================>                                (80 + 97) / 200][Stage 38:==========================>                          (101 + 98) / 200][Stage 38:=====================================================>(197 + 3) / 200]                                                                                [Stage 43:===>                                                  (14 + 96) / 200][Stage 43:===========>                                          (41 + 97) / 200][Stage 43:==================>                                   (67 + 98) / 200][Stage 43:==========================>                          (100 + 98) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:41:39 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:41:42] Spark Session initialized
+[2025-10-20 19:41:42] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:41:44] Dataset downloaded in 1.21 seconds
+[2025-10-20 19:41:44] Reading Wikipedia network dataset
+[2025-10-20 19:41:47] Dataset read in 3.52 seconds
+[2025-10-20 19:41:47] Counting total edges...
+[2025-10-20 19:41:49] Total edges: 103689 (computed in 1.96s)
+[2025-10-20 19:41:49] Counting unique nodes...
+[2025-10-20 19:41:52] Total unique nodes: 7115 (computed in 2.32s)
+[2025-10-20 19:41:52] Calculating out-degree distribution...
+[2025-10-20 19:42:07] Out-degree calculated for 6110 nodes in 15.78s
+[2025-10-20 19:42:07] Calculating in-degree distribution...
+[2025-10-20 19:42:14] In-degree calculated for 2381 nodes in 6.25s
+[2025-10-20 19:42:14] Finding top influencers...

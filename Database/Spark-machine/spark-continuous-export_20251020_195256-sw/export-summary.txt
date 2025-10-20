@@ -1,0 +1,48 @@
+Spark Continuous Results Export Summary
+======================================
+Export Date: Mon Oct 20 19:52:57 UTC 2025
+Namespace: default
+Pod Name: spark-wikipedia-continuous-c9c77fdb-hst8h
+Export Directory: ./spark-continuous-export_20251020_195256
+
+Files Copied: 2
+
+Directory Structure:
+-rw-rw-r-- 1 cc cc 0 Oct 20 19:52 ./export-summary.txt
+-rw-rw-r-- 1 cc cc 98K Oct 20 19:52 ./pod-logs.txt
+-rw-rw-r-- 1 cc cc 15K Oct 20 19:52 ./output/continuous-results.txt
+-rw-rw-r-- 1 cc cc 20K Oct 20 19:52 ./output/continuous-throughput.csv
+
+Throughput Data Preview (last 10 entries):
+17,2025-10-20 19:52:49,indegree_time,3.203623056411743,seconds
+17,2025-10-20 19:52:49,indegree_throughput,743.2210213478947,nodes/second
+17,2025-10-20 19:52:49,top_influencers_time,1.2804090976715088,seconds
+17,2025-10-20 19:52:49,stats_time,2.3906424045562744,seconds
+17,2025-10-20 19:52:49,avg_out_degree,16.97037643207856,edges
+17,2025-10-20 19:52:49,max_out_degree,893,edges
+17,2025-10-20 19:52:49,avg_in_degree,43.54850902981941,edges
+17,2025-10-20 19:52:49,max_in_degree,457,edges
+17,2025-10-20 19:52:49,total_processing_time,14.688737630844116,seconds
+17,2025-10-20 19:52:49,overall_throughput,7059.081767671366,edges/second
+
+Results Summary (last 20 lines):
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.73s
+  Read Time: 3.37s
+  Total Processing Time: 14.69s
+  Overall Throughput: 7059.08 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges

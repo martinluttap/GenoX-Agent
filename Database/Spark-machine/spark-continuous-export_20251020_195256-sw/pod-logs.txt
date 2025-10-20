@@ -1,0 +1,858 @@
+Java version:
+openjdk version "17.0.2" 2022-01-18
+OpenJDK Runtime Environment (build 17.0.2+8-86)
+OpenJDK 64-Bit Server VM (build 17.0.2+8-86, mixed mode, sharing)
+Installing Python3 and pip...
+update-alternatives: using /usr/bin/python3 to provide /usr/bin/python (python) in auto mode
+Python version:
+Python 3.9.2
+Installing PySpark...
+Starting continuous Spark Wikipedia analysis...
+
+=========================================
+ITERATION 1 - Mon Oct 20 19:45:52 UTC 2025
+=========================================
+Running Spark analysis (iteration 1)...
+[2025-10-20 19:45:53] Starting Wikipedia Network Dataset Processing
+WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:45:56 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:46:00] Spark Session initialized
+[2025-10-20 19:46:00] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:46:00] Dataset downloaded in 0.69 seconds
+[2025-10-20 19:46:00] Reading Wikipedia network dataset
+[2025-10-20 19:46:04] Dataset read in 3.13 seconds
+[2025-10-20 19:46:04] Counting total edges...
+[2025-10-20 19:46:05] Total edges: 103689 (computed in 1.49s)
+[2025-10-20 19:46:05] Counting unique nodes...
+[2025-10-20 19:46:07] Total unique nodes: 7115 (computed in 1.76s)
+[2025-10-20 19:46:07] Calculating out-degree distribution...
+[2025-10-20 19:46:10] Out-degree calculated for 6110 nodes in 3.42s
+[2025-10-20 19:46:10] Calculating in-degree distribution...
+[2025-10-20 19:46:12] In-degree calculated for 2381 nodes in 2.19s
+[2025-10-20 19:46:12] Finding top influencers...
+[2025-10-20 19:46:13] Top 10 influencers found in 0.97s
+[2025-10-20 19:46:13]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:46:13]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:46:13]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:46:13]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:46:13]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:46:13]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:46:13]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:46:13]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:46:13]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:46:13]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:46:13] Calculating degree statistics...
+[2025-10-20 19:46:15] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:46:15] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:46:15] Statistics computed in 1.73s
+[2025-10-20 19:46:15] Writing throughput metrics to CSV...
+[2025-10-20 19:46:15] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:46:15] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:46:15] Wikipedia network analysis completed successfully!
+[2025-10-20 19:46:16] Spark session stopped
+Iteration 1 completed. Results appended to files.
+Latest throughput entry:
+1,2025-10-20 19:46:15,overall_throughput,8969.836705329906,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 2 - Mon Oct 20 19:46:16 UTC 2025
+=========================================
+Running Spark analysis (iteration 2)...
+[2025-10-20 19:46:16] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 21:===========>                                           (42 + 2) / 200][Stage 21:==============>                                        (54 + 2) / 200][Stage 21:====================>                                  (73 + 2) / 200][Stage 21:=========================>                             (93 + 3) / 200][Stage 21:===============================>                      (115 + 2) / 200][Stage 21:======================================>               (141 + 2) / 200][Stage 21:=============================================>        (169 + 2) / 200][Stage 21:=====================================================>(199 + 1) / 200][Stage 23:===============================>                      (118 + 2) / 200][Stage 23:============================================>         (166 + 2) / 200]                                                                                [Stage 29:======================>                                (81 + 2) / 200][Stage 29:================================>                     (119 + 2) / 200][Stage 29:=============================================>        (167 + 2) / 200][Stage 31:============================================>         (164 + 3) / 200]                                                                                [Stage 36:=========================================>            (155 + 2) / 200]                                                                                [Stage 38:===================================>                  (132 + 3) / 200][Stage 38:====================================================> (193 + 3) / 200]                                                                                [Stage 43:================================================>     (179 + 3) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:46:18 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:46:20] Spark Session initialized
+[2025-10-20 19:46:20] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:46:21] Dataset downloaded in 1.01 seconds
+[2025-10-20 19:46:21] Reading Wikipedia network dataset
+[2025-10-20 19:46:25] Dataset read in 3.24 seconds
+[2025-10-20 19:46:25] Counting total edges...
+[2025-10-20 19:46:26] Total edges: 103689 (computed in 1.55s)
+[2025-10-20 19:46:26] Counting unique nodes...
+[2025-10-20 19:46:28] Total unique nodes: 7115 (computed in 1.84s)
+[2025-10-20 19:46:28] Calculating out-degree distribution...
+[2025-10-20 19:46:32] Out-degree calculated for 6110 nodes in 3.80s
+[2025-10-20 19:46:32] Calculating in-degree distribution...
+[2025-10-20 19:46:35] In-degree calculated for 2381 nodes in 2.89s
+[2025-10-20 19:46:35] Finding top influencers...
+[2025-10-20 19:46:36] Top 10 influencers found in 1.41s
+[2025-10-20 19:46:36]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:46:36]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:46:36]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:46:36]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:46:36]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:46:36]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:46:36]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:46:36]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:46:36]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:46:36]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:46:36] Calculating degree statistics...
+[2025-10-20 19:46:39] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:46:39] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:46:39] Statistics computed in 2.47s
+[2025-10-20 19:46:39] Writing throughput metrics to CSV...
+[2025-10-20 19:46:39] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:46:39] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:46:39] Wikipedia network analysis completed successfully!
+[2025-10-20 19:46:39] Spark session stopped
+Iteration 2 completed. Results appended to files.
+Latest throughput entry:
+2,2025-10-20 19:46:39,overall_throughput,7427.984856039996,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 3 - Mon Oct 20 19:46:39 UTC 2025
+=========================================
+Running Spark analysis (iteration 3)...
+[2025-10-20 19:46:39] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 21:=======>                                               (29 + 5) / 200][Stage 21:============>                                          (45 + 4) / 200][Stage 21:=================>                                     (62 + 4) / 200][Stage 21:======================>                                (81 + 4) / 200][Stage 21:===========================>                          (100 + 4) / 200][Stage 21:================================>                     (122 + 5) / 200][Stage 21:========================================>             (150 + 4) / 200][Stage 21:==============================================>       (172 + 4) / 200][Stage 21:=====================================================>(198 + 2) / 200][Stage 23:=======================>                               (86 + 4) / 200][Stage 23:=================================>                    (123 + 5) / 200][Stage 23:===========================================>          (162 + 4) / 200]                                                                                [Stage 29:=========================>                             (94 + 5) / 200][Stage 29:=================================>                    (125 + 4) / 200][Stage 29:==========================================>           (157 + 5) / 200][Stage 29:==================================================>   (187 + 4) / 200][Stage 31:===========================>                          (100 + 6) / 200][Stage 31:=====================================>                (139 + 5) / 200][Stage 31:================================================>     (181 + 5) / 200]                                                                                [Stage 36:================>                                      (60 + 5) / 200][Stage 36:=========================>                             (93 + 7) / 200][Stage 36:====================================>                 (134 + 4) / 200][Stage 36:=============================================>        (168 + 6) / 200]                                                                                [Stage 38:======================>                                (81 + 4) / 200][Stage 38:================================>                     (119 + 5) / 200][Stage 38:========================================>             (151 + 4) / 200][Stage 38:==================================================>   (188 + 4) / 200]                                                                                [Stage 43:============================>                         (104 + 4) / 200][Stage 43:===========================================>          (161 + 4) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:46:42 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:46:45] Spark Session initialized
+[2025-10-20 19:46:45] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:46:46] Dataset downloaded in 0.65 seconds
+[2025-10-20 19:46:46] Reading Wikipedia network dataset
+[2025-10-20 19:46:50] Dataset read in 3.72 seconds
+[2025-10-20 19:46:50] Counting total edges...
+[2025-10-20 19:46:52] Total edges: 103689 (computed in 1.94s)
+[2025-10-20 19:46:52] Counting unique nodes...
+[2025-10-20 19:46:54] Total unique nodes: 7115 (computed in 2.58s)
+[2025-10-20 19:46:54] Calculating out-degree distribution...
+[2025-10-20 19:46:59] Out-degree calculated for 6110 nodes in 4.59s
+[2025-10-20 19:46:59] Calculating in-degree distribution...
+[2025-10-20 19:47:02] In-degree calculated for 2381 nodes in 3.29s
+[2025-10-20 19:47:02] Finding top influencers...
+[2025-10-20 19:47:04] Top 10 influencers found in 1.53s
+[2025-10-20 19:47:04]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:47:04]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:47:04]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:47:04]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:47:04]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:47:04]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:47:04]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:47:04]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:47:04]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:47:04]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:47:04] Calculating degree statistics...
+[2025-10-20 19:47:07] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:47:07] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:47:07] Statistics computed in 2.96s
+[2025-10-20 19:47:07] Writing throughput metrics to CSV...
+[2025-10-20 19:47:07] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:47:07] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:47:07] Wikipedia network analysis completed successfully!
+[2025-10-20 19:47:07] Spark session stopped
+Iteration 3 completed. Results appended to files.
+Latest throughput entry:
+3,2025-10-20 19:47:07,overall_throughput,6134.695303611307,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 4 - Mon Oct 20 19:47:07 UTC 2025
+=========================================
+Running Spark analysis (iteration 4)...
+[2025-10-20 19:47:07] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 9:=============================>                             (1 + 1) / 2]                                                                                [Stage 21:==========>                                            (37 + 5) / 200][Stage 21:==============>                                        (53 + 5) / 200][Stage 21:===================>                                   (70 + 5) / 200][Stage 21:========================>                              (90 + 4) / 200][Stage 21:=============================>                        (108 + 4) / 200][Stage 21:==================================>                   (128 + 4) / 200][Stage 21:========================================>             (150 + 4) / 200][Stage 21:===============================================>      (177 + 4) / 200][Stage 23:=================>                                     (62 + 4) / 200][Stage 23:=========================>                             (94 + 4) / 200][Stage 23:==================================>                   (129 + 4) / 200][Stage 23:===========================================>          (161 + 6) / 200][Stage 23:=====================================================>(197 + 3) / 200]                                                                                [Stage 29:==============>                                        (54 + 4) / 200][Stage 29:======================>                                (80 + 5) / 200][Stage 29:=============================>                        (108 + 4) / 200][Stage 29:======================================>               (141 + 4) / 200][Stage 29:==============================================>       (172 + 4) / 200][Stage 31:==========================>                            (97 + 5) / 200][Stage 31:======================================>               (143 + 3) / 200][Stage 31:================================================>     (179 + 5) / 200]                                                                                [Stage 36:===============>                                       (58 + 5) / 200][Stage 36:=========================>                             (91 + 4) / 200][Stage 36:================================>                     (122 + 4) / 200][Stage 36:=============================================>        (168 + 4) / 200]                                                                                [Stage 38:============================>                         (107 + 5) / 200][Stage 38:======================================>               (143 + 5) / 200][Stage 38:================================================>     (180 + 4) / 200]                                                                                [Stage 43:==================================>                   (126 + 4) / 200][Stage 43:==========================================>           (159 + 5) / 200][Stage 43:=====================================================>(199 + 1) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:47:09 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:47:12] Spark Session initialized
+[2025-10-20 19:47:12] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:47:13] Dataset downloaded in 0.79 seconds
+[2025-10-20 19:47:13] Reading Wikipedia network dataset
+[2025-10-20 19:47:16] Dataset read in 3.11 seconds
+[2025-10-20 19:47:16] Counting total edges...
+[2025-10-20 19:47:18] Total edges: 103689 (computed in 1.37s)
+[2025-10-20 19:47:18] Counting unique nodes...
+[2025-10-20 19:47:20] Total unique nodes: 7115 (computed in 2.34s)
+[2025-10-20 19:47:20] Calculating out-degree distribution...
+[2025-10-20 19:47:24] Out-degree calculated for 6110 nodes in 3.99s
+[2025-10-20 19:47:24] Calculating in-degree distribution...
+[2025-10-20 19:47:27] In-degree calculated for 2381 nodes in 2.59s
+[2025-10-20 19:47:27] Finding top influencers...
+[2025-10-20 19:47:28] Top 10 influencers found in 1.31s
+[2025-10-20 19:47:28]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:47:28]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:47:28]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:47:28]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:47:28]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:47:28]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:47:28]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:47:28]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:47:28]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:47:28]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:47:28] Calculating degree statistics...
+[2025-10-20 19:47:30] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:47:30] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:47:30] Statistics computed in 1.99s
+[2025-10-20 19:47:30] Writing throughput metrics to CSV...
+[2025-10-20 19:47:30] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:47:30] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:47:30] Wikipedia network analysis completed successfully!
+[2025-10-20 19:47:30] Spark session stopped
+Iteration 4 completed. Results appended to files.
+Latest throughput entry:
+4,2025-10-20 19:47:30,overall_throughput,7629.615586785154,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 5 - Mon Oct 20 19:47:30 UTC 2025
+=========================================
+Running Spark analysis (iteration 5)...
+[2025-10-20 19:47:31] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                                                          (0 + 1) / 1]                                                                                [Stage 21:=======>                                               (28 + 4) / 200][Stage 21:============>                                          (44 + 4) / 200][Stage 21:=================>                                     (65 + 3) / 200][Stage 21:======================>                                (81 + 3) / 200][Stage 21:===========================>                          (101 + 3) / 200][Stage 21:================================>                     (122 + 3) / 200][Stage 21:=======================================>              (148 + 3) / 200][Stage 21:==============================================>       (174 + 3) / 200][Stage 21:====================================================> (193 + 4) / 200][Stage 23:=====================>                                 (77 + 3) / 200][Stage 23:=============================>                        (109 + 3) / 200][Stage 23:=======================================>              (147 + 3) / 200][Stage 23:=================================================>    (183 + 4) / 200]                                                                                [Stage 29:=====================>                                 (79 + 3) / 200][Stage 29:===============================>                      (116 + 3) / 200][Stage 29:=========================================>            (153 + 3) / 200][Stage 29:====================================================> (194 + 3) / 200][Stage 31:==================================>                   (129 + 3) / 200][Stage 31:================================================>     (180 + 3) / 200]                                                                                [Stage 36:============================>                         (105 + 4) / 200][Stage 36:======================================>               (143 + 3) / 200][Stage 36:=================================================>    (185 + 5) / 200]                                                                                [Stage 38:===============================>                      (117 + 4) / 200][Stage 38:==============================================>       (171 + 3) / 200]                                                                                [Stage 43:======================================>               (142 + 3) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:47:32 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:47:35] Spark Session initialized
+[2025-10-20 19:47:35] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:47:36] Dataset downloaded in 0.72 seconds
+[2025-10-20 19:47:36] Reading Wikipedia network dataset
+[2025-10-20 19:47:39] Dataset read in 3.19 seconds
+[2025-10-20 19:47:39] Counting total edges...
+[2025-10-20 19:47:41] Total edges: 103689 (computed in 1.41s)
+[2025-10-20 19:47:41] Counting unique nodes...
+[2025-10-20 19:47:43] Total unique nodes: 7115 (computed in 1.98s)
+[2025-10-20 19:47:43] Calculating out-degree distribution...
+[2025-10-20 19:47:47] Out-degree calculated for 6110 nodes in 4.30s
+[2025-10-20 19:47:47] Calculating in-degree distribution...
+[2025-10-20 19:47:50] In-degree calculated for 2381 nodes in 2.87s
+[2025-10-20 19:47:50] Finding top influencers...
+[2025-10-20 19:47:51] Top 10 influencers found in 1.41s
+[2025-10-20 19:47:51]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:47:51]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:47:51]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:47:51]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:47:51]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:47:51]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:47:51]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:47:51]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:47:51]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:47:51]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:47:51] Calculating degree statistics...
+[2025-10-20 19:47:54] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:47:54] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:47:54] Statistics computed in 2.37s
+[2025-10-20 19:47:54] Writing throughput metrics to CSV...
+[2025-10-20 19:47:54] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:47:54] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:47:54] Wikipedia network analysis completed successfully!
+[2025-10-20 19:47:54] Spark session stopped
+Iteration 5 completed. Results appended to files.
+Latest throughput entry:
+5,2025-10-20 19:47:54,overall_throughput,7230.448317860747,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 6 - Mon Oct 20 19:47:54 UTC 2025
+=========================================
+Running Spark analysis (iteration 6)...
+[2025-10-20 19:47:54] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 21:=======>                                               (27 + 5) / 200][Stage 21:===========>                                           (41 + 5) / 200][Stage 21:================>                                      (60 + 4) / 200][Stage 21:=====================>                                 (77 + 5) / 200][Stage 21:=========================>                             (92 + 5) / 200][Stage 21:=============================>                        (109 + 4) / 200][Stage 21:==================================>                   (128 + 4) / 200][Stage 21:========================================>             (151 + 4) / 200][Stage 21:==============================================>       (174 + 5) / 200][Stage 21:====================================================> (194 + 4) / 200][Stage 23:=================>                                     (63 + 4) / 200][Stage 23:==========================>                            (95 + 5) / 200][Stage 23:====================================>                 (134 + 5) / 200][Stage 23:============================================>         (165 + 5) / 200]                                                                                [Stage 29:=================>                                     (65 + 4) / 200][Stage 29:=========================>                             (93 + 4) / 200][Stage 29:=================================>                    (124 + 4) / 200][Stage 29:===========================================>          (162 + 5) / 200][Stage 29:==================================================>   (188 + 5) / 200][Stage 31:===========================>                          (103 + 5) / 200][Stage 31:=======================================>              (148 + 4) / 200][Stage 31:==================================================>   (188 + 4) / 200]                                                                                [Stage 36:========================>                              (90 + 5) / 200][Stage 36:==================================>                   (129 + 4) / 200][Stage 36:==============================================>       (173 + 4) / 200]                                                                                [Stage 38:==================================>                   (126 + 5) / 200][Stage 38:==============================================>       (174 + 4) / 200]                                                                                [Stage 43:=======================================>              (145 + 4) / 200][Stage 43:===================================================>  (189 + 5) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:47:56 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:47:59] Spark Session initialized
+[2025-10-20 19:47:59] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:48:00] Dataset downloaded in 0.73 seconds
+[2025-10-20 19:48:00] Reading Wikipedia network dataset
+[2025-10-20 19:48:03] Dataset read in 2.98 seconds
+[2025-10-20 19:48:03] Counting total edges...
+[2025-10-20 19:48:04] Total edges: 103689 (computed in 1.52s)
+[2025-10-20 19:48:04] Counting unique nodes...
+[2025-10-20 19:48:06] Total unique nodes: 7115 (computed in 2.09s)
+[2025-10-20 19:48:06] Calculating out-degree distribution...
+[2025-10-20 19:48:11] Out-degree calculated for 6110 nodes in 4.28s
+[2025-10-20 19:48:11] Calculating in-degree distribution...
+[2025-10-20 19:48:14] In-degree calculated for 2381 nodes in 2.92s
+[2025-10-20 19:48:14] Finding top influencers...
+[2025-10-20 19:48:15] Top 10 influencers found in 1.31s
+[2025-10-20 19:48:15]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:48:15]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:48:15]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:48:15]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:48:15]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:48:15]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:48:15]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:48:15]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:48:15]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:48:15]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:48:15] Calculating degree statistics...
+[2025-10-20 19:48:17] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:48:17] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:48:17] Statistics computed in 2.18s
+[2025-10-20 19:48:17] Writing throughput metrics to CSV...
+[2025-10-20 19:48:17] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:48:17] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:48:17] Wikipedia network analysis completed successfully!
+[2025-10-20 19:48:17] Spark session stopped
+Iteration 6 completed. Results appended to files.
+Latest throughput entry:
+6,2025-10-20 19:48:17,overall_throughput,7253.176213398788,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 7 - Mon Oct 20 19:48:17 UTC 2025
+=========================================
+Running Spark analysis (iteration 7)...
+[2025-10-20 19:48:17] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                  (0 + 1) / 1][Stage 6:>                  (0 + 1) / 1]                                                                                [Stage 21:========>                                              (32 + 2) / 200][Stage 21:===========>                                           (42 + 3) / 200][Stage 21:===============>                                       (56 + 3) / 200][Stage 21:==================>                                    (69 + 3) / 200][Stage 21:========================>                              (88 + 5) / 200][Stage 21:============================>                         (105 + 4) / 200][Stage 21:=================================>                    (123 + 3) / 200][Stage 21:=======================================>              (146 + 4) / 200][Stage 21:=============================================>        (170 + 3) / 200][Stage 21:===================================================>  (190 + 3) / 200][Stage 23:===========================>                          (100 + 4) / 200][Stage 23:===================================>                  (132 + 4) / 200][Stage 23:==============================================>       (171 + 4) / 200]                                                                                [Stage 29:========================>                              (90 + 4) / 200][Stage 29:=============================>                        (111 + 4) / 200][Stage 29:======================================>               (141 + 3) / 200][Stage 29:=============================================>        (170 + 3) / 200][Stage 31:===============================>                      (115 + 3) / 200][Stage 31:========================================>             (149 + 4) / 200][Stage 31:=================================================>    (185 + 3) / 200]                                                                                [Stage 36:=========================>                             (93 + 3) / 200][Stage 36:======================================>               (142 + 3) / 200][Stage 36:===================================================>  (192 + 3) / 200]                                                                                [Stage 38:================================>                     (120 + 3) / 200][Stage 38:============================================>         (165 + 4) / 200]                                                                                [Stage 43:=======================================>              (145 + 3) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:48:19 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:48:22] Spark Session initialized
+[2025-10-20 19:48:22] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:48:23] Dataset downloaded in 0.76 seconds
+[2025-10-20 19:48:23] Reading Wikipedia network dataset
+[2025-10-20 19:48:26] Dataset read in 3.15 seconds
+[2025-10-20 19:48:26] Counting total edges...
+[2025-10-20 19:48:28] Total edges: 103689 (computed in 1.91s)
+[2025-10-20 19:48:28] Counting unique nodes...
+[2025-10-20 19:48:30] Total unique nodes: 7115 (computed in 2.27s)
+[2025-10-20 19:48:30] Calculating out-degree distribution...
+[2025-10-20 19:48:35] Out-degree calculated for 6110 nodes in 4.07s
+[2025-10-20 19:48:35] Calculating in-degree distribution...
+[2025-10-20 19:48:37] In-degree calculated for 2381 nodes in 2.52s
+[2025-10-20 19:48:37] Finding top influencers...
+[2025-10-20 19:48:38] Top 10 influencers found in 1.22s
+[2025-10-20 19:48:38]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:48:38]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:48:38]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:48:38]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:48:38]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:48:38]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:48:38]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:48:38]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:48:38]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:48:38]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:48:38] Calculating degree statistics...
+[2025-10-20 19:48:41] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:48:41] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:48:41] Statistics computed in 2.41s
+[2025-10-20 19:48:41] Writing throughput metrics to CSV...
+[2025-10-20 19:48:41] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:48:41] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:48:41] Wikipedia network analysis completed successfully!
+[2025-10-20 19:48:41] Spark session stopped
+Iteration 7 completed. Results appended to files.
+Latest throughput entry:
+7,2025-10-20 19:48:41,overall_throughput,7200.354333909358,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 8 - Mon Oct 20 19:48:41 UTC 2025
+=========================================
+Running Spark analysis (iteration 8)...
+[2025-10-20 19:48:41] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                                                          (0 + 1) / 1]                                                                                [Stage 21:============>                                          (46 + 3) / 200][Stage 21:=================>                                     (65 + 3) / 200][Stage 21:=======================>                               (85 + 3) / 200][Stage 21:============================>                         (105 + 5) / 200][Stage 21:===================================>                  (131 + 3) / 200][Stage 21:=========================================>            (155 + 3) / 200][Stage 21:================================================>     (178 + 3) / 200][Stage 23:====================>                                  (76 + 4) / 200][Stage 23:=============================>                        (111 + 3) / 200][Stage 23:=======================================>              (148 + 4) / 200][Stage 23:================================================>     (181 + 4) / 200]                                                                                [Stage 29:========================>                              (90 + 3) / 200][Stage 29:================================>                     (121 + 3) / 200][Stage 29:===========================================>          (161 + 2) / 200][Stage 31:=================================>                    (123 + 3) / 200][Stage 31:================================================>     (178 + 3) / 200]                                                                                [Stage 36:================================>                     (122 + 3) / 200][Stage 36:============================================>         (164 + 3) / 200]                                                                                [Stage 38:==============================>                       (113 + 3) / 200][Stage 38:===========================================>          (160 + 4) / 200]                                                                                [Stage 43:==================================>                   (127 + 3) / 200][Stage 43:============================================>         (166 + 3) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:48:43 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:48:46] Spark Session initialized
+[2025-10-20 19:48:46] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:48:47] Dataset downloaded in 0.63 seconds
+[2025-10-20 19:48:47] Reading Wikipedia network dataset
+[2025-10-20 19:48:50] Dataset read in 3.09 seconds
+[2025-10-20 19:48:50] Counting total edges...
+[2025-10-20 19:48:52] Total edges: 103689 (computed in 1.64s)
+[2025-10-20 19:48:52] Counting unique nodes...
+[2025-10-20 19:48:53] Total unique nodes: 7115 (computed in 1.66s)
+[2025-10-20 19:48:53] Calculating out-degree distribution...
+[2025-10-20 19:48:57] Out-degree calculated for 6110 nodes in 3.83s
+[2025-10-20 19:48:57] Calculating in-degree distribution...
+[2025-10-20 19:49:00] In-degree calculated for 2381 nodes in 2.50s
+[2025-10-20 19:49:00] Finding top influencers...
+[2025-10-20 19:49:01] Top 10 influencers found in 1.19s
+[2025-10-20 19:49:01]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:49:01]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:49:01]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:49:01]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:49:01]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:49:01]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:49:01]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:49:01]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:49:01]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:49:01]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:49:01] Calculating degree statistics...
+[2025-10-20 19:49:03] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:49:03] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:49:03] Statistics computed in 2.11s
+[2025-10-20 19:49:03] Writing throughput metrics to CSV...
+[2025-10-20 19:49:03] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:49:03] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:49:03] Wikipedia network analysis completed successfully!
+[2025-10-20 19:49:03] Spark session stopped
+Iteration 8 completed. Results appended to files.
+Latest throughput entry:
+8,2025-10-20 19:49:03,overall_throughput,8021.877254114387,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 9 - Mon Oct 20 19:49:03 UTC 2025
+=========================================
+Running Spark analysis (iteration 9)...
+[2025-10-20 19:49:03] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                                                          (0 + 1) / 1]                                                                                [Stage 21:===========>                                           (43 + 3) / 200][Stage 21:================>                                      (60 + 4) / 200][Stage 21:====================>                                  (76 + 3) / 200][Stage 21:==========================>                            (98 + 3) / 200][Stage 21:================================>                     (122 + 3) / 200][Stage 21:======================================>               (143 + 3) / 200][Stage 21:============================================>         (165 + 3) / 200][Stage 21:==================================================>   (187 + 3) / 200][Stage 23:=============================>                        (111 + 3) / 200][Stage 23:========================================>             (149 + 3) / 200][Stage 23:================================================>     (181 + 3) / 200]                                                                                [Stage 29:======================>                                (82 + 3) / 200][Stage 29:===============================>                      (115 + 3) / 200][Stage 29:=========================================>            (154 + 3) / 200][Stage 29:===================================================>  (192 + 3) / 200][Stage 31:====================================>                 (134 + 4) / 200][Stage 31:===================================================>  (191 + 4) / 200]                                                                                [Stage 36:=======================>                               (85 + 3) / 200][Stage 36:===================================>                  (131 + 3) / 200][Stage 36:===================================================>  (190 + 3) / 200]                                                                                [Stage 38:============================>                         (105 + 4) / 200][Stage 38:============================================>         (163 + 3) / 200]                                                                                [Stage 43:=============================================>        (168 + 3) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:49:05 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:49:08] Spark Session initialized
+[2025-10-20 19:49:08] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:49:09] Dataset downloaded in 0.60 seconds
+[2025-10-20 19:49:09] Reading Wikipedia network dataset
+[2025-10-20 19:49:12] Dataset read in 3.02 seconds
+[2025-10-20 19:49:12] Counting total edges...
+[2025-10-20 19:49:13] Total edges: 103689 (computed in 1.61s)
+[2025-10-20 19:49:13] Counting unique nodes...
+[2025-10-20 19:49:16] Total unique nodes: 7115 (computed in 2.17s)
+[2025-10-20 19:49:16] Calculating out-degree distribution...
+[2025-10-20 19:49:20] Out-degree calculated for 6110 nodes in 4.59s
+[2025-10-20 19:49:20] Calculating in-degree distribution...
+[2025-10-20 19:49:23] In-degree calculated for 2381 nodes in 2.95s
+[2025-10-20 19:49:23] Finding top influencers...
+[2025-10-20 19:49:24] Top 10 influencers found in 1.28s
+[2025-10-20 19:49:24]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:49:24]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:49:24]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:49:24]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:49:24]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:49:24]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:49:24]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:49:24]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:49:24]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:49:24]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:49:24] Calculating degree statistics...
+[2025-10-20 19:49:27] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:49:27] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:49:27] Statistics computed in 2.22s
+[2025-10-20 19:49:27] Writing throughput metrics to CSV...
+[2025-10-20 19:49:27] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:49:27] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:49:27] Wikipedia network analysis completed successfully!
+[2025-10-20 19:49:27] Spark session stopped
+Iteration 9 completed. Results appended to files.
+Latest throughput entry:
+9,2025-10-20 19:49:27,overall_throughput,6997.206342096494,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 10 - Mon Oct 20 19:49:27 UTC 2025
+=========================================
+Running Spark analysis (iteration 10)...
+[2025-10-20 19:49:27] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                  (0 + 1) / 1][Stage 6:>                  (0 + 1) / 1]                                                                                [Stage 21:==========>                                            (39 + 5) / 200][Stage 21:===============>                                       (55 + 5) / 200][Stage 21:===================>                                   (70 + 4) / 200][Stage 21:======================>                                (83 + 6) / 200][Stage 21:===========================>                          (101 + 4) / 200][Stage 21:=================================>                    (124 + 4) / 200][Stage 21:======================================>               (143 + 4) / 200][Stage 21:=============================================>        (167 + 5) / 200][Stage 21:=================================================>    (185 + 4) / 200][Stage 23:=====================>                                 (78 + 5) / 200][Stage 23:============================>                         (104 + 5) / 200][Stage 23:====================================>                 (134 + 5) / 200][Stage 23:==========================================>           (159 + 4) / 200][Stage 23:==================================================>   (186 + 6) / 200]                                                                                [Stage 29:==================>                                    (69 + 4) / 200][Stage 29:==========================>                            (96 + 4) / 200][Stage 29:==================================>                   (126 + 4) / 200][Stage 29:=======================================>              (147 + 4) / 200][Stage 29:================================================>     (180 + 5) / 200][Stage 31:====================================>                 (135 + 5) / 200][Stage 31:===============================================>      (177 + 6) / 200]                                                                                [Stage 36:===========================>                          (101 + 4) / 200][Stage 36:=========================================>            (153 + 4) / 200]                                                                                [Stage 38:===============================>                      (118 + 4) / 200][Stage 38:===========================================>          (162 + 5) / 200]                                                                                [Stage 43:=====================================>                (140 + 5) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:49:29 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:49:32] Spark Session initialized
+[2025-10-20 19:49:32] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:49:33] Dataset downloaded in 0.62 seconds
+[2025-10-20 19:49:33] Reading Wikipedia network dataset
+[2025-10-20 19:49:36] Dataset read in 3.20 seconds
+[2025-10-20 19:49:36] Counting total edges...
+[2025-10-20 19:49:38] Total edges: 103689 (computed in 1.62s)
+[2025-10-20 19:49:38] Counting unique nodes...
+[2025-10-20 19:49:40] Total unique nodes: 7115 (computed in 2.13s)
+[2025-10-20 19:49:40] Calculating out-degree distribution...
+[2025-10-20 19:49:44] Out-degree calculated for 6110 nodes in 4.08s
+[2025-10-20 19:49:44] Calculating in-degree distribution...
+[2025-10-20 19:49:47] In-degree calculated for 2381 nodes in 2.90s
+[2025-10-20 19:49:47] Finding top influencers...
+[2025-10-20 19:49:48] Top 10 influencers found in 1.32s
+[2025-10-20 19:49:48]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:49:48]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:49:48]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:49:48]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:49:48]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:49:48]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:49:48]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:49:48]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:49:48]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:49:48]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:49:48] Calculating degree statistics...
+[2025-10-20 19:49:50] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:49:50] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:49:50] Statistics computed in 2.13s
+[2025-10-20 19:49:50] Writing throughput metrics to CSV...
+[2025-10-20 19:49:50] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:49:50] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:49:50] Wikipedia network analysis completed successfully!
+[2025-10-20 19:49:51] Spark session stopped
+Iteration 10 completed. Results appended to files.
+Latest throughput entry:
+10,2025-10-20 19:49:50,overall_throughput,7314.81017628126,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 11 - Mon Oct 20 19:49:51 UTC 2025
+=========================================
+Running Spark analysis (iteration 11)...
+[2025-10-20 19:49:51] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                  (0 + 1) / 1][Stage 6:>                  (0 + 1) / 1]                                                                                [Stage 21:============>                                          (46 + 3) / 200][Stage 21:=================>                                     (63 + 4) / 200][Stage 21:=======================>                               (86 + 4) / 200][Stage 21:==============================>                       (114 + 3) / 200][Stage 21:====================================>                 (135 + 3) / 200][Stage 21:===========================================>          (160 + 3) / 200][Stage 21:==================================================>   (186 + 3) / 200][Stage 23:==========================>                            (97 + 3) / 200][Stage 23:=================================>                    (125 + 4) / 200][Stage 23:==========================================>           (159 + 4) / 200][Stage 23:==================================================>   (186 + 3) / 200]                                                                                [Stage 29:==================>                                    (68 + 4) / 200][Stage 29:===========================>                           (99 + 3) / 200][Stage 29:===================================>                  (131 + 3) / 200][Stage 29:============================================>         (163 + 3) / 200][Stage 29:======================================================(200 + 0) / 200][Stage 31:=========================>                             (91 + 3) / 200][Stage 31:====================================>                 (134 + 3) / 200][Stage 31:==================================================>   (188 + 3) / 200]                                                                                [Stage 36:==============================>                       (114 + 4) / 200][Stage 36:=========================================>            (154 + 3) / 200]                                                                                [Stage 38:=================================>                    (124 + 3) / 200][Stage 38:==============================================>       (174 + 3) / 200]                                                                                [Stage 43:=============================================>        (168 + 3) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:49:53 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:49:56] Spark Session initialized
+[2025-10-20 19:49:56] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:49:57] Dataset downloaded in 0.74 seconds
+[2025-10-20 19:49:57] Reading Wikipedia network dataset
+[2025-10-20 19:50:00] Dataset read in 2.97 seconds
+[2025-10-20 19:50:00] Counting total edges...
+[2025-10-20 19:50:01] Total edges: 103689 (computed in 1.65s)
+[2025-10-20 19:50:01] Counting unique nodes...
+[2025-10-20 19:50:04] Total unique nodes: 7115 (computed in 2.21s)
+[2025-10-20 19:50:04] Calculating out-degree distribution...
+[2025-10-20 19:50:08] Out-degree calculated for 6110 nodes in 4.00s
+[2025-10-20 19:50:08] Calculating in-degree distribution...
+[2025-10-20 19:50:10] In-degree calculated for 2381 nodes in 2.82s
+[2025-10-20 19:50:10] Finding top influencers...
+[2025-10-20 19:50:12] Top 10 influencers found in 1.17s
+[2025-10-20 19:50:12]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:50:12]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:50:12]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:50:12]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:50:12]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:50:12]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:50:12]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:50:12]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:50:12]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:50:12]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:50:12] Calculating degree statistics...
+[2025-10-20 19:50:14] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:50:14] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:50:14] Statistics computed in 2.01s
+[2025-10-20 19:50:14] Writing throughput metrics to CSV...
+[2025-10-20 19:50:14] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:50:14] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:50:14] Wikipedia network analysis completed successfully!
+[2025-10-20 19:50:14] Spark session stopped
+Iteration 11 completed. Results appended to files.
+Latest throughput entry:
+11,2025-10-20 19:50:14,overall_throughput,7484.4976599284655,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 12 - Mon Oct 20 19:50:14 UTC 2025
+=========================================
+Running Spark analysis (iteration 12)...
+[2025-10-20 19:50:14] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 21:========>                                              (32 + 3) / 200][Stage 21:=============>                                         (48 + 4) / 200][Stage 21:=================>                                     (65 + 2) / 200][Stage 21:======================>                                (80 + 4) / 200][Stage 21:==========================>                            (96 + 4) / 200][Stage 21:==============================>                       (114 + 3) / 200][Stage 21:===================================>                  (133 + 3) / 200][Stage 21:==========================================>           (156 + 4) / 200][Stage 21:================================================>     (180 + 3) / 200][Stage 23:=============================>                        (108 + 4) / 200][Stage 23:========================================>             (150 + 3) / 200][Stage 23:====================================================> (196 + 3) / 200]                                                                                [Stage 29:=======================>                               (86 + 4) / 200][Stage 29:==============================>                       (114 + 3) / 200][Stage 29:====================================>                 (136 + 3) / 200][Stage 29:===========================================>          (162 + 3) / 200][Stage 29:=================================================>    (184 + 3) / 200][Stage 31:===================================>                  (133 + 3) / 200][Stage 31:=================================================>    (184 + 3) / 200]                                                                                [Stage 36:==================================>                   (129 + 3) / 200][Stage 36:=================================================>    (182 + 3) / 200]                                                                                [Stage 38:===============================>                      (118 + 3) / 200][Stage 38:===============================================>      (176 + 3) / 200]                                                                                [Stage 43:==================================================>   (188 + 3) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:50:16 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:50:20] Spark Session initialized
+[2025-10-20 19:50:20] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:50:20] Dataset downloaded in 0.61 seconds
+[2025-10-20 19:50:20] Reading Wikipedia network dataset
+[2025-10-20 19:50:24] Dataset read in 3.47 seconds
+[2025-10-20 19:50:24] Counting total edges...
+[2025-10-20 19:50:26] Total edges: 103689 (computed in 1.88s)
+[2025-10-20 19:50:26] Counting unique nodes...
+[2025-10-20 19:50:29] Total unique nodes: 7115 (computed in 3.18s)
+[2025-10-20 19:50:29] Calculating out-degree distribution...
+[2025-10-20 19:50:35] Out-degree calculated for 6110 nodes in 5.61s
+[2025-10-20 19:50:35] Calculating in-degree distribution...
+[2025-10-20 19:50:38] In-degree calculated for 2381 nodes in 3.49s
+[2025-10-20 19:50:38] Finding top influencers...
+[2025-10-20 19:50:40] Top 10 influencers found in 1.43s
+[2025-10-20 19:50:40]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:50:40]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:50:40]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:50:40]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:50:40]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:50:40]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:50:40]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:50:40]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:50:40]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:50:40]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:50:40] Calculating degree statistics...
+[2025-10-20 19:50:42] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:50:42] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:50:42] Statistics computed in 2.77s
+[2025-10-20 19:50:42] Writing throughput metrics to CSV...
+[2025-10-20 19:50:42] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:50:42] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:50:42] Wikipedia network analysis completed successfully!
+[2025-10-20 19:50:43] Spark session stopped
+Iteration 12 completed. Results appended to files.
+Latest throughput entry:
+12,2025-10-20 19:50:42,overall_throughput,5648.820867695389,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 13 - Mon Oct 20 19:50:43 UTC 2025
+=========================================
+Running Spark analysis (iteration 13)...
+[2025-10-20 19:50:43] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                  (0 + 1) / 1][Stage 6:>                  (0 + 1) / 1][Stage 9:=============================>                             (1 + 1) / 2]                                                                                [Stage 21:======>                                                (22 + 5) / 200][Stage 21:=========>                                             (33 + 4) / 200][Stage 21:============>                                          (46 + 6) / 200][Stage 21:=================>                                     (62 + 4) / 200][Stage 21:=====================>                                 (79 + 5) / 200][Stage 21:==========================>                            (95 + 4) / 200][Stage 21:=============================>                        (108 + 5) / 200][Stage 21:=================================>                    (123 + 4) / 200][Stage 21:====================================>                 (136 + 4) / 200][Stage 21:=========================================>            (154 + 4) / 200][Stage 21:===============================================>      (176 + 4) / 200][Stage 21:=====================================================>(199 + 1) / 200][Stage 23:====================>                                  (74 + 4) / 200][Stage 23:=============================>                        (108 + 4) / 200][Stage 23:====================================>                 (134 + 4) / 200][Stage 23:=============================================>        (169 + 5) / 200][Stage 23:====================================================> (195 + 4) / 200]                                                                                [Stage 29:====================>                                  (74 + 4) / 200][Stage 29:===========================>                           (99 + 4) / 200][Stage 29:=================================>                    (123 + 4) / 200][Stage 29:========================================>             (151 + 4) / 200][Stage 29:===============================================>      (177 + 5) / 200][Stage 31:========================>                              (89 + 4) / 200][Stage 31:=================================>                    (124 + 4) / 200][Stage 31:===========================================>          (160 + 4) / 200]                                                                                [Stage 36:===========================>                          (100 + 4) / 200][Stage 36:====================================>                 (137 + 4) / 200][Stage 36:=================================================>    (183 + 5) / 200]                                                                                [Stage 38:================================>                     (120 + 4) / 200][Stage 38:============================================>         (165 + 5) / 200]                                                                                [Stage 43:=============================>                        (109 + 4) / 200][Stage 43:=====================================>                (138 + 4) / 200][Stage 43:============================================>         (165 + 4) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:50:45 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:50:49] Spark Session initialized
+[2025-10-20 19:50:49] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:50:50] Dataset downloaded in 1.18 seconds
+[2025-10-20 19:50:50] Reading Wikipedia network dataset
+[2025-10-20 19:50:53] Dataset read in 3.50 seconds
+[2025-10-20 19:50:53] Counting total edges...
+[2025-10-20 19:50:55] Total edges: 103689 (computed in 1.98s)
+[2025-10-20 19:50:55] Counting unique nodes...
+[2025-10-20 19:50:58] Total unique nodes: 7115 (computed in 2.87s)
+[2025-10-20 19:50:58] Calculating out-degree distribution...
+[2025-10-20 19:51:04] Out-degree calculated for 6110 nodes in 5.93s
+[2025-10-20 19:51:04] Calculating in-degree distribution...
+[2025-10-20 19:51:08] In-degree calculated for 2381 nodes in 4.11s
+[2025-10-20 19:51:08] Finding top influencers...
+[2025-10-20 19:51:10] Top 10 influencers found in 1.90s
+[2025-10-20 19:51:10]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:51:10]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:51:10]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:51:10]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:51:10]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:51:10]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:51:10]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:51:10]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:51:10]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:51:10]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:51:10] Calculating degree statistics...
+[2025-10-20 19:51:13] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:51:13] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:51:13] Statistics computed in 3.01s
+[2025-10-20 19:51:13] Writing throughput metrics to CSV...
+[2025-10-20 19:51:13] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:51:13] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:51:13] Wikipedia network analysis completed successfully!
+[2025-10-20 19:51:13] Spark session stopped
+Iteration 13 completed. Results appended to files.
+Latest throughput entry:
+13,2025-10-20 19:51:13,overall_throughput,5238.752276590987,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 14 - Mon Oct 20 19:51:13 UTC 2025
+=========================================
+Running Spark analysis (iteration 14)...
+[2025-10-20 19:51:14] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                  (0 + 1) / 1][Stage 6:>                  (0 + 1) / 1][Stage 9:=============================>                             (1 + 1) / 2]                                                                                [Stage 21:========>                                              (31 + 4) / 200][Stage 21:===========>                                           (43 + 4) / 200][Stage 21:==============>                                        (54 + 4) / 200][Stage 21:==================>                                    (66 + 4) / 200][Stage 21:====================>                                  (75 + 4) / 200][Stage 21:========================>                              (90 + 4) / 200][Stage 21:===========================>                          (103 + 4) / 200][Stage 21:================================>                     (120 + 4) / 200][Stage 21:====================================>                 (135 + 5) / 200][Stage 21:=======================================>              (148 + 4) / 200][Stage 21:=============================================>        (168 + 4) / 200][Stage 21:=================================================>    (184 + 4) / 200][Stage 23:=============>                                         (49 + 5) / 200][Stage 23:====================>                                  (75 + 4) / 200][Stage 23:============================>                         (107 + 4) / 200][Stage 23:====================================>                 (135 + 5) / 200][Stage 23:============================================>         (163 + 4) / 200][Stage 23:=================================================>    (184 + 4) / 200]                                                                                [Stage 29:===========>                                           (42 + 4) / 200][Stage 29:===============>                                       (57 + 4) / 200][Stage 29:====================>                                  (76 + 4) / 200][Stage 29:========================>                              (89 + 4) / 200][Stage 29:===========================>                          (103 + 4) / 200][Stage 29:==================================>                   (126 + 4) / 200][Stage 29:==========================================>           (156 + 5) / 200][Stage 29:==================================================>   (187 + 4) / 200][Stage 31:====================>                                  (74 + 4) / 200][Stage 31:===========================>                          (101 + 4) / 200][Stage 31:=======================================>              (147 + 4) / 200][Stage 31:=================================================>    (185 + 4) / 200]                                                                                [Stage 36:==================>                                    (68 + 4) / 200][Stage 36:===========================>                           (99 + 5) / 200][Stage 36:==================================>                   (126 + 4) / 200][Stage 36:========================================>             (149 + 5) / 200][Stage 36:==================================================>   (187 + 4) / 200]                                                                                [Stage 38:=======================>                               (85 + 5) / 200][Stage 38:==================================>                   (127 + 4) / 200][Stage 38:===========================================>          (160 + 4) / 200][Stage 38:=====================================================>(199 + 1) / 200]                                                                                [Stage 43:===============================>                      (117 + 4) / 200][Stage 43:=======================================>              (148 + 4) / 200][Stage 43:====================================================> (193 + 4) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:51:16 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:51:18] Spark Session initialized
+[2025-10-20 19:51:18] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:51:19] Dataset downloaded in 0.88 seconds
+[2025-10-20 19:51:19] Reading Wikipedia network dataset
+[2025-10-20 19:51:23] Dataset read in 3.20 seconds
+[2025-10-20 19:51:23] Counting total edges...
+[2025-10-20 19:51:24] Total edges: 103689 (computed in 1.44s)
+[2025-10-20 19:51:24] Counting unique nodes...
+[2025-10-20 19:51:26] Total unique nodes: 7115 (computed in 2.15s)
+[2025-10-20 19:51:26] Calculating out-degree distribution...
+[2025-10-20 19:51:30] Out-degree calculated for 6110 nodes in 4.20s
+[2025-10-20 19:51:30] Calculating in-degree distribution...
+[2025-10-20 19:51:33] In-degree calculated for 2381 nodes in 2.31s
+[2025-10-20 19:51:33] Finding top influencers...
+[2025-10-20 19:51:34] Top 10 influencers found in 1.18s
+[2025-10-20 19:51:34]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:51:34]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:51:34]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:51:34]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:51:34]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:51:34]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:51:34]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:51:34]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:51:34]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:51:34]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:51:34] Calculating degree statistics...
+[2025-10-20 19:51:36] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:51:36] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:51:36] Statistics computed in 2.21s
+[2025-10-20 19:51:36] Writing throughput metrics to CSV...
+[2025-10-20 19:51:36] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:51:36] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:51:36] Wikipedia network analysis completed successfully!
+[2025-10-20 19:51:37] Spark session stopped
+Iteration 14 completed. Results appended to files.
+Latest throughput entry:
+14,2025-10-20 19:51:36,overall_throughput,7689.988263102188,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 15 - Mon Oct 20 19:51:37 UTC 2025
+=========================================
+Running Spark analysis (iteration 15)...
+[2025-10-20 19:51:37] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                  (0 + 1) / 1][Stage 6:>                  (0 + 1) / 1]                                                                                [Stage 21:===========>                                           (40 + 3) / 200][Stage 21:==============>                                        (53 + 3) / 200][Stage 21:==================>                                    (68 + 3) / 200][Stage 21:=======================>                               (84 + 3) / 200][Stage 21:============================>                         (104 + 3) / 200][Stage 21:================================>                     (122 + 3) / 200][Stage 21:======================================>               (142 + 3) / 200][Stage 21:===========================================>          (161 + 3) / 200][Stage 21:================================================>     (180 + 3) / 200][Stage 23:========================>                              (90 + 5) / 200][Stage 23:==================================>                   (126 + 3) / 200][Stage 23:============================================>         (166 + 3) / 200]                                                                                [Stage 29:==========================>                            (97 + 3) / 200][Stage 29:=====================================>                (138 + 3) / 200][Stage 29:===============================================>      (176 + 3) / 200][Stage 31:============================================>         (163 + 3) / 200]                                                                                [Stage 36:=============================>                        (110 + 3) / 200][Stage 36:===========================================>          (160 + 3) / 200]                                                                                [Stage 38:====================>                                  (73 + 3) / 200][Stage 38:===============================>                      (116 + 4) / 200][Stage 38:============================================>         (163 + 3) / 200]                                                                                [Stage 43:==============================================>       (171 + 4) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:51:39 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:51:42] Spark Session initialized
+[2025-10-20 19:51:42] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:51:43] Dataset downloaded in 0.81 seconds
+[2025-10-20 19:51:43] Reading Wikipedia network dataset
+[2025-10-20 19:51:46] Dataset read in 3.20 seconds
+[2025-10-20 19:51:46] Counting total edges...
+[2025-10-20 19:51:48] Total edges: 103689 (computed in 1.97s)
+[2025-10-20 19:51:48] Counting unique nodes...
+[2025-10-20 19:51:51] Total unique nodes: 7115 (computed in 2.43s)
+[2025-10-20 19:51:51] Calculating out-degree distribution...
+[2025-10-20 19:51:55] Out-degree calculated for 6110 nodes in 4.61s
+[2025-10-20 19:51:55] Calculating in-degree distribution...
+[2025-10-20 19:51:59] In-degree calculated for 2381 nodes in 3.29s
+[2025-10-20 19:51:59] Finding top influencers...
+[2025-10-20 19:52:00] Top 10 influencers found in 1.48s
+[2025-10-20 19:52:00]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:52:00]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:52:00]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:52:00]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:52:00]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:52:00]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:52:00]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:52:00]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:52:00]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:52:00]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:52:00] Calculating degree statistics...
+[2025-10-20 19:52:03] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:52:03] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:52:03] Statistics computed in 2.48s
+[2025-10-20 19:52:03] Writing throughput metrics to CSV...
+[2025-10-20 19:52:03] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:52:03] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:52:03] Wikipedia network analysis completed successfully!
+[2025-10-20 19:52:03] Spark session stopped
+Iteration 15 completed. Results appended to files.
+Latest throughput entry:
+15,2025-10-20 19:52:03,overall_throughput,6374.778428324189,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 16 - Mon Oct 20 19:52:03 UTC 2025
+=========================================
+Running Spark analysis (iteration 16)...
+[2025-10-20 19:52:03] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                  (0 + 1) / 1][Stage 6:>                  (0 + 1) / 1]                                                                                [Stage 21:=======>                                               (29 + 4) / 200][Stage 21:============>                                          (45 + 5) / 200][Stage 21:=================>                                     (63 + 3) / 200][Stage 21:====================>                                  (76 + 5) / 200][Stage 21:=========================>                             (94 + 4) / 200][Stage 21:=============================>                        (108 + 4) / 200][Stage 21:==================================>                   (127 + 4) / 200][Stage 21:=======================================>              (148 + 4) / 200][Stage 21:==============================================>       (171 + 5) / 200][Stage 21:====================================================> (195 + 5) / 200][Stage 23:===========================>                           (99 + 4) / 200][Stage 23:===================================>                  (133 + 4) / 200][Stage 23:=============================================>        (169 + 5) / 200]                                                                                [Stage 29:======================>                                (81 + 5) / 200][Stage 29:=============================>                        (109 + 4) / 200][Stage 29:==================================>                   (129 + 4) / 200][Stage 29:=========================================>            (153 + 4) / 200][Stage 29:================================================>     (181 + 4) / 200][Stage 31:===========================>                          (102 + 4) / 200][Stage 31:======================================>               (144 + 4) / 200][Stage 31:===============================================>      (176 + 5) / 200]                                                                                [Stage 36:======================>                                (80 + 4) / 200][Stage 36:==============================>                       (114 + 5) / 200][Stage 36:=========================================>            (155 + 6) / 200]                                                                                [Stage 38:==========================>                            (98 + 4) / 200][Stage 38:=====================================>                (139 + 5) / 200][Stage 38:===============================================>      (176 + 4) / 200]                                                                                [Stage 43:====================================>                 (135 + 4) / 200][Stage 43:===================================================>  (190 + 4) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:52:05 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:52:08] Spark Session initialized
+[2025-10-20 19:52:08] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:52:08] Dataset downloaded in 0.66 seconds
+[2025-10-20 19:52:08] Reading Wikipedia network dataset
+[2025-10-20 19:52:11] Dataset read in 3.30 seconds
+[2025-10-20 19:52:12] Counting total edges...
+[2025-10-20 19:52:13] Total edges: 103689 (computed in 1.29s)
+[2025-10-20 19:52:13] Counting unique nodes...
+[2025-10-20 19:52:15] Total unique nodes: 7115 (computed in 1.89s)
+[2025-10-20 19:52:15] Calculating out-degree distribution...
+[2025-10-20 19:52:18] Out-degree calculated for 6110 nodes in 3.63s
+[2025-10-20 19:52:18] Calculating in-degree distribution...
+[2025-10-20 19:52:21] In-degree calculated for 2381 nodes in 2.83s
+[2025-10-20 19:52:21] Finding top influencers...
+[2025-10-20 19:52:23] Top 10 influencers found in 1.45s
+[2025-10-20 19:52:23]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:52:23]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:52:23]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:52:23]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:52:23]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:52:23]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:52:23]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:52:23]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:52:23]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:52:23]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:52:23] Calculating degree statistics...
+[2025-10-20 19:52:25] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:52:25] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:52:25] Statistics computed in 2.21s
+[2025-10-20 19:52:25] Writing throughput metrics to CSV...
+[2025-10-20 19:52:25] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:52:25] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:52:25] Wikipedia network analysis completed successfully!
+[2025-10-20 19:52:25] Spark session stopped
+Iteration 16 completed. Results appended to files.
+Latest throughput entry:
+16,2025-10-20 19:52:25,overall_throughput,7799.486192768887,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 17 - Mon Oct 20 19:52:25 UTC 2025
+=========================================
+Running Spark analysis (iteration 17)...
+[2025-10-20 19:52:25] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 21:==========>                                            (39 + 3) / 200][Stage 21:================>                                      (59 + 3) / 200][Stage 21:====================>                                  (76 + 3) / 200][Stage 21:=========================>                             (93 + 3) / 200][Stage 21:===============================>                      (115 + 3) / 200][Stage 21:====================================>                 (136 + 3) / 200][Stage 21:==========================================>           (157 + 3) / 200][Stage 21:==================================================>   (187 + 3) / 200][Stage 23:=================================>                    (123 + 3) / 200][Stage 23:=============================================>        (167 + 4) / 200]                                                                                [Stage 29:===========================>                          (102 + 4) / 200][Stage 29:=====================================>                (139 + 3) / 200][Stage 29:==============================================>       (174 + 4) / 200][Stage 31:===================>                                   (70 + 3) / 200][Stage 31:=============================>                        (109 + 3) / 200][Stage 31:========================================>             (149 + 3) / 200][Stage 31:=====================================================>(199 + 1) / 200]                                                                                [Stage 36:==================>                                    (69 + 3) / 200][Stage 36:============================>                         (106 + 3) / 200][Stage 36:=========================================>            (152 + 3) / 200][Stage 36:===================================================>  (189 + 3) / 200]                                                                                [Stage 38:====================>                                  (76 + 3) / 200][Stage 38:==================================>                   (128 + 4) / 200][Stage 38:================================================>     (181 + 3) / 200]                                                                                [Stage 43:================================>                     (121 + 6) / 200][Stage 43:==================================================>   (187 + 3) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:52:27 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:52:30] Spark Session initialized
+[2025-10-20 19:52:30] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:52:31] Dataset downloaded in 0.73 seconds
+[2025-10-20 19:52:31] Reading Wikipedia network dataset
+[2025-10-20 19:52:34] Dataset read in 3.37 seconds
+[2025-10-20 19:52:34] Counting total edges...
+[2025-10-20 19:52:36] Total edges: 103689 (computed in 1.48s)
+[2025-10-20 19:52:36] Counting unique nodes...
+[2025-10-20 19:52:38] Total unique nodes: 7115 (computed in 1.81s)
+[2025-10-20 19:52:38] Calculating out-degree distribution...
+[2025-10-20 19:52:42] Out-degree calculated for 6110 nodes in 4.53s
+[2025-10-20 19:52:42] Calculating in-degree distribution...
+[2025-10-20 19:52:45] In-degree calculated for 2381 nodes in 3.20s
+[2025-10-20 19:52:45] Finding top influencers...
+[2025-10-20 19:52:47] Top 10 influencers found in 1.28s
+[2025-10-20 19:52:47]   #1: Node 4037 with 457 incoming edges
+[2025-10-20 19:52:47]   #2: Node 15 with 361 incoming edges
+[2025-10-20 19:52:47]   #3: Node 2398 with 340 incoming edges
+[2025-10-20 19:52:47]   #4: Node 2625 with 331 incoming edges
+[2025-10-20 19:52:47]   #5: Node 1297 with 309 incoming edges
+[2025-10-20 19:52:47]   #6: Node 2565 with 274 incoming edges
+[2025-10-20 19:52:47]   #7: Node 762 with 272 incoming edges
+[2025-10-20 19:52:47]   #8: Node 2328 with 266 incoming edges
+[2025-10-20 19:52:47]   #9: Node 5254 with 265 incoming edges
+[2025-10-20 19:52:47]   #10: Node 3352 with 264 incoming edges
+[2025-10-20 19:52:47] Calculating degree statistics...
+[2025-10-20 19:52:49] Out-degree stats - Avg: 16.97, Max: 893, Min: 1
+[2025-10-20 19:52:49] In-degree stats - Avg: 43.55, Max: 457, Min: 1
+[2025-10-20 19:52:49] Statistics computed in 2.39s
+[2025-10-20 19:52:49] Writing throughput metrics to CSV...
+[2025-10-20 19:52:49] Throughput data appended to /output/continuous-throughput.csv
+[2025-10-20 19:52:49] Detailed results written to /output/continuous-results.txt
+[2025-10-20 19:52:49] Wikipedia network analysis completed successfully!
+[2025-10-20 19:52:49] Spark session stopped
+Iteration 17 completed. Results appended to files.
+Latest throughput entry:
+17,2025-10-20 19:52:49,overall_throughput,7059.081767671366,edges/second
+Starting next iteration immediately...
+
+=========================================
+ITERATION 18 - Mon Oct 20 19:52:49 UTC 2025
+=========================================
+Running Spark analysis (iteration 18)...
+[2025-10-20 19:52:50] Starting Wikipedia Network Dataset Processing
+[Stage 1:>                                                          (0 + 1) / 1]                                                                                [Stage 5:>                                                          (0 + 1) / 1]                                                                                [Stage 21:=======>                                               (28 + 4) / 200][Stage 21:============>                                          (44 + 5) / 200][Stage 21:================>                                      (61 + 5) / 200][Stage 21:======================>                                (81 + 4) / 200][Stage 21:===========================>                          (100 + 4) / 200][Stage 21:================================>                     (121 + 5) / 200][Stage 21:=======================================>              (145 + 4) / 200][Stage 21:=============================================>        (170 + 4) / 200][Stage 21:====================================================> (193 + 4) / 200][Stage 23:======================>                                (83 + 6) / 200][Stage 23:=============================>                        (110 + 4) / 200][Stage 23:===================================>                  (132 + 4) / 200][Stage 23:==========================================>           (158 + 4) / 200][Stage 23:================================================>     (180 + 5) / 200]                                                                                [Stage 29:=====================>                                 (78 + 4) / 200][Stage 29:===========================>                          (101 + 5) / 200][Stage 29:===================================>                  (130 + 4) / 200][Stage 29:============================================>         (163 + 4) / 200][Stage 29:====================================================> (193 + 4) / 200][Stage 31:===============================>                      (115 + 4) / 200][Stage 31:==========================================>           (157 + 4) / 200]                                                                                [Stage 36:==============================>                       (114 + 4) / 200][Stage 36:===========================================>          (161 + 4) / 200]                                                                                [Stage 38:================================>                     (122 + 4) / 200][Stage 38:===============================================>      (177 + 4) / 200]                                                                                [Stage 43:==================================>                   (126 + 4) / 200][Stage 43:==================================================>   (187 + 5) / 200]                                                                                WARNING: Using incubator modules: jdk.incubator.vector
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/10/20 19:52:52 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+[2025-10-20 19:52:54] Spark Session initialized
+[2025-10-20 19:52:54] Downloading dataset from https://snap.stanford.edu/data/wiki-Vote.txt.gz
+[2025-10-20 19:52:55] Dataset downloaded in 0.76 seconds
+[2025-10-20 19:52:55] Reading Wikipedia network dataset

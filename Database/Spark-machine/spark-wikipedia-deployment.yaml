@@ -1,0 +1,339 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spark-wikipedia-config
+  namespace: default
+data:
+  spark-app.py: |
+    from pyspark.sql import SparkSession
+    from pyspark.sql.functions import col, count, sum as _sum, avg, max as _max, min as _min
+    import time
+    import csv
+    import os
+    from datetime import datetime
+    
+    def log_message(message):
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(f"[{timestamp}] {message}")
+        
+    def write_throughput_csv(metrics, output_path=None):
+        """Append throughput metrics to CSV file"""
+        if output_path is None:
+            output_dir = os.environ.get('OUTPUT_DIR', '/output')
+            output_path = os.path.join(output_dir, 'continuous-throughput.csv')
+        
+        try:
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            
+            # Check if file exists to write header
+            file_exists = os.path.exists(output_path)
+            
+            with open(output_path, 'a', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                
+                # Write header if file is new
+                if not file_exists:
+                    writer.writerow(['Iteration', 'Timestamp', 'Metric', 'Value', 'Unit'])
+                
+                # Write metrics with iteration and timestamp
+                iteration = os.environ.get('ITERATION', '1')
+                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                
+                for key, value in metrics.items():
+                    if isinstance(value, tuple):
+                        writer.writerow([iteration, timestamp, key, value[0], value[1]])
+                    else:
+                        writer.writerow([iteration, timestamp, key, value, ''])
+            
+            log_message(f"Throughput data appended to {output_path}")
+            return True
+        except Exception as e:
+            log_message(f"Error writing CSV: {str(e)}")
+            return False
+    
+    def main():
+        log_message("Starting Wikipedia Network Dataset Processing")
+        
+        # Initialize Spark Session
+        spark = SparkSession.builder \
+            .appName("Wikipedia Network Analysis") \
+            .config("spark.driver.memory", "2g") \
+            .config("spark.executor.memory", "2g") \
+            .getOrCreate()
+        
+        log_message("Spark Session initialized")
+        
+        # Dataset URL - Wikipedia link graph
+        dataset_url = "https://snap.stanford.edu/data/wiki-Vote.txt.gz"
+        local_path = "/tmp/wiki-Vote.txt.gz"
+        
+        # Download dataset
+        log_message(f"Downloading dataset from {dataset_url}")
+        download_start = time.time()
+        
+        try:
+            import urllib.request
+            urllib.request.urlretrieve(dataset_url, local_path)
+            download_time = time.time() - download_start
+            log_message(f"Dataset downloaded in {download_time:.2f} seconds")
+        except Exception as e:
+            log_message(f"Error downloading dataset: {str(e)}")
+            spark.stop()
+            return
+        
+        # Read and process dataset
+        log_message("Reading Wikipedia network dataset")
+        read_start = time.time()
+        
+        try:
+            # Read the dataset (skip comment lines starting with #)
+            df = spark.read.option("comment", "#") \
+                .option("delimiter", "\t") \
+                .csv(local_path) \
+                .toDF("from_node", "to_node")
+            
+            # Cast to integers
+            df = df.withColumn("from_node", col("from_node").cast("integer")) \
+                   .withColumn("to_node", col("to_node").cast("integer"))
+            
+            read_time = time.time() - read_start
+            log_message(f"Dataset read in {read_time:.2f} seconds")
+            
+            # Cache the dataframe for better performance
+            df.cache()
+            
+            # Metrics dictionary
+            metrics = {}
+            metrics['download_time'] = (download_time, 'seconds')
+            metrics['read_time'] = (read_time, 'seconds')
+            
+            # Operation 1: Count total edges
+            log_message("Counting total edges...")
+            count_start = time.time()
+            total_edges = df.count()
+            count_time = time.time() - count_start
+            log_message(f"Total edges: {total_edges} (computed in {count_time:.2f}s)")
+            metrics['total_edges'] = (total_edges, 'edges')
+            metrics['count_time'] = (count_time, 'seconds')
+            metrics['count_throughput'] = (total_edges / count_time if count_time > 0 else 0, 'edges/second')
+            
+            # Operation 2: Count unique nodes
+            log_message("Counting unique nodes...")
+            unique_start = time.time()
+            from_nodes = df.select("from_node").distinct()
+            to_nodes = df.select("to_node").distinct()
+            total_unique_nodes = from_nodes.union(to_nodes).distinct().count()
+            unique_time = time.time() - unique_start
+            log_message(f"Total unique nodes: {total_unique_nodes} (computed in {unique_time:.2f}s)")
+            metrics['total_nodes'] = (total_unique_nodes, 'nodes')
+            metrics['unique_nodes_time'] = (unique_time, 'seconds')
+            
+            # Operation 3: Calculate out-degree (number of outgoing edges per node)
+            log_message("Calculating out-degree distribution...")
+            outdegree_start = time.time()
+            out_degree = df.groupBy("from_node").agg(count("to_node").alias("out_degree"))
+            out_degree.cache()
+            out_degree_count = out_degree.count()
+            outdegree_time = time.time() - outdegree_start
+            log_message(f"Out-degree calculated for {out_degree_count} nodes in {outdegree_time:.2f}s")
+            metrics['outdegree_time'] = (outdegree_time, 'seconds')
+            metrics['outdegree_throughput'] = (out_degree_count / outdegree_time if outdegree_time > 0 else 0, 'nodes/second')
+            
+            # Operation 4: Calculate in-degree (number of incoming edges per node)
+            log_message("Calculating in-degree distribution...")
+            indegree_start = time.time()
+            in_degree = df.groupBy("to_node").agg(count("from_node").alias("in_degree"))
+            in_degree.cache()
+            in_degree_count = in_degree.count()
+            indegree_time = time.time() - indegree_start
+            log_message(f"In-degree calculated for {in_degree_count} nodes in {indegree_time:.2f}s")
+            metrics['indegree_time'] = (indegree_time, 'seconds')
+            metrics['indegree_throughput'] = (in_degree_count / indegree_time if indegree_time > 0 else 0, 'nodes/second')
+            
+            # Operation 5: Find top influencers (nodes with highest in-degree)
+            log_message("Finding top influencers...")
+            top_start = time.time()
+            top_influencers = in_degree.orderBy(col("in_degree").desc()).limit(10)
+            top_results = top_influencers.collect()
+            top_time = time.time() - top_start
+            log_message(f"Top 10 influencers found in {top_time:.2f}s")
+            metrics['top_influencers_time'] = (top_time, 'seconds')
+            
+            for i, row in enumerate(top_results, 1):
+                log_message(f"  #{i}: Node {row['to_node']} with {row['in_degree']} incoming edges")
+            
+            # Operation 6: Calculate statistics
+            log_message("Calculating degree statistics...")
+            stats_start = time.time()
+            out_stats = out_degree.agg(
+                avg("out_degree").alias("avg_out"),
+                _max("out_degree").alias("max_out"),
+                _min("out_degree").alias("min_out")
+            ).collect()[0]
+            
+            in_stats = in_degree.agg(
+                avg("in_degree").alias("avg_in"),
+                _max("in_degree").alias("max_in"),
+                _min("in_degree").alias("min_in")
+            ).collect()[0]
+            stats_time = time.time() - stats_start
+            
+            log_message(f"Out-degree stats - Avg: {out_stats['avg_out']:.2f}, Max: {out_stats['max_out']}, Min: {out_stats['min_out']}")
+            log_message(f"In-degree stats - Avg: {in_stats['avg_in']:.2f}, Max: {in_stats['max_in']}, Min: {in_stats['min_in']}")
+            log_message(f"Statistics computed in {stats_time:.2f}s")
+            
+            metrics['stats_time'] = (stats_time, 'seconds')
+            metrics['avg_out_degree'] = (out_stats['avg_out'], 'edges')
+            metrics['max_out_degree'] = (out_stats['max_out'], 'edges')
+            metrics['avg_in_degree'] = (in_stats['avg_in'], 'edges')
+            metrics['max_in_degree'] = (in_stats['max_in'], 'edges')
+            
+            # Total processing time
+            total_processing_time = (count_time + unique_time + outdegree_time + 
+                                   indegree_time + top_time + stats_time)
+            metrics['total_processing_time'] = (total_processing_time, 'seconds')
+            metrics['overall_throughput'] = (total_edges / total_processing_time if total_processing_time > 0 else 0, 'edges/second')
+            
+            # Write metrics to CSV
+            log_message("Writing throughput metrics to CSV...")
+            write_throughput_csv(metrics)
+            
+            # Also append detailed results
+            output_dir = os.environ.get('OUTPUT_DIR', '/output')
+            results_path = os.path.join(output_dir, 'continuous-results.txt')
+            
+            # Check if this is the first write
+            file_exists = os.path.exists(results_path)
+            
+            with open(results_path, 'a') as f:
+                iteration = os.environ.get('ITERATION', '1')
+                
+                if not file_exists:
+                    f.write("Wikipedia Network Dataset Continuous Analysis Results\n")
+                    f.write("=" * 70 + "\n\n")
+                
+                f.write(f"\n{'='*50}\n")
+                f.write(f"ITERATION {iteration} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(f"{'='*50}\n")
+                f.write(f"Dataset: {dataset_url}\n\n")
+                f.write(f"Dataset Statistics:\n")
+                f.write(f"  Total Edges: {total_edges:,}\n")
+                f.write(f"  Total Nodes: {total_unique_nodes:,}\n")
+                f.write(f"  Avg Out-Degree: {out_stats['avg_out']:.2f}\n")
+                f.write(f"  Max Out-Degree: {out_stats['max_out']}\n")
+                f.write(f"  Avg In-Degree: {in_stats['avg_in']:.2f}\n")
+                f.write(f"  Max In-Degree: {in_stats['max_in']}\n\n")
+                f.write(f"Performance Metrics:\n")
+                f.write(f"  Download Time: {download_time:.2f}s\n")
+                f.write(f"  Read Time: {read_time:.2f}s\n")
+                f.write(f"  Total Processing Time: {total_processing_time:.2f}s\n")
+                f.write(f"  Overall Throughput: {total_edges / total_processing_time:.2f} edges/second\n\n")
+                f.write(f"Top 10 Influencers:\n")
+                for i, row in enumerate(top_results, 1):
+                    f.write(f"  #{i}: Node {row['to_node']} - {row['in_degree']} incoming edges\n")
+            
+            log_message(f"Detailed results written to {results_path}")
+            log_message("Wikipedia network analysis completed successfully!")
+            
+        except Exception as e:
+            log_message(f"Error processing dataset: {str(e)}")
+            import traceback
+            traceback.print_exc()
+        finally:
+            spark.stop()
+            log_message("Spark session stopped")
+    
+    if __name__ == "__main__":
+        main()
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-wikipedia-continuous
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark-wikipedia
+  template:
+    metadata:
+      labels:
+        app: spark-wikipedia
+        job: wikipedia-analysis
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: spark-wikipedia
+        image: openjdk:17-jdk-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            set -e
+            echo "Java version:"; java -version
+            echo "Installing Python3 and pip..."
+            apt-get update -qq && apt-get install -y -qq python3 python3-pip ca-certificates > /dev/null 2>&1
+            update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+            echo "Python version:"; python --version
+
+            echo "Installing PySpark..."
+            python -m pip install --quiet --no-cache-dir pyspark requests
+
+            echo "Starting continuous Spark Wikipedia analysis..."
+            
+            # Initialize iteration counter
+            ITERATION=1
+            
+            # Create single output files
+            mkdir -p /output
+            
+            while true; do
+              echo ""
+              echo "========================================="
+              echo "ITERATION $ITERATION - $(date)"
+              echo "========================================="
+              
+              # Set environment variables for Python script
+              export OUTPUT_DIR="/output"
+              export ITERATION="$ITERATION"
+              
+              echo "Running Spark analysis (iteration $ITERATION)..."
+              python /app/spark-app.py
+              
+              echo "Iteration $ITERATION completed. Results appended to files."
+              if [ -f "/output/continuous-throughput.csv" ]; then
+                echo "Latest throughput entry:"
+                tail -n 1 "/output/continuous-throughput.csv"
+              fi
+              
+              echo "Starting next iteration immediately..."
+              ITERATION=$((ITERATION + 1))
+            done
+        
+        volumeMounts:
+        - name: spark-app
+          mountPath: /app
+        - name: output
+          mountPath: /output
+        
+        resources:
+          requests:
+            memory: "3Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        
+        env:
+        - name: PYSPARK_PYTHON
+          value: "python3"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+      
+      volumes:
+      - name: spark-app
+        configMap:
+          name: spark-wikipedia-config
+      - name: output
+        emptyDir: {}

@@ -1,0 +1,530 @@
+Wikipedia Network Dataset Continuous Analysis Results
+======================================================================
+
+
+==================================================
+ITERATION 1 - 2025-10-20 19:46:15
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.69s
+  Read Time: 3.13s
+  Total Processing Time: 11.56s
+  Overall Throughput: 8969.84 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 2 - 2025-10-20 19:46:39
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 1.01s
+  Read Time: 3.24s
+  Total Processing Time: 13.96s
+  Overall Throughput: 7427.98 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 3 - 2025-10-20 19:47:07
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.65s
+  Read Time: 3.72s
+  Total Processing Time: 16.90s
+  Overall Throughput: 6134.70 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 4 - 2025-10-20 19:47:30
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.79s
+  Read Time: 3.11s
+  Total Processing Time: 13.59s
+  Overall Throughput: 7629.62 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 5 - 2025-10-20 19:47:54
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.72s
+  Read Time: 3.19s
+  Total Processing Time: 14.34s
+  Overall Throughput: 7230.45 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 6 - 2025-10-20 19:48:17
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.73s
+  Read Time: 2.98s
+  Total Processing Time: 14.30s
+  Overall Throughput: 7253.18 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 7 - 2025-10-20 19:48:41
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.76s
+  Read Time: 3.15s
+  Total Processing Time: 14.40s
+  Overall Throughput: 7200.35 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 8 - 2025-10-20 19:49:03
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.63s
+  Read Time: 3.09s
+  Total Processing Time: 12.93s
+  Overall Throughput: 8021.88 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 9 - 2025-10-20 19:49:27
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.60s
+  Read Time: 3.02s
+  Total Processing Time: 14.82s
+  Overall Throughput: 6997.21 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 10 - 2025-10-20 19:49:50
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.62s
+  Read Time: 3.20s
+  Total Processing Time: 14.18s
+  Overall Throughput: 7314.81 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 11 - 2025-10-20 19:50:14
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.74s
+  Read Time: 2.97s
+  Total Processing Time: 13.85s
+  Overall Throughput: 7484.50 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 12 - 2025-10-20 19:50:42
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.61s
+  Read Time: 3.47s
+  Total Processing Time: 18.36s
+  Overall Throughput: 5648.82 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 13 - 2025-10-20 19:51:13
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 1.18s
+  Read Time: 3.50s
+  Total Processing Time: 19.79s
+  Overall Throughput: 5238.75 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 14 - 2025-10-20 19:51:36
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.88s
+  Read Time: 3.20s
+  Total Processing Time: 13.48s
+  Overall Throughput: 7689.99 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 15 - 2025-10-20 19:52:03
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.81s
+  Read Time: 3.20s
+  Total Processing Time: 16.27s
+  Overall Throughput: 6374.78 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 16 - 2025-10-20 19:52:25
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.66s
+  Read Time: 3.30s
+  Total Processing Time: 13.29s
+  Overall Throughput: 7799.49 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
+
+==================================================
+ITERATION 17 - 2025-10-20 19:52:49
+==================================================
+Dataset: https://snap.stanford.edu/data/wiki-Vote.txt.gz
+
+Dataset Statistics:
+  Total Edges: 103,689
+  Total Nodes: 7,115
+  Avg Out-Degree: 16.97
+  Max Out-Degree: 893
+  Avg In-Degree: 43.55
+  Max In-Degree: 457
+
+Performance Metrics:
+  Download Time: 0.73s
+  Read Time: 3.37s
+  Total Processing Time: 14.69s
+  Overall Throughput: 7059.08 edges/second
+
+Top 10 Influencers:
+  #1: Node 4037 - 457 incoming edges
+  #2: Node 15 - 361 incoming edges
+  #3: Node 2398 - 340 incoming edges
+  #4: Node 2625 - 331 incoming edges
+  #5: Node 1297 - 309 incoming edges
+  #6: Node 2565 - 274 incoming edges
+  #7: Node 762 - 272 incoming edges
+  #8: Node 2328 - 266 incoming edges
+  #9: Node 5254 - 265 incoming edges
+  #10: Node 3352 - 264 incoming edges
