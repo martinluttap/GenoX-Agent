@@ -13,9 +13,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/martinluttap/2024-biosys-ec-elasticcontainer/controller"
-	"github.com/martinluttap/2024-biosys-ec-elasticcontainer/metrics"
-	"github.com/martinluttap/2024-biosys-ec-elasticcontainer/policy"
+	"github.com/martinluttap/GenoX-Agent/controller"
+	"github.com/martinluttap/GenoX-Agent/metrics"
+	"github.com/martinluttap/GenoX-Agent/policy"
 )
 
 func makeHints() map[string]string {

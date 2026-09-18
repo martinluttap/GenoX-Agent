@@ -3,13 +3,13 @@
 	url = git@github.com:martinluttap/2024-exp-alibabassf.git
 [submodule "2024-biosys-ec-alibabassf"]
 	path = 2024-biosys-ec-alibabassf
-	url = git@github.com:martinluttap/2024-biosys-ec-alibabassf.git
+	url = git@github.com:martinluttap/GenoX-Artifacts-alibabassf.git
 [submodule "2024-biosys-ec-sinan"]
 	path = 2024-biosys-ec-sinan
-	url = git@github.com:martinluttap/2024-biosys-ec-sinan.git
+	url = git@github.com:martinluttap/GenoX-Artifacts-sinan.git
 [submodule "2024-biosys-ec-nodens"]
 	path = 2024-biosys-ec-nodens
-	url = git@github.com:martinluttap/2024-biosys-ec-nodens.git
+	url = git@github.com:martinluttap/GenoX-Artifacts-nodens.git
 [submodule "2024-biosys-ec-autothrottle"]
 	path = 2024-biosys-ec-autothrottle
-	url = git@github.com:martinluttap/2024-biosys-ec-autothrottle.git
+	url = git@github.com:martinluttap/GenoX-Artifacts-autothrottle.git

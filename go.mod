@@ -1,4 +1,4 @@
-module github.com/martinluttap/2024-biosys-ec-elasticcontainer
+module github.com/martinluttap/GenoX-Agent
 
 go 1.22.5
 

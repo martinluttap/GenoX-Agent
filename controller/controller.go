@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/martinluttap/2024-biosys-ec-elasticcontainer/functions"
+	"github.com/martinluttap/GenoX-Agent/functions"
 )
 
 func TickWriter(activeContainersCh <-chan []string, policy string, intervalMillisecond int, stopCh chan int, wg *sync.WaitGroup) {

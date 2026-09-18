@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/containerd/cgroups/v3/cgroup1"
-	"github.com/martinluttap/2024-biosys-ec-elasticcontainer/metrics"
+	"github.com/martinluttap/GenoX-Agent/metrics"
 )
 
 func AIMD(activeContainersCh chan []string) {
